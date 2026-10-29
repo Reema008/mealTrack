@@ -155,10 +155,10 @@ async function runTest(admin: SupabaseClient, appUrl: string, authHeader: string
 
   const { data: member } = await admin
     .from('household_members')
-    .select('household_id, households(timezone)')
+    .select('household_id, status, households(timezone)')
     .eq('user_id', userId)
     .maybeSingle();
-  if (!member) return json({ error: 'You are not a member of a household' }, 403);
+  if (!member || member.status !== 'approved') return json({ error: 'You are not approved to use MealTrack yet' }, 403);
 
   const tz = (member.households as unknown as { timezone: string }).timezone;
   const date = reminderPlan(new Date(), tz).reminderDate;
