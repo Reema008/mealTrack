@@ -110,24 +110,24 @@ h2,
    delivered = solid lilac, not received = darkest plum (brightest in dark mode),
    pending = lilac stripes, planned = hollow outline. */
 :root {
-  --st-delivered: #8670ab;
-  --st-delivered-soft: #c4b0e2;
-  --st-missed: #2b2538;
+  --st-delivered: #ab94d3;
+  --st-delivered-soft: #d6c8ec;
+  --st-missed: #594977;
   --st-pending: #9d88bd;
   --st-planned-edge: #ab94d3;
-  --st-planned-fill: #ffffff;
+  --st-planned-fill: #f6f2fb;
   --st-on: #ffffff;
-  --st-on-missed: #ffffff;
+  --st-on-missed: #f6f2fb;
 }
 .dark {
-  --st-delivered: #bba6dc;
-  --st-delivered-soft: #7d6aa0;
-  --st-missed: #f5f1fa;
+  --st-delivered: #8c78ad;
+  --st-delivered-soft: #5f5080;
+  --st-missed: #dccdef;
   --st-pending: #bba6dc;
   --st-planned-edge: #8c78ad;
-  --st-planned-fill: transparent;
-  --st-on: #19161f;
-  --st-on-missed: #19161f;
+  --st-planned-fill: #2d2738;
+  --st-on: #ffffff;
+  --st-on-missed: #463a5e;
 }
 .st-delivered { background-color: var(--st-delivered); }
 .st-delivered-soft { background-color: var(--st-delivered-soft); }
@@ -218,6 +218,16 @@ a:active {
   transform-origin: left;
   animation: taro-grow 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
+
+/* Password eye: blinks while open, pops when tapped. */
+.pw-eye { animation: pw-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.pw-lid { transform-origin: 12px 12px; animation: pw-blink 4s ease-in-out infinite; }
+.pw-heart { transform-origin: 12px 12.4px; animation: pw-beat 1.6s ease-in-out infinite; }
+.pw-z { animation: pw-float 2.4s ease-in-out infinite; }
+@keyframes pw-pop { 0% { transform: scale(0.6) rotate(-12deg); } 60% { transform: scale(1.15) rotate(4deg); } 100% { transform: scale(1) rotate(0); } }
+@keyframes pw-blink { 0%, 44%, 52%, 100% { transform: scaleY(1); } 48% { transform: scaleY(0.1); } }
+@keyframes pw-beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+@keyframes pw-float { 0%, 100% { transform: translate(0, 0); opacity: 0.9; } 50% { transform: translate(1px, -2px); opacity: 0.5; } }
 
 /* Floating sparkles behind the app. */
 .taro-sparkles {

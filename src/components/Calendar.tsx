@@ -1,4 +1,4 @@
-import { NonVegIcon, VegIcon } from './ui';
+import { CurryIcon, NonVegIcon, VegIcon } from './ui';
 import { addDays, eachDay, endOfMonth, formatDate, formatLong, startOfMonth, startOfWeek, weekdayShort } from '../domain/dates';
 import { mealsForDate } from '../domain/meals';
 import { getDayType } from '../domain/schedule';
@@ -94,14 +94,15 @@ function MealIcons({ meals, className }: { meals: MealMark[]; className?: string
   );
 }
 
-/** A curry bowl with a line through it: a non-veg meal came without the extra curries. */
+/** The curry bowl with a line through it: a non-veg meal came without the extra curries. */
 export function NoExtraMark({ className }: { className: string }) {
   return (
-    <svg viewBox="0 0 12 12" className={`${className} text-emerald-700 dark:text-emerald-200`} aria-hidden>
-      <path d="M1.6 5.6h8.8a4.4 4.4 0 0 1-8.8 0Z" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
-      <path d="M4.4 3.8c-.5-.6.5-1 0-1.7M7.6 3.8c-.5-.6.5-1 0-1.7" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
-      <path d="M1.5 10.8 10.5 1.6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-    </svg>
+    <span className={`relative inline-flex ${className}`} aria-hidden>
+      <CurryIcon className="h-full w-full opacity-80" />
+      <svg viewBox="0 0 12 12" className="absolute inset-0 h-full w-full">
+        <path d="M1.5 10.5 10.5 1.5" strokeWidth="1.6" strokeLinecap="round" style={{ stroke: 'var(--st-missed)' }} />
+      </svg>
+    </span>
   );
 }
 

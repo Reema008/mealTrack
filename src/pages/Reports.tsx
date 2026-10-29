@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CategoryTile, DailyChart, SplitBar, StatCard } from '../components/Charts';
-import { Card, ErrorNote, NonVegIcon, Spinner, TextField, VegIcon } from '../components/ui';
+import { Card, CurryIcon, ErrorNote, NonVegIcon, Spinner, TextField, VegIcon } from '../components/ui';
 import { addDays, addMonths, endOfMonth, endOfWeek, formatMonth, formatShort, isISODate, startOfMonth, startOfWeek } from '../domain/dates';
 import { computeStats, formatPercent, listMeals, type ReportMetric } from '../domain/stats';
 import { subscriptionPeriods } from '../domain/subscription';
@@ -135,7 +135,7 @@ export function ReportsPage() {
             <StatCard label="Scheduled days" emoji="📅" tint="cream" value={s.scheduledDays} hint="Sundays excluded" onClick={open('scheduledDays')} />
             {s.pending > 0 && <StatCard label="Pending today" emoji="💫" tint="butter" value={s.pending} hint="lunch 2 PM · dinner 10 PM" onClick={open('pending')} />}
             <StatCard label="Planned" emoji="🔮" tint="lavender" value={s.planned.meals} hint="future, not counted yet" onClick={open('planned')} />
-            <StatCard label="Extra curries" emoji="🥄" tint="peach" value={a.extraCurryReceived} hint={`of ${a.nonVegMeals} delivered non-veg · ${a.extraCurryMissing} missing`} onClick={open('extraCurry')} />
+            <StatCard label="Extra curries" emoji={<CurryIcon className="h-6 w-6" />} tint="peach" value={a.extraCurryReceived} hint={`of ${a.nonVegMeals} delivered non-veg · ${a.extraCurryMissing} missing`} onClick={open('extraCurry')} />
           </div>
 
           <section aria-labelledby="by-category" className="space-y-3">

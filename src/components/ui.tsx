@@ -50,6 +50,20 @@ export function VegIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
   );
 }
 
+/** Extra curries: a little bowl of curry with steam. */
+export function CurryIcon({ className = 'h-5 w-5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <path d="M9 7.5c-.9-1 .9-1.7 0-2.9M12.5 7.5c-.9-1 .9-1.7 0-2.9M16 7.5c-.9-1 .9-1.7 0-2.9" fill="none" stroke="#bfaed8" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M3.5 11h17a8.5 8.5 0 0 1-17 0Z" fill="#9d88bd" />
+      <ellipse cx="12" cy="11" rx="8.5" ry="1.9" fill="#dccdef" />
+      <circle cx="9.3" cy="10.8" r="0.9" fill="#f6f2fb" />
+      <circle cx="13.6" cy="11.1" r="0.7" fill="#f6f2fb" />
+      <path d="M9.5 21h5" stroke="#8670ab" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /** Non-veg mark: a square with a triangle, like the label on Indian food packets. */
 export function NonVegIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
   return (
@@ -205,21 +219,30 @@ export function PasswordField({
           aria-pressed={visible}
           aria-label={visible ? 'Hide password' : 'Show password'}
           title={visible ? 'Hide password' : 'Show password'}
-          className="absolute inset-y-0 right-1 my-1 flex w-11 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+          className="absolute inset-y-0 right-1 my-1 flex w-11 items-center justify-center rounded-xl text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 dark:text-emerald-300 dark:hover:bg-white/10 dark:hover:text-emerald-200"
         >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          {/* key={visible} restarts the pop animation on every tap */}
+          <svg key={String(visible)} viewBox="0 0 24 24" className="pw-eye h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             {visible ? (
               <>
-                {/* eye with slash: password is visible, tap to hide */}
-                <path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.2M6.6 6.6A17.4 17.4 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6" />
-                <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
-                <path d="M3 3l18 18" />
+                {/* wide-open eye with a heart pupil that blinks: password is showing, tap to hide */}
+                <g className="pw-lid">
+                  <path d="M2.5 12s3.4-6.2 9.5-6.2 9.5 6.2 9.5 6.2-3.4 6.2-9.5 6.2S2.5 12 2.5 12Z" />
+                  <path
+                    className="pw-heart"
+                    d="M12 15.2s-3.1-1.9-3.1-3.9a1.6 1.6 0 0 1 3.1-.7 1.6 1.6 0 0 1 3.1.7c0 2-3.1 3.9-3.1 3.9Z"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                </g>
+                <path d="M6 5.8 5 4.3M12 4.6V2.9M18 5.8l1-1.5" strokeWidth={1.5} />
               </>
             ) : (
               <>
-                {/* open eye: password is hidden, tap to show */}
-                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
-                <circle cx="12" cy="12" r="3" />
+                {/* sleepy closed eye with lashes: password is hidden, tap to show */}
+                <path d="M3 11.5s3.4 4.6 9 4.6 9-4.6 9-4.6" />
+                <path d="M6.2 14.4 5 16.2M9.4 15.8l-.6 2M14.6 15.8l.6 2M17.8 14.4l1.2 1.8" strokeWidth={1.5} />
+                <path className="pw-z" d="M17 4.5h2.6L17 7.5h2.6" strokeWidth={1.3} />
               </>
             )}
           </svg>
