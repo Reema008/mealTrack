@@ -66,7 +66,7 @@ export function DayMeals({
             confirmLabel: future ? 'Skip day' : 'Mark not delivered',
           }
         : {
-            emoji: '🥡',
+            emoji: '💜',
             title: 'Mark the whole day delivered?',
             message: (
               <>

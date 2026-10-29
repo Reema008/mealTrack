@@ -129,19 +129,19 @@ export function ReportsPage() {
         <>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
             <StatCard label="Delivery success" emoji="✨" tint="sage" value={formatPercent(a.successRate)} hint={`${a.delivered} of ${a.meals} meals so far`} onClick={open('success')} />
-            <StatCard label="Delivered" emoji="🥡" tint="cream" value={a.delivered} hint={a.deliveredExplicit ? `${a.deliveredExplicit} edited` : 'as scheduled'} onClick={open('delivered')} />
+            <StatCard label="Delivered" emoji="💜" tint="cream" value={a.delivered} hint={a.deliveredExplicit ? `${a.deliveredExplicit} edited` : 'as scheduled'} onClick={open('delivered')} />
             <StatCard label="Not received" emoji="🚫" tint="blush" value={a.notReceived} hint="tap for the dates" onClick={open('notReceived')} />
             <StatCard label="Scheduled meals" emoji="🗓️" tint="lavender" value={s.scheduledTotal} hint={`${s.scheduledLunch} lunch · ${s.scheduledDinner} dinner`} onClick={open('scheduled')} />
             <StatCard label="Scheduled days" emoji="📅" tint="cream" value={s.scheduledDays} hint="Sundays excluded" onClick={open('scheduledDays')} />
             {s.pending > 0 && <StatCard label="Pending today" emoji="⏳" tint="butter" value={s.pending} hint="lunch 2 PM · dinner 10 PM" onClick={open('pending')} />}
             <StatCard label="Planned" emoji="🔮" tint="lavender" value={s.planned.meals} hint="future, not counted yet" onClick={open('planned')} />
-            <StatCard label="Extra curries" emoji="🍛" tint="peach" value={a.extraCurryReceived} hint={`of ${a.nonVegMeals} delivered non-veg · ${a.extraCurryMissing} missing`} onClick={open('extraCurry')} />
+            <StatCard label="Extra curries" emoji="🥄" tint="peach" value={a.extraCurryReceived} hint={`of ${a.nonVegMeals} delivered non-veg · ${a.extraCurryMissing} missing`} onClick={open('extraCurry')} />
           </div>
 
           <section aria-labelledby="by-category" className="space-y-3">
             <h2 id="by-category" className="text-xl">By category</h2>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
-              <CategoryTile label="Veg" emoji="🥗" tint="sage" stats={s.categories.veg} onClick={open('veg')} />
+              <CategoryTile label="Veg" emoji="🌸" tint="sage" stats={s.categories.veg} onClick={open('veg')} />
               <CategoryTile label="Non-Veg" emoji="🍗" tint="peach" stats={s.categories.nonveg} onClick={open('nonveg')} />
               <CategoryTile label="Lunch" emoji="☀️" tint="butter" stats={s.categories.lunch} onClick={open('lunch')} />
               <CategoryTile label="Dinner" emoji="🌙" tint="lavender" stats={s.categories.dinner} onClick={open('dinner')} />
@@ -152,9 +152,9 @@ export function ReportsPage() {
             <SplitBar
               title="Meal outcomes"
               parts={[
-                { label: 'Delivered (edited)', value: a.deliveredExplicit, className: 'bg-emerald-600' },
+                { label: 'Delivered (edited)', value: a.deliveredExplicit, className: 'bg-emerald-400' },
                 { label: 'Delivered (as scheduled)', value: a.deliveredAssumed, className: 'bg-emerald-300' },
-                { label: 'Not received', value: a.notReceived, className: 'bg-rose-400' },
+                { label: 'Not received', value: a.notReceived, className: 'bg-rose-500' },
                 { label: 'Pending', value: s.pending, className: 'bg-orange-300' },
                 { label: 'Planned', value: s.planned.meals, className: 'bg-slate-300' },
               ]}

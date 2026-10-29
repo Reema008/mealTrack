@@ -40,7 +40,7 @@ const DAY_TYPE_STYLE: Record<DayType, string> = {
   none: 'bg-slate-200 text-slate-700 dark:bg-slate-900 dark:text-slate-200',
 };
 
-export const DAY_TYPE_EMOJI: Record<DayType, string> = { veg: '🥗', nonveg: '🍗', none: '🌤️' };
+export const DAY_TYPE_EMOJI: Record<DayType, string> = { veg: '🌸', nonveg: '🍗', none: '🌤️' };
 
 export function DayTypeChip({ type, className = '' }: { type: DayType; className?: string }) {
   return (

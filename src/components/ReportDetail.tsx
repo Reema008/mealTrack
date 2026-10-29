@@ -106,7 +106,7 @@ export function ReportDetailSheet({
                 onChange={setDayType}
                 options={[
                   { value: 'all', label: 'All' },
-                  { value: 'veg', label: '🥗 Veg' },
+                  { value: 'veg', label: '🌸 Veg' },
                   { value: 'nonveg', label: '🍗 Non-Veg' },
                 ]}
               />
