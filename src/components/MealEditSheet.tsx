@@ -86,7 +86,7 @@ export function MealEditSheet({ meal, pending, onClose }: { meal: EffectiveMeal;
         <h2 id="edit-title" className="text-2xl">
           Edit {PERIOD_LABEL[meal.period].toLowerCase()}
         </h2>
-        <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
+        <p className="mb-4 text-sm text-slate-600 dark:text-slate-300">
           {formatLong(meal.date)} · {nonveg ? 'Non-Veg' : 'Veg'}
           {future && ' · planned (future date)'}
         </p>

@@ -40,7 +40,7 @@ export function DayMeals({
           🌤️
         </p>
         <p className="mt-3 font-display text-2xl">No Delivery Scheduled</p>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Sunday is a day off. Enjoy your meal at home!</p>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Sunday is a day off. Enjoy your meal at home!</p>
       </div>
     );
   }

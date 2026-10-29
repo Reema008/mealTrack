@@ -7,7 +7,7 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 const VARIANTS: Record<Variant, string> = {
   primary: 'bg-emerald-600 text-white shadow-soft hover:bg-emerald-700 disabled:bg-emerald-600/50 disabled:shadow-none',
   secondary:
-    'bg-white text-slate-800 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600 dark:hover:bg-slate-700',
+    'bg-white text-slate-800 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-50 dark:ring-slate-600 dark:hover:bg-slate-700',
   ghost: 'text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-slate-800',
   danger: 'bg-white text-rose-700 ring-1 ring-inset ring-rose-300 hover:bg-rose-50 dark:bg-slate-800 dark:text-rose-300 dark:ring-rose-700',
 };
@@ -37,7 +37,7 @@ export function Card({ children, className = '' }: { children: ReactNode; classN
 const DAY_TYPE_STYLE: Record<DayType, string> = {
   veg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200',
   nonveg: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-200',
-  none: 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+  none: 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
 };
 
 export const DAY_TYPE_EMOJI: Record<DayType, string> = { veg: '🥗', nonveg: '🍗', none: '🌤️' };
@@ -89,7 +89,7 @@ export function StatusBadge({ kind }: { kind: BadgeKind | null }) {
 
 export function Spinner({ label = 'Loading' }: { label?: string }) {
   return (
-    <div role="status" className="flex items-center justify-center gap-2 py-8 text-sm text-slate-600 dark:text-slate-400">
+    <div role="status" className="flex items-center justify-center gap-2 py-8 text-sm text-slate-600 dark:text-slate-300">
       <span className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" aria-hidden />
       {label}…
     </div>
@@ -122,7 +122,7 @@ export function Segmented<T extends string | boolean>({
 }) {
   return (
     <fieldset>
-      <legend className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">{label}</legend>
+      <legend className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">{label}</legend>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(5.5rem,1fr))] gap-2" role="radiogroup" aria-label={label}>
         {options.map((o) => {
           const selected = o.value === value;
@@ -140,7 +140,7 @@ export function Segmented<T extends string | boolean>({
               className={`min-h-12 rounded-xl px-3 py-1.5 text-sm leading-tight font-semibold ring-1 ring-inset transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
                 selected
                   ? tone
-                  : 'bg-white text-slate-700 ring-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600'
+                  : 'bg-white text-slate-700 ring-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-50 dark:ring-slate-600'
               }`}
             >
               {o.label}
@@ -161,7 +161,7 @@ export function PasswordField({
   const [visible, setVisible] = useState(false);
   return (
     <div>
-      <label htmlFor={id} className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+      <label htmlFor={id} className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
         {label}
       </label>
       <div className="relative">
@@ -171,7 +171,7 @@ export function PasswordField({
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
-          className="block min-h-11 w-full rounded-xl border-0 bg-white py-2 pl-3 pr-12 text-base text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-600 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
+          className="block min-h-11 w-full rounded-xl border-0 bg-white py-2 pl-3 pr-12 text-base text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-600 dark:bg-slate-800 dark:text-slate-50 dark:ring-slate-600"
           {...props}
         />
         <button
@@ -181,7 +181,7 @@ export function PasswordField({
           aria-pressed={visible}
           aria-label={visible ? 'Hide password' : 'Show password'}
           title={visible ? 'Hide password' : 'Show password'}
-          className="absolute inset-y-0 right-1 my-1 flex w-11 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+          className="absolute inset-y-0 right-1 my-1 flex w-11 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             {visible ? (
@@ -212,12 +212,12 @@ export function TextField({
 }: React.InputHTMLAttributes<HTMLInputElement> & { label: string; id: string }) {
   return (
     <div>
-      <label htmlFor={id} className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+      <label htmlFor={id} className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
         {label}
       </label>
       <input
         id={id}
-        className="block min-h-11 w-full rounded-xl border-0 bg-white px-3 text-base text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-600 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
+        className="block min-h-11 w-full rounded-xl border-0 bg-white px-3 text-base text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-600 dark:bg-slate-800 dark:text-slate-50 dark:ring-slate-600"
         {...props}
       />
     </div>
@@ -250,7 +250,7 @@ export function FilterChips<T extends string>({
             className={`min-h-9 rounded-full px-3.5 py-1 text-xs font-semibold ring-1 ring-inset transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
               selected
                 ? 'bg-emerald-600 text-white ring-emerald-600'
-                : 'bg-white/80 text-slate-700 ring-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600'
+                : 'bg-white/80 text-slate-700 ring-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-50 dark:ring-slate-600'
             }`}
           >
             {o.label}

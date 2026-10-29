@@ -43,7 +43,7 @@ export function CalendarPage() {
             role="tab"
             aria-selected={view === v}
             onClick={() => setView(v)}
-            className={`min-h-10 rounded-lg text-sm font-semibold ${view === v ? 'bg-white shadow-sm dark:bg-slate-900' : 'text-slate-600 dark:text-slate-400'}`}
+            className={`min-h-10 rounded-lg text-sm font-semibold ${view === v ? 'bg-white shadow-sm dark:bg-slate-900' : 'text-slate-600 dark:text-slate-300'}`}
           >
             {v === 'month' ? 'Month' : 'List'}
           </button>
@@ -84,7 +84,7 @@ export function CalendarPage() {
                     <DayTypeChip type={getDayType(d)} />
                   </div>
                   {meals.length === 0 ? (
-                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">No delivery scheduled</p>
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">No delivery scheduled</p>
                   ) : (
                     <ul className="mt-2 space-y-1">
                       {meals.map((m) => (

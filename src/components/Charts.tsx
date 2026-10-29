@@ -31,7 +31,7 @@ export function StatCard({
   const body = (
     <>
       <span className="flex items-start justify-between gap-2">
-        <span className="min-w-0 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">{label}</span>
+        <span className="min-w-0 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">{label}</span>
         {emoji && (
           <span className="text-lg leading-none" aria-hidden>
             {emoji}
@@ -39,7 +39,7 @@ export function StatCard({
         )}
       </span>
       <span className="mt-2 block break-words font-display text-3xl tabular-nums text-slate-900 dark:text-slate-50">{value}</span>
-      {hint && <span className="mt-1 block text-xs text-slate-600 dark:text-slate-400">{hint}</span>}
+      {hint && <span className="mt-1 block text-xs text-slate-600 dark:text-slate-300">{hint}</span>}
       {onClick && (
         <span className="mt-2 block text-xs font-semibold text-emerald-700 dark:text-emerald-300" aria-hidden>
           View details →
@@ -72,11 +72,11 @@ export function SplitBar({ title, parts }: { title: string; parts: Array<{ label
         {total > 0 &&
           parts.map((p) => p.value > 0 && <div key={p.label} className={`${p.className} rounded-full`} style={{ width: `${(p.value / total) * 100}%` }} />)}
       </div>
-      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-400">
+      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
         {parts.map((p) => (
           <li key={p.label} className="flex items-center gap-1.5">
             <span className={`h-2.5 w-2.5 rounded-full ${p.className}`} aria-hidden />
-            {p.label}: <span className="font-semibold tabular-nums text-slate-900 dark:text-slate-100">{p.value}</span>
+            {p.label}: <span className="font-semibold tabular-nums text-slate-900 dark:text-slate-50">{p.value}</span>
           </li>
         ))}
       </ul>
@@ -115,13 +115,13 @@ export function DailyChart({ daily }: { daily: MealStats['daily'] }) {
         })}
       </svg>
       {showLabels && (
-        <div className="grid text-center text-[10px] text-slate-500 dark:text-slate-400" style={{ gridTemplateColumns: `repeat(${daily.length}, 1fr)` }} aria-hidden>
+        <div className="grid text-center text-[10px] text-slate-500 dark:text-slate-300" style={{ gridTemplateColumns: `repeat(${daily.length}, 1fr)` }} aria-hidden>
           {daily.map((d) => (
             <span key={d.date}>{formatDate(d.date, { day: 'numeric' })}</span>
           ))}
         </div>
       )}
-      <ul className="mt-2 flex flex-wrap gap-x-4 text-xs text-slate-600 dark:text-slate-400">
+      <ul className="mt-2 flex flex-wrap gap-x-4 text-xs text-slate-600 dark:text-slate-300">
         <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />Delivered</li>
         <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-rose-400" />Not received</li>
         <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-amber-300" />Pending</li>
@@ -166,7 +166,7 @@ export function CategoryTile({
         {stats.notReceived > 0 && <span className="rounded-full bg-rose-400" style={{ width: `${(stats.notReceived / total) * 100}%` }} />}
         {stats.upcoming > 0 && <span className="rounded-full bg-sky-300" style={{ width: `${(stats.upcoming / total) * 100}%` }} />}
       </span>
-      <span className="mt-2 block text-xs text-slate-700 dark:text-slate-300">
+      <span className="mt-2 block text-xs text-slate-700 dark:text-slate-200">
         <strong>{stats.delivered}</strong> delivered · <strong>{stats.notReceived}</strong> not received
         {stats.upcoming > 0 && <> · {stats.upcoming} upcoming</>}
       </span>

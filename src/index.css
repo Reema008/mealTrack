@@ -29,7 +29,7 @@ body {
 }
 
 .dark body {
-  color: theme('colors.cocoa.100');
+  color: theme('colors.cocoa.50');
   background-color: theme('colors.cocoa.950');
   background-image:
     radial-gradient(38rem 26rem at 110% -5%, rgba(134, 58, 36, 0.25), transparent 60%),
@@ -47,7 +47,7 @@ body {
   color: theme('colors.cocoa.900');
 }
 .dark #root {
-  color: theme('colors.cocoa.100');
+  color: theme('colors.cocoa.50');
 }
 h1,
 h2,
@@ -61,7 +61,7 @@ summary {
 .dark h3,
 .dark figcaption,
 .dark summary {
-  color: theme('colors.cocoa.50');
+  color: #ffffff;
 }
 
 /* Elegant serif for headings. */

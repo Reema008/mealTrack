@@ -67,7 +67,7 @@ export function MonthCalendar({
 
   return (
     <div>
-      <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-slate-500 dark:text-slate-400" aria-hidden>
+      <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-slate-500 dark:text-slate-300" aria-hidden>
         {headers.map((d) => (
           <div key={d} className="py-1">
             {weekdayShort(d)}
@@ -92,8 +92,8 @@ export function MonthCalendar({
                 isSel
                   ? 'bg-emerald-600 font-semibold text-white'
                   : inMonth
-                    ? 'bg-white text-slate-900 ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-white/[0.05] dark:text-slate-100 dark:ring-white/[0.06]'
-                    : 'text-slate-400 dark:text-slate-600'
+                    ? 'bg-white text-slate-900 ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-white/[0.05] dark:text-slate-50 dark:ring-white/[0.06]'
+                    : 'text-slate-400 dark:text-slate-400'
               } ${isToday && !isSel ? 'ring-2 ring-emerald-600 dark:ring-emerald-500' : ''} ${d > today && !isSel && inMonth ? 'bg-slate-50 dark:bg-white/[0.02]' : ''}`}
             >
               <span>{Number(formatDate(d, { day: 'numeric' }))}</span>
@@ -107,7 +107,7 @@ export function MonthCalendar({
           );
         })}
       </div>
-      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-400">
+      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
         <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" />Veg</li>
         <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-orange-500" />Non-Veg</li>
         <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-slate-300" />No delivery</li>
@@ -148,7 +148,7 @@ export function WeekStrip({
               className={`flex w-full min-w-0 flex-col items-center gap-0.5 rounded-xl px-0.5 py-2 text-xs leading-tight ring-1 transition-colors ${
                 d === today
                   ? 'bg-emerald-600 text-white ring-emerald-600'
-                  : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50 dark:bg-white/[0.05] dark:text-slate-200 dark:ring-white/[0.06]'
+                  : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50 dark:bg-white/[0.05] dark:text-slate-50 dark:ring-white/[0.06]'
               }`}
             >
               <span className="font-medium">{weekdayShort(d)}</span>

@@ -29,7 +29,7 @@ function SubscriptionSection() {
   return (
     <Card>
       <h2 className="mb-1 text-xl">Subscription</h2>
-      <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">{subs.isLoading ? 'Loading…' : summary}</p>
+      <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">{subs.isLoading ? 'Loading…' : summary}</p>
       <Link
         to="/subscriptions"
         className="inline-flex min-h-11 items-center justify-center rounded-full bg-emerald-600 px-5 text-sm font-semibold text-white shadow-soft hover:bg-emerald-700"
@@ -61,7 +61,7 @@ function TimezoneSection() {
   return (
     <Card>
       <h2 className="mb-1 text-xl">Timezone</h2>
-      <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">Decides what “today” is, the 2 PM / 10 PM meal times, and the 10 PM reminder.</p>
+      <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">Decides what “today” is, the 2 PM / 10 PM meal times, and the 10 PM reminder.</p>
       <form
         className="flex flex-wrap items-end gap-2"
         onSubmit={(e) => {
@@ -117,7 +117,7 @@ function RemindersSection() {
   return (
     <Card>
       <h2 className="mb-1 text-xl">Daily 10 PM reminder</h2>
-      <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">
+      <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
         Monday–Saturday at 10:00 PM ({household.timezone}), a push notification asks you to check today’s meals. Reminders never mark meals as confirmed.
       </p>
       {support === 'not-configured' && <p className="text-sm text-amber-800 dark:text-amber-300">Push notifications are not configured for this app build (missing VAPID public key).</p>}
@@ -129,7 +129,7 @@ function RemindersSection() {
       {support === 'supported' && (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className="text-sm text-slate-700 dark:text-slate-200">
+            <span className="text-sm text-slate-700 dark:text-slate-50">
               Reminders on this phone: <strong className={enabled && deviceSubscribed ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-900 dark:text-slate-50'}>{pref.isLoading ? '…' : enabled && deviceSubscribed ? 'On' : 'Off'}</strong>
             </span>
             {enabled && deviceSubscribed ? (

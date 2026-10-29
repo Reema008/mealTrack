@@ -108,7 +108,7 @@ function ConfirmDialog({ options, onClose }: { options: ConfirmOptions; onClose:
           </h2>
         </div>
         {options.message && (
-          <div id="confirm-message" className="px-6 pt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+          <div id="confirm-message" className="px-6 pt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-200">
             {options.message}
           </div>
         )}

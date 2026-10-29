@@ -44,7 +44,7 @@ function SyncIndicator({ sync }: { sync: SyncState }) {
     dot = 'bg-amber-400';
   }
   return (
-    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-white/80 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700" role="status" aria-live="polite">
+    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-white/80 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700" role="status" aria-live="polite">
       <span className={`h-2 w-2 rounded-full ${dot}`} aria-hidden />
       {text}
     </span>
@@ -88,7 +88,7 @@ function OfflineConflictDialog({ conflict, onDone }: { conflict: SyncConflict; o
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 sm:items-center">
       <div role="alertdialog" aria-modal="true" aria-labelledby="conflict-title" className="max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] dark:bg-slate-900 sm:rounded-3xl">
         <h2 id="conflict-title" className="text-2xl">Someone else changed this meal</h2>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
           {PERIOD_LABEL[conflict.period]} on {formatLong(conflict.date)} was changed on another phone just before your change was saved.
         </p>
         <dl className="mt-3 space-y-1 text-sm">
@@ -117,7 +117,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <img src="./icons/icon.svg" alt="" className="h-10 w-10 shrink-0 rounded-2xl shadow-soft" />
             <div className="min-w-0">
             <p className="truncate font-display text-2xl leading-none text-slate-900 dark:text-slate-50">MealTrack</p>
-            <p className="truncate text-xs text-slate-600 dark:text-slate-400">Lunch & dinner tracker</p>
+            <p className="truncate text-xs text-slate-600 dark:text-slate-300">Lunch & dinner tracker</p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -141,7 +141,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   end={n.to === '/'}
                   className={({ isActive }) =>
                     `flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-center text-[11px] font-semibold leading-tight transition-colors ${
-                      isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200' : 'text-slate-600 dark:text-slate-400'
+                      isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200' : 'text-slate-600 dark:text-slate-300'
                     }`
                   }
                 >

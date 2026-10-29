@@ -21,7 +21,7 @@ export function HomePage() {
   return (
     <div className="space-y-5">
       <section aria-labelledby="today-heading">
-        <p className="text-sm text-slate-600 dark:text-slate-400">{greeting}</p>
+        <p className="text-sm text-slate-600 dark:text-slate-300">{greeting}</p>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
           <h1 id="today-heading" className="text-3xl">
             {formatLong(today)}
@@ -49,8 +49,8 @@ export function HomePage() {
         </div>
         <WeekStrip start={weekStart} today={today} map={map} pendingKeys={pendingKeys} onSelect={(d) => navigate(`/day/${d}`)} />
         {!isLoading && !error && (
-          <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
-            So far: <span className="font-semibold text-slate-900 dark:text-slate-100">{week.actual.delivered}</span> of {week.actual.meals} meals
+          <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+            So far: <span className="font-semibold text-slate-900 dark:text-slate-50">{week.actual.delivered}</span> of {week.actual.meals} meals
             delivered ({formatPercent(week.actual.successRate)})
             {week.actual.assumedMeals > 0 && <>, {week.actual.assumedMeals} assumed</>}. {week.planned.meals} planned for later this week.
           </p>

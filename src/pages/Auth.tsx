@@ -13,7 +13,7 @@ function Screen({ subtitle, children }: { subtitle: string; children: ReactNode 
       <div className="mb-6 text-center">
         <img src="./icons/icon.svg" alt="" className="mx-auto h-20 w-20 rounded-[1.75rem] shadow-soft" />
         <h1 className="mt-4 text-4xl text-slate-900 dark:text-slate-50">MealTrack</h1>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{subtitle}</p>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{subtitle}</p>
       </div>
       {children}
     </div>
@@ -52,7 +52,7 @@ export function LoginPage({ notice }: { notice: string | null }) {
       <Card>
         <form className="space-y-4" onSubmit={submit}>
           <h2 className="text-2xl">Sign in</h2>
-          {notice && <p className="text-sm text-slate-600 dark:text-slate-400">{notice}</p>}
+          {notice && <p className="text-sm text-slate-600 dark:text-slate-300">{notice}</p>}
           <TextField
             id="username"
             label="Username"
@@ -69,7 +69,7 @@ export function LoginPage({ notice }: { notice: string | null }) {
           <Button type="submit" className="w-full" disabled={busy || !username.trim() || !password}>
             {busy ? 'Signing in…' : 'Sign in'}
           </Button>
-          <p className="text-center text-xs text-slate-600 dark:text-slate-400">No account or forgot your password? Ask your MealTrack admin.</p>
+          <p className="text-center text-xs text-slate-600 dark:text-slate-300">No account or forgot your password? Ask your MealTrack admin.</p>
         </form>
       </Card>
     </Screen>
@@ -103,7 +103,7 @@ export function ChangePasswordForm({ onDone, onCancel }: { onDone: () => void; o
     <form className="space-y-4" onSubmit={submit}>
       <PasswordField id="new-password" label="New password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
       <PasswordField id="confirm-password" label="Type it again" autoComplete="new-password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} required />
-      <p className="text-xs text-slate-600 dark:text-slate-400">At least 8 characters.</p>
+      <p className="text-xs text-slate-600 dark:text-slate-300">At least 8 characters.</p>
       <FormError message={error} />
       <div className="flex flex-wrap justify-end gap-2">
         {onCancel && (
@@ -125,7 +125,7 @@ export function FirstPasswordPage({ name, membershipKey }: { name: string; membe
     <Screen subtitle={`Welcome, ${name}`}>
       <Card>
         <h2 className="text-2xl">Choose your password</h2>
-        <p className="mb-4 mt-1 text-sm text-slate-600 dark:text-slate-400">
+        <p className="mb-4 mt-1 text-sm text-slate-600 dark:text-slate-300">
           You signed in with a temporary password. Pick your own so only you know it.
         </p>
         <ChangePasswordForm onDone={() => void qc.invalidateQueries({ queryKey: membershipKey })} />

@@ -36,8 +36,8 @@ const PERIOD_STYLE: Record<MealPeriod, { emoji: string; tint: string }> = {
 function Row({ label, value, bad }: { label: string; value: string; bad?: boolean }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 py-2">
-      <dt className="text-sm text-slate-600 dark:text-slate-400">{label}</dt>
-      <dd className={`ml-auto text-right text-sm font-semibold ${bad ? 'text-rose-700 dark:text-rose-300' : 'text-slate-900 dark:text-slate-100'}`}>{value}</dd>
+      <dt className="text-sm text-slate-600 dark:text-slate-300">{label}</dt>
+      <dd className={`ml-auto text-right text-sm font-semibold ${bad ? 'text-rose-700 dark:text-rose-300' : 'text-slate-900 dark:text-slate-50'}`}>{value}</dd>
     </div>
   );
 }
@@ -76,7 +76,7 @@ export function MealCard({ meal, pending, onEdit }: { meal: EffectiveMeal; pendi
         )}
       </dl>
       {meal.timing === 'pending' && (
-        <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+        <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
           Assumed delivered from {cutoffLabel(meal.period)} unless someone marks it.
         </p>
       )}

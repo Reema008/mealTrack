@@ -102,7 +102,7 @@ function AlertModal({ alert, onClose }: { alert: Alert; onClose: () => void }) {
             {t.title}
           </h2>
         </div>
-        <p id="alert-message" className="px-6 pt-1 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+        <p id="alert-message" className="px-6 pt-1 text-sm leading-relaxed text-slate-700 dark:text-slate-200">
           {alert.message}
         </p>
         <div className="p-5 pt-5">

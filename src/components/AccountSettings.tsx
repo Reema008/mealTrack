@@ -52,7 +52,7 @@ function ChangeUsernameForm({ userId, current, name, onClose }: { userId: string
         onChange={(e) => setUsername(e.target.value)}
         required
       />
-      <p className="-mt-1 text-xs text-slate-600 dark:text-slate-400">3–30 characters: letters, numbers, dot, dash or underscore. The password stays the same.</p>
+      <p className="-mt-1 text-xs text-slate-600 dark:text-slate-300">3–30 characters: letters, numbers, dot, dash or underscore. The password stays the same.</p>
       {error && (
         <p role="alert" className="text-sm text-rose-700 dark:text-rose-300">
           {error}
@@ -79,9 +79,9 @@ export function MyAccountSection() {
   return (
     <Card>
       <h2 className="mb-1 text-xl">My account</h2>
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">Signed in as</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">Signed in as</p>
       <p className="break-all font-display text-3xl leading-tight text-slate-900 dark:text-slate-50">{membership.username ?? membership.display_name}</p>
-      <p className="mb-3 mt-0.5 text-sm text-slate-600 dark:text-slate-400">
+      <p className="mb-3 mt-0.5 text-sm text-slate-600 dark:text-slate-300">
         {membership.username && <>{membership.display_name} · </>}
         {membership.role === 'admin' ? 'Admin' : 'Member'}
       </p>
@@ -154,9 +154,9 @@ function NewAccountForm({ onClose }: { onClose: () => void }) {
         onChange={(e) => setUsername(e.target.value)}
         required
       />
-      <p className="-mt-1 text-xs text-slate-600 dark:text-slate-400">3–30 characters: letters, numbers, dot, dash or underscore.</p>
+      <p className="-mt-1 text-xs text-slate-600 dark:text-slate-300">3–30 characters: letters, numbers, dot, dash or underscore.</p>
       <PasswordField id="acc-password" label="Temporary password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-      <p className="-mt-1 text-xs text-slate-600 dark:text-slate-400">At least 8 characters. They choose their own when they first sign in.</p>
+      <p className="-mt-1 text-xs text-slate-600 dark:text-slate-300">At least 8 characters. They choose their own when they first sign in.</p>
       <Segmented<'member' | 'admin'>
         label="Access"
         value={role}
@@ -259,9 +259,9 @@ function AccountRow({ account }: { account: Account }) {
         <div className="min-w-0">
           <p className="break-all font-display text-xl leading-tight text-slate-900 dark:text-slate-50">
             {account.username ?? account.display_name}
-            {isMe && <span className="font-sans text-sm font-normal text-slate-600 dark:text-slate-400"> (you)</span>}
+            {isMe && <span className="font-sans text-sm font-normal text-slate-600 dark:text-slate-300"> (you)</span>}
           </p>
-          <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
+          <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">
             {account.username && <>{account.display_name} · </>}
             {account.role === 'admin' ? 'Admin' : 'Member'}
             {account.must_change_password && ' · temporary password'}
@@ -326,7 +326,7 @@ export function FamilyAccountsSection() {
         <h2 className="text-xl">Family accounts</h2>
         {!adding && <Button onClick={() => setAdding(true)}>+ Add person</Button>}
       </div>
-      <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">Only people with an account can open MealTrack. You create their username and a temporary password.</p>
+      <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">Only people with an account can open MealTrack. You create their username and a temporary password.</p>
       {adding && (
         <div className="mb-3">
           <NewAccountForm onClose={() => setAdding(false)} />

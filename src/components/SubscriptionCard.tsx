@@ -26,7 +26,7 @@ export function SubscriptionCard() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0 flex-1 basis-48">
             <h2 className="text-xl">Subscription</h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">Record your renewal date and amount to track each 4-week subscription.</p>
+            <p className="text-sm text-slate-600 dark:text-slate-300">Record your renewal date and amount to track each 4-week subscription.</p>
           </div>
           <Link to="/subscriptions" className={linkButton}>Add</Link>
         </div>
@@ -40,7 +40,7 @@ export function SubscriptionCard() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0 flex-1 basis-48">
             <h2 className="text-xl">Renewal due</h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-sm text-slate-600 dark:text-slate-300">
               The last subscription ended on {formatShort(status.period.end)} ({formatAmount(status.period.record.amount)}).
             </p>
           </div>
@@ -56,7 +56,7 @@ export function SubscriptionCard() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0 flex-1 basis-48">
             <h2 className="text-xl">Subscription</h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-sm text-slate-600 dark:text-slate-300">
               Next subscription starts {formatShort(status.period.start)} · {formatAmount(status.period.record.amount)}
             </p>
           </div>
@@ -76,13 +76,13 @@ export function SubscriptionCard() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-xl">Subscription</h2>
-          <p className="text-xs text-slate-600 dark:text-slate-400">
-            {formatShort(p.start)} – {formatShort(p.end)} · <strong className="text-slate-900 dark:text-slate-100">{formatAmount(p.record.amount)}</strong>
+          <p className="text-xs text-slate-600 dark:text-slate-300">
+            {formatShort(p.start)} – {formatShort(p.end)} · <strong className="text-slate-900 dark:text-slate-50">{formatAmount(p.record.amount)}</strong>
           </p>
         </div>
         <div className="text-right">
           <p className="font-display text-2xl leading-none">{daysLeft === 0 ? 'Last day' : `${daysLeft} days left`}</p>
-          <p className="text-xs text-slate-600 dark:text-slate-400">renews {formatShort(p.renewsOn)}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-300">renews {formatShort(p.renewsOn)}</p>
         </div>
       </div>
       <div
@@ -96,8 +96,8 @@ export function SubscriptionCard() {
         <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600" style={{ width: `${pct}%` }} />
       </div>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
-        <span className="text-slate-600 dark:text-slate-400">
-          Day <strong className="text-slate-900 dark:text-slate-100">{day}</strong> of {p.days}
+        <span className="text-slate-600 dark:text-slate-300">
+          Day <strong className="text-slate-900 dark:text-slate-50">{day}</strong> of {p.days}
           {!isLoading && <> · {s.actual.delivered} of {s.scheduledTotal} meals ({formatPercent(s.actual.successRate)})</>}
         </span>
         <Link to="/subscriptions" className="font-semibold text-emerald-700 hover:underline dark:text-emerald-300">

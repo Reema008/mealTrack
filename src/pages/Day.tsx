@@ -25,7 +25,7 @@ export function DayPage() {
         </Button>
         <div className="min-w-0 text-center">
           <h1 className="text-lg font-semibold">{formatLong(date)}</h1>
-          <p className="text-xs text-slate-600 dark:text-slate-400">{timing}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-300">{timing}</p>
         </div>
         <Button variant="secondary" onClick={() => navigate(`/day/${addDays(date, 1)}`)} aria-label="Next day">
           →

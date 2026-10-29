@@ -69,11 +69,11 @@ function SubscriptionForm({
     <form className="space-y-3" onSubmit={submit}>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
         <div>
-          <label htmlFor={`start-${submitLabel}`} className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Start date</label>
+          <label htmlFor={`start-${submitLabel}`} className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Start date</label>
           <input id={`start-${submitLabel}`} type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} required />
         </div>
         <div>
-          <label htmlFor={`amount-${submitLabel}`} className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Amount (₹)</label>
+          <label htmlFor={`amount-${submitLabel}`} className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Amount (₹)</label>
           <input
             id={`amount-${submitLabel}`}
             inputMode="decimal"
@@ -117,7 +117,7 @@ function PeriodCard({
   const costPerMeal = period.record.amount !== null && a.delivered > 0 ? period.record.amount / a.delivered : null;
   const chip = {
     Current: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200',
-    Ended: 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+    Ended: 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
     Upcoming: 'bg-sky-100 text-sky-800 dark:bg-sky-900/60 dark:text-sky-200',
   }[label];
 
@@ -128,7 +128,7 @@ function PeriodCard({
           <p className="font-display text-lg leading-tight">
             {formatShort(period.start)} – {formatShort(period.end)}
           </p>
-          <p className="text-xs text-slate-600 dark:text-slate-400">
+          <p className="text-xs text-slate-600 dark:text-slate-300">
             {period.days} days{period.days < 28 && ' (renewed early)'}
           </p>
         </div>
@@ -140,24 +140,24 @@ function PeriodCard({
 
       <dl className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-2 text-sm">
         <div className="rounded-2xl bg-emerald-50/80 p-2 dark:bg-emerald-950/40">
-          <dt className="text-xs text-slate-600 dark:text-slate-400">Delivered</dt>
+          <dt className="text-xs text-slate-600 dark:text-slate-300">Delivered</dt>
           <dd className="font-semibold">{a.delivered} / {s.scheduledTotal}</dd>
         </div>
         <div className="rounded-2xl bg-rose-50/80 p-2 dark:bg-rose-950/40">
-          <dt className="text-xs text-slate-600 dark:text-slate-400">Not received</dt>
+          <dt className="text-xs text-slate-600 dark:text-slate-300">Not received</dt>
           <dd className="font-semibold">{a.notReceived}</dd>
         </div>
         <div className="rounded-2xl bg-sky-50/80 p-2 dark:bg-sky-950/40">
-          <dt className="text-xs text-slate-600 dark:text-slate-400">Success</dt>
+          <dt className="text-xs text-slate-600 dark:text-slate-300">Success</dt>
           <dd className="font-semibold">{formatPercent(a.successRate)}</dd>
         </div>
         <div className="rounded-2xl bg-amber-50/80 p-2 dark:bg-amber-950/40">
-          <dt className="text-xs text-slate-600 dark:text-slate-400">Per delivered meal</dt>
+          <dt className="text-xs text-slate-600 dark:text-slate-300">Per delivered meal</dt>
           <dd className="font-semibold">{costPerMeal === null ? '—' : formatAmount(Math.round(costPerMeal * 100) / 100)}</dd>
         </div>
       </dl>
       {(s.planned.meals > 0 || s.pending > 0) && (
-        <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+        <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
           {s.planned.meals + s.pending} meals still to come in this subscription.
         </p>
       )}
@@ -244,12 +244,12 @@ export function SubscriptionsPage() {
     <div className="space-y-4">
       <div>
         <h1 className="text-3xl">Subscriptions</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400">Each subscription covers 4 weeks from its start date.</p>
+        <p className="text-sm text-slate-600 dark:text-slate-300">Each subscription covers 4 weeks from its start date.</p>
       </div>
 
       <Card>
         <h2 className="mb-1 text-xl">{status.kind === 'ended' ? 'Renewal due' : 'Record a renewal'}</h2>
-        <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">
+        <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
           {status.kind === 'active'
             ? `The current subscription renews on ${formatShort(status.period.renewsOn)}.`
             : status.kind === 'ended'
@@ -276,20 +276,20 @@ export function SubscriptionsPage() {
       ) : subs.isLoading || overrides.isLoading ? (
         <Spinner label="Loading subscriptions" />
       ) : periods.length === 0 ? (
-        <p className="py-6 text-center text-sm text-slate-600 dark:text-slate-400">No subscriptions recorded yet. 🌿</p>
+        <p className="py-6 text-center text-sm text-slate-600 dark:text-slate-300">No subscriptions recorded yet. 🌿</p>
       ) : (
         <>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-2">
             <div className="rounded-3xl bg-amber-100/80 p-3 shadow-soft dark:bg-amber-950/50">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">Total paid</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">Total paid</p>
               <p className="mt-1 font-display text-xl">{formatAmount(totalSpent)}</p>
             </div>
             <div className="rounded-3xl bg-sky-100/80 p-3 shadow-soft dark:bg-sky-950/50">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">Subscriptions</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">Subscriptions</p>
               <p className="mt-1 font-display text-xl">{periods.length}</p>
             </div>
             <div className="rounded-3xl bg-emerald-100/80 p-3 shadow-soft dark:bg-emerald-950/50">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">Avg / meal</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">Avg / meal</p>
               <p className="mt-1 font-display text-xl">
                 {deliveredWithAmount > 0 ? formatAmount(Math.round((totalSpent / deliveredWithAmount) * 100) / 100) : '—'}
               </p>

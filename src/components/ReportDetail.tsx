@@ -91,13 +91,13 @@ export function ReportDetailSheet({
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h2 id="detail-title" className="text-2xl">{info.title}</h2>
-              <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">{rangeLabel}</p>
+              <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">{rangeLabel}</p>
             </div>
             <Button variant="secondary" className="min-h-9 shrink-0 px-3" onClick={onClose} aria-label="Close details">
               ✕
             </Button>
           </div>
-          <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">{info.help}</p>
+          <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{info.help}</p>
           {dayTypeFilterable && (
             <div className="mt-3">
               <FilterChips
@@ -149,7 +149,7 @@ export function ReportDetailSheet({
 
         <div className="overflow-y-auto p-5 pt-3">
           {groups.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-600 dark:text-slate-400">Nothing here for this period. 🌿</p>
+            <p className="py-8 text-center text-sm text-slate-600 dark:text-slate-300">Nothing here for this period. 🌿</p>
           ) : (
             <ol className="space-y-3">
               {groups.map((g) => (
