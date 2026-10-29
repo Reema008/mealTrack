@@ -2,8 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useToast } from '../components/Toast';
 import { Button, Card } from '../components/ui';
-import { formatShort, isISODate, isValidTimeZone, todayInTimeZone } from '../domain/dates';
-import { PERIOD_DAYS, periodProgress } from '../domain/subscription';
+import { Link } from 'react-router-dom';
+import { formatShort, isValidTimeZone } from '../domain/dates';
+import { formatAmount, subscriptionStatus } from '../domain/subscription';
+import { useSubscriptions } from '../data/subscriptions';
 import { fetchReminderPreference, setReminderPreference, updateHousehold } from '../data/api';
 import { membershipKey, useHousehold } from '../data/household';
 import { currentSubscription, enablePushOnThisDevice, pushSupport, sendTestNotification } from '../lib/push';
@@ -11,60 +13,28 @@ import { currentSubscription, enablePushOnThisDevice, pushSupport, sendTestNotif
 const TIMEZONES = ['Asia/Kolkata', 'Asia/Dubai', 'Asia/Singapore', 'Europe/London', 'America/New_York', 'America/Los_Angeles', 'Australia/Sydney'];
 
 function SubscriptionSection() {
-  const { household, userId } = useHousehold();
-  const qc = useQueryClient();
-  const toast = useToast();
-  const [date, setDate] = useState(household.subscription_start ?? todayInTimeZone(household.timezone));
-  const today = todayInTimeZone(household.timezone);
-  const progress = household.subscription_start ? periodProgress(household.subscription_start, today) : null;
-
-  const save = useMutation({
-    mutationFn: async () => {
-      if (!isISODate(date)) throw new Error('Choose the renewal date.');
-      await updateHousehold(household.id, { subscription_start: date });
-    },
-    onSuccess: () => {
-      toast('Renewal date saved.');
-      void qc.invalidateQueries({ queryKey: membershipKey(userId) });
-    },
-    onError: (e) => toast((e as Error).message, 'error'),
-  });
+  const { today } = useHousehold();
+  const subs = useSubscriptions();
+  const status = subscriptionStatus(subs.data ?? [], today);
+  const summary =
+    status.kind === 'active'
+      ? `Current: ${formatShort(status.period.start)} – ${formatShort(status.period.end)} · ${formatAmount(status.period.record.amount)} · renews ${formatShort(status.period.renewsOn)}`
+      : status.kind === 'ended'
+        ? `Renewal due: the last subscription ended on ${formatShort(status.period.end)}.`
+        : status.kind === 'upcoming'
+          ? `Next subscription starts ${formatShort(status.period.start)}.`
+          : 'No subscriptions recorded yet.';
 
   return (
     <Card>
       <h2 className="mb-1 text-xl">Subscription</h2>
-      <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">
-        Each subscription period runs {PERIOD_DAYS / 7} weeks from the renewal date. The next period starts automatically.
-      </p>
-      {progress && (
-        <p className="mb-3 rounded-2xl bg-emerald-50 p-3 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">
-          Current period: <strong>{formatShort(progress.period.start)} – {formatShort(progress.period.end)}</strong> · day {progress.day} of {PERIOD_DAYS} ·
-          renews <strong>{formatShort(progress.period.renewsOn)}</strong>
-        </p>
-      )}
-      <form
-        className="flex flex-wrap items-end gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          save.mutate();
-        }}
+      <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">{subs.isLoading ? 'Loading…' : summary}</p>
+      <Link
+        to="/subscriptions"
+        className="inline-flex min-h-11 items-center justify-center rounded-full bg-emerald-600 px-5 text-sm font-semibold text-white shadow-soft hover:bg-emerald-700"
       >
-        <div className="min-w-0 flex-1">
-          <label htmlFor="renewal" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Renewal date
-          </label>
-          <input
-            id="renewal"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="block min-h-11 w-full rounded-2xl border-0 bg-white px-3 ring-1 ring-inset ring-slate-300 dark:bg-slate-800 dark:ring-slate-600"
-          />
-        </div>
-        <Button type="submit" disabled={save.isPending || date === household.subscription_start}>
-          {save.isPending ? 'Saving…' : 'Save'}
-        </Button>
-      </form>
+        Renewals & history →
+      </Link>
     </Card>
   );
 }

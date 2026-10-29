@@ -14,6 +14,7 @@ import { DayPage } from './pages/Day';
 import { HomePage } from './pages/Home';
 import { ReportsPage } from './pages/Reports';
 import { SettingsPage } from './pages/Settings';
+import { SubscriptionsPage } from './pages/Subscriptions';
 
 /** Lets the service worker deep-link an already-open window (notification click). */
 function ServiceWorkerNavigation() {
@@ -90,6 +91,7 @@ function SignedIn() {
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/subscriptions" element={<SubscriptionsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AppShell>

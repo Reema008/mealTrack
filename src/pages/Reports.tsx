@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { DailyChart, SplitBar, StatCard } from '../components/Charts';
+import { CategoryTile, DailyChart, SplitBar, StatCard } from '../components/Charts';
 import { Card, ErrorNote, Spinner, TextField } from '../components/ui';
 import { addDays, addMonths, endOfMonth, endOfWeek, formatMonth, formatShort, isISODate, startOfMonth, startOfWeek } from '../domain/dates';
 import { computeStats, formatPercent, listMeals, type ReportMetric } from '../domain/stats';
-import { periodAt, periodFor } from '../domain/subscription';
+import { subscriptionPeriods } from '../domain/subscription';
+import { useSubscriptions } from '../data/subscriptions';
+import { useSearchParams } from 'react-router-dom';
 import { ReportDetailSheet } from '../components/ReportDetail';
 import { useHousehold } from '../data/household';
 import { useOverrides } from '../data/meals';
@@ -12,12 +14,18 @@ type Mode = 'subscription' | 'week' | 'month' | 'custom';
 const MAX_CUSTOM_DAYS = 366;
 
 export function ReportsPage() {
-  const { today, nowMinutes, household } = useHousehold();
-  const renewal = household.subscription_start;
+  const { today, nowMinutes } = useHousehold();
+  const [params] = useSearchParams();
+  const periods = subscriptionPeriods(useSubscriptions().data ?? []);
+  const hasPeriods = periods.length > 0;
+  const requested = params.get('period');
+  const latestStarted = Math.max(0, periods.filter((p) => p.start <= today).length - 1);
+  const currentPeriod = requested && periods.some((p) => p.start === requested) ? periods.findIndex((p) => p.start === requested) : latestStarted;
   const [detail, setDetail] = useState<ReportMetric | null>(null);
-  const [mode, setMode] = useState<Mode>(renewal ? 'subscription' : 'week');
-  const currentPeriod = renewal ? periodFor(renewal, today).index : 0;
-  const [periodIndex, setPeriodIndex] = useState(currentPeriod);
+  const [chosenMode, setMode] = useState<Mode | null>(null);
+  const mode: Mode = chosenMode ?? (hasPeriods ? 'subscription' : 'week');
+  const [chosenIndex, setPeriodIndex] = useState<number | null>(null);
+  const periodIndex = Math.min(Math.max(chosenIndex ?? currentPeriod, 0), Math.max(periods.length - 1, 0));
   const [anchor, setAnchor] = useState(today);
   const [customStart, setCustomStart] = useState(startOfMonth(today));
   const [customEnd, setCustomEnd] = useState(today);
@@ -26,8 +34,8 @@ export function ReportsPage() {
   let end: string;
   let title: string;
   let rangeError: string | null = null;
-  if (mode === 'subscription' && renewal) {
-    const p = periodAt(renewal, periodIndex);
+  if (mode === 'subscription' && hasPeriods) {
+    const p = periods[periodIndex];
     start = p.start;
     end = p.end;
     title = `${formatShort(start)} – ${formatShort(end)}`;
@@ -60,10 +68,10 @@ export function ReportsPage() {
   const a = s.actual;
 
   const shift = (delta: number) => {
-    if (mode === 'subscription') setPeriodIndex((i) => i + delta);
+    if (mode === 'subscription') setPeriodIndex(Math.min(Math.max(periodIndex + delta, 0), periods.length - 1));
     else setAnchor(mode === 'week' ? addDays(anchor, 7 * delta) : addMonths(anchor, delta));
   };
-  const modes: Mode[] = renewal ? ['subscription', 'week', 'month', 'custom'] : ['week', 'month', 'custom'];
+  const modes: Mode[] = hasPeriods ? ['subscription', 'week', 'month', 'custom'] : ['week', 'month', 'custom'];
   const MODE_LABEL: Record<Mode, string> = { subscription: '4 weeks', week: 'Weekly', month: 'Monthly', custom: 'Custom' };
 
   return (
@@ -81,7 +89,7 @@ export function ReportsPage() {
             onClick={() => {
               setMode(m);
               setAnchor(today);
-              setPeriodIndex(currentPeriod);
+              setPeriodIndex(null);
             }}
             className={`min-h-10 rounded-full text-sm font-semibold capitalize ${mode === m ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
           >
@@ -102,7 +110,8 @@ export function ReportsPage() {
             <p className="font-display text-lg">{title}</p>
             {mode === 'subscription' && (
               <p className="text-xs text-slate-600 dark:text-slate-400">
-                {periodIndex === currentPeriod ? 'Current subscription period' : periodIndex < currentPeriod ? 'Earlier period' : 'Upcoming period'}
+                Subscription {periodIndex + 1} of {periods.length}
+                {periods[periodIndex]?.record.amount != null && ` · ₹${periods[periodIndex].record.amount!.toLocaleString('en-IN')}`}
               </p>
             )}
           </div>
@@ -130,6 +139,16 @@ export function ReportsPage() {
             <StatCard label="Egg meals" emoji="🍳" tint="butter" value={a.egg} hint="delivered" onClick={open('egg')} />
             <StatCard label="Extra curries" emoji="🍛" tint="peach" value={a.extraCurryReceived} hint={`${a.extraCurryMissing} missing of ${a.nonVegMeals}`} onClick={open('extraCurry')} />
           </div>
+
+          <section aria-labelledby="by-category" className="space-y-3">
+            <h2 id="by-category" className="text-xl">By category</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <CategoryTile label="Veg" emoji="🥗" tint="sage" stats={s.categories.veg} onClick={open('veg')} />
+              <CategoryTile label="Non-Veg" emoji="🍗" tint="peach" stats={s.categories.nonveg} onClick={open('nonveg')} />
+              <CategoryTile label="Lunch" emoji="☀️" tint="butter" stats={s.categories.lunch} onClick={open('lunch')} />
+              <CategoryTile label="Dinner" emoji="🌙" tint="lavender" stats={s.categories.dinner} onClick={open('dinner')} />
+            </div>
+          </section>
 
           <Card className="space-y-5">
             <SplitBar

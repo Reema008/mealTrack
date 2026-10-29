@@ -18,6 +18,10 @@ export const METRIC_INFO: Record<ReportMetric, { title: string; help: string }> 
   chicken: { title: 'Chicken meals', help: 'Delivered non-veg meals with chicken.' },
   egg: { title: 'Egg meals', help: 'Delivered non-veg meals with egg.' },
   extraCurry: { title: 'Extra curries', help: 'Every non-veg meal so far, showing whether the extra curries came.' },
+  veg: { title: 'Veg meals', help: 'All lunches and dinners on veg days (Mon, Thu, Sat) in this period.' },
+  nonveg: { title: 'Non-veg meals', help: 'All lunches and dinners on non-veg days (Tue, Wed, Fri) in this period.' },
+  lunch: { title: 'Lunches', help: 'Every scheduled lunch in this period, veg and non-veg.' },
+  dinner: { title: 'Dinners', help: 'Every scheduled dinner in this period, veg and non-veg.' },
 };
 
 function mealLine(m: EffectiveMeal, metric: ReportMetric): string {

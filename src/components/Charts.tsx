@@ -130,3 +130,49 @@ export function DailyChart({ daily }: { daily: MealStats['daily'] }) {
     </figure>
   );
 }
+
+/** One category tile (Veg / Non-Veg / Lunch / Dinner) with its own split bar; opens details. */
+export function CategoryTile({
+  label,
+  emoji,
+  tint,
+  stats,
+  onClick,
+}: {
+  label: string;
+  emoji: string;
+  tint: Tint;
+  stats: { scheduled: number; meals: number; delivered: number; notReceived: number; upcoming: number; successRate: number | null };
+  onClick: () => void;
+}) {
+  const total = stats.scheduled || 1;
+  const pct = stats.successRate === null ? '—' : `${Math.round(stats.successRate)}%`;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`${label}: ${stats.delivered} delivered, ${stats.notReceived} not received, ${stats.upcoming} upcoming. View details`}
+      className={`block w-full rounded-3xl p-4 text-left shadow-soft ring-1 ring-white/60 transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:ring-slate-800 ${TINTS[tint]}`}
+    >
+      <span className="flex items-center justify-between gap-2">
+        <span className="font-display text-lg">
+          <span aria-hidden>{emoji} </span>
+          {label}
+        </span>
+        <span className="font-display text-2xl tabular-nums">{pct}</span>
+      </span>
+      <span className="mt-2 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-white/70 dark:bg-slate-800" aria-hidden>
+        {stats.delivered > 0 && <span className="rounded-full bg-emerald-400" style={{ width: `${(stats.delivered / total) * 100}%` }} />}
+        {stats.notReceived > 0 && <span className="rounded-full bg-rose-400" style={{ width: `${(stats.notReceived / total) * 100}%` }} />}
+        {stats.upcoming > 0 && <span className="rounded-full bg-sky-300" style={{ width: `${(stats.upcoming / total) * 100}%` }} />}
+      </span>
+      <span className="mt-2 block text-xs text-slate-700 dark:text-slate-300">
+        <strong>{stats.delivered}</strong> delivered · <strong>{stats.notReceived}</strong> not received
+        {stats.upcoming > 0 && <> · {stats.upcoming} upcoming</>}
+      </span>
+      <span className="mt-1 block text-xs font-semibold text-emerald-700 dark:text-emerald-300" aria-hidden>
+        View details →
+      </span>
+    </button>
+  );
+}

@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { toAppError } from '../lib/errors';
+import type { SubscriptionRecord } from '../domain/subscription';
 import type { ISODate, MealOverride, MealPeriod, MealValues } from '../domain/types';
 
 export interface Household {
@@ -124,4 +125,37 @@ export async function fetchRecentNotifications(userId: string) {
     .limit(5);
   if (error) throw toAppError(error);
   return data ?? [];
+}
+
+// ---------------------------------------------------------------------------
+// Subscription renewals (history)
+// ---------------------------------------------------------------------------
+export async function fetchSubscriptions(householdId: string): Promise<SubscriptionRecord[]> {
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select('id, start_date, amount')
+    .eq('household_id', householdId)
+    .order('start_date');
+  if (error) throw toAppError(error);
+  return (data ?? []).map((r) => ({ id: r.id as string, start_date: r.start_date as string, amount: r.amount === null ? null : Number(r.amount) }));
+}
+
+function subscriptionError(err: { code?: string; message?: string }): Error {
+  if (err.code === '23505') return new Error('There is already a subscription starting on that date.');
+  return toAppError(err);
+}
+
+export async function addSubscription(householdId: string, startDate: ISODate, amount: number | null): Promise<void> {
+  const { error } = await supabase.from('subscriptions').insert({ household_id: householdId, start_date: startDate, amount });
+  if (error) throw subscriptionError(error);
+}
+
+export async function updateSubscription(id: string, startDate: ISODate, amount: number | null): Promise<void> {
+  const { error } = await supabase.from('subscriptions').update({ start_date: startDate, amount }).eq('id', id);
+  if (error) throw subscriptionError(error);
+}
+
+export async function deleteSubscription(id: string): Promise<void> {
+  const { error } = await supabase.from('subscriptions').delete().eq('id', id);
+  if (error) throw toAppError(error);
 }

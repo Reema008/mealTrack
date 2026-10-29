@@ -16,6 +16,20 @@ import type { EffectiveMeal, ISODate, OverrideMap } from './types';
  *    delivered had no extra curries, so they count as missing.
  *  - Success % = actual delivered / actual meals × 100.
  */
+/** Counts for one category of meals (veg, non-veg, lunch or dinner). */
+export interface CategoryStats {
+  scheduled: number;
+  /** Meals with an outcome so far (past, or today after the cutoff / saved). */
+  meals: number;
+  delivered: number;
+  notReceived: number;
+  /** Pending today + planned future meals. */
+  upcoming: number;
+  successRate: number | null;
+}
+
+export type MealCategory = 'veg' | 'nonveg' | 'lunch' | 'dinner';
+
 export interface MealStats {
   start: ISODate;
   end: ISODate;
@@ -47,6 +61,7 @@ export interface MealStats {
     notExpected: number;
   };
   daily: Array<{ date: ISODate; delivered: number; notReceived: number; pending: number; planned: number }>;
+  categories: Record<MealCategory, CategoryStats>;
 }
 
 export function emptyStats(start: ISODate, end: ISODate): MealStats {
@@ -74,7 +89,21 @@ export function emptyStats(start: ISODate, end: ISODate): MealStats {
     },
     planned: { meals: 0, egg: 0, chicken: 0, extraCurry: 0, notExpected: 0 },
     daily: [],
+    categories: { veg: emptyCategory(), nonveg: emptyCategory(), lunch: emptyCategory(), dinner: emptyCategory() },
   };
+}
+
+const emptyCategory = (): CategoryStats => ({ scheduled: 0, meals: 0, delivered: 0, notReceived: 0, upcoming: 0, successRate: null });
+
+function addToCategory(c: CategoryStats, m: EffectiveMeal) {
+  c.scheduled++;
+  if (m.timing === 'future' || m.timing === 'pending') {
+    c.upcoming++;
+    return;
+  }
+  c.meals++;
+  if (m.deliveryStatus === 'delivered') c.delivered++;
+  else c.notReceived++;
 }
 
 /** True when a meal has an outcome (delivered or not) to count. */
@@ -110,6 +139,8 @@ export function computeStats(
       s.scheduledTotal++;
       if (meal.period === 'lunch') s.scheduledLunch++;
       else s.scheduledDinner++;
+      addToCategory(s.categories[meal.dayType], meal);
+      addToCategory(s.categories[meal.period], meal);
       if (meal.timing === 'future') {
         addPlanned(s, meal);
         day.planned++;
@@ -127,6 +158,7 @@ export function computeStats(
 
   const a = s.actual;
   a.successRate = a.meals === 0 ? null : (a.delivered / a.meals) * 100;
+  for (const c of Object.values(s.categories)) c.successRate = c.meals === 0 ? null : (c.delivered / c.meals) * 100;
   return s;
 }
 
@@ -180,7 +212,11 @@ export type ReportMetric =
   | 'planned'
   | 'chicken'
   | 'egg'
-  | 'extraCurry';
+  | 'extraCurry'
+  | 'veg'
+  | 'nonveg'
+  | 'lunch'
+  | 'dinner';
 
 const delivered = (m: EffectiveMeal) => isActual(m) && m.deliveryStatus === 'delivered';
 
@@ -195,6 +231,10 @@ export const METRIC_FILTERS: Record<ReportMetric, (m: EffectiveMeal) => boolean>
   chicken: (m) => delivered(m) && m.mainDish === 'chicken',
   egg: (m) => delivered(m) && m.mainDish === 'egg',
   extraCurry: (m) => isActual(m) && m.dayType === 'nonveg',
+  veg: (m) => m.dayType === 'veg',
+  nonveg: (m) => m.dayType === 'nonveg',
+  lunch: (m) => m.period === 'lunch',
+  dinner: (m) => m.period === 'dinner',
 };
 
 export interface DayGroup {
