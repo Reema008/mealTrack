@@ -55,18 +55,18 @@ export function MealCard({ meal, pending, onEdit }: { meal: EffectiveMeal; pendi
     >
       <header className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 font-display text-xl">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/80 text-lg shadow-sm dark:bg-white/10" aria-hidden>
-            <span className="taro-bob">{style.emoji}</span>
+          <span className="taro-bob text-xl" aria-hidden>
+            {style.emoji}
           </span>
           {PERIOD_LABEL[meal.period]}
         </h3>
         <StatusBadge kind={badgeFor(meal, pending)} />
       </header>
-      <dl className="divide-y divide-slate-900/5 dark:divide-white/10">
+      <dl>
         <Row label="Delivery" value={deliveryLabel(meal)} bad={notReceived} />
         {meal.dayType === 'nonveg' && !notReceived && (
           <>
-            <Row label="Main dish" value={meal.mainDish === 'egg' ? 'Egg 🍳' : 'Chicken 🍗'} />
+            <Row label="Main dish" value={meal.mainDish === 'egg' ? 'Egg' : 'Chicken'} />
             <Row
               label="Extra curries"
               value={meal.extraCurryReceived ? (upcoming ? 'Expected' : 'Received') : upcoming ? 'Not expected' : 'Not Received'}
@@ -85,7 +85,7 @@ export function MealCard({ meal, pending, onEdit }: { meal: EffectiveMeal; pendi
         onClick={onEdit}
         aria-label={`Edit ${PERIOD_LABEL[meal.period].toLowerCase()} for ${formatLong(meal.date)}`}
       >
-        Edit {PERIOD_LABEL[meal.period].toLowerCase()}
+        Edit {PERIOD_LABEL[meal.period].toLowerCase()} ♡
       </Button>
     </article>
   );

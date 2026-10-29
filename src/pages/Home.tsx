@@ -11,7 +11,7 @@ import { useOverrides } from '../data/meals';
 
 export function HomePage() {
   const { today, nowMinutes } = useHousehold();
-  const greeting = nowMinutes < 12 * 60 ? 'Good morning ☀️' : nowMinutes < 17 * 60 ? 'Good afternoon 🌿' : 'Good evening 🌙';
+  const greeting = nowMinutes < 12 * 60 ? 'Good morning ♡' : nowMinutes < 17 * 60 ? 'Good afternoon ♡' : 'Good evening ♡';
   const navigate = useNavigate();
   const weekStart = startOfWeek(today);
   const weekEnd = endOfWeek(today);
@@ -21,7 +21,7 @@ export function HomePage() {
   return (
     <div className="space-y-5">
       <section aria-labelledby="today-heading">
-        <p className="text-sm text-slate-600 dark:text-slate-300">{greeting}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-300">{greeting}</p>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
           <h1 id="today-heading" className="text-[1.7rem] leading-tight">
             {formatLong(today)}

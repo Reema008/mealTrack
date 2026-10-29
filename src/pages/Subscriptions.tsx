@@ -276,7 +276,7 @@ export function SubscriptionsPage() {
       ) : subs.isLoading || overrides.isLoading ? (
         <Spinner label="Loading subscriptions" />
       ) : periods.length === 0 ? (
-        <p className="py-6 text-center text-sm text-slate-600 dark:text-slate-300">No subscriptions recorded yet. 🌿</p>
+        <p className="py-6 text-center text-sm text-slate-600 dark:text-slate-300">No subscriptions recorded yet. ✿</p>
       ) : (
         <>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-2">

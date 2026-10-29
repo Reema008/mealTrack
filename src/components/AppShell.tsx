@@ -114,7 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="mx-auto flex min-h-dvh max-w-2xl flex-col">
         <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-2 bg-slate-50/75 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur-md dark:bg-slate-950/75">
           <div className="flex min-w-0 items-center gap-2.5">
-            <img src="./icons/icon.svg" alt="" className="h-10 w-10 shrink-0 rounded-2xl shadow-soft" />
+            <img src="./icons/icon.svg" alt="" className="taro-logo h-10 w-10 shrink-0 rounded-2xl" />
             <div className="min-w-0">
             <p className="truncate font-display text-2xl leading-none text-slate-900 dark:text-slate-50">MealTrack</p>
             <p className="truncate text-xs text-slate-600 dark:text-slate-300">Lunch & dinner tracker</p>
@@ -133,7 +133,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
         <main className="flex-1 px-4 pb-28 pt-2">{children}</main>
         <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-          <ul className="mx-auto grid max-w-md grid-cols-4 gap-1 rounded-full bg-white/85 p-1.5 shadow-soft backdrop-blur-md dark:bg-slate-900/85">
+          <ul className="taro-nav mx-auto grid max-w-md grid-cols-4 gap-1 rounded-full p-1.5 shadow-soft backdrop-blur-md">
             {NAV.map((n) => (
               <li key={n.to}>
                 <NavLink

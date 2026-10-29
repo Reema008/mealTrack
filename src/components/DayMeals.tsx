@@ -37,7 +37,7 @@ export function DayMeals({
     return (
       <div className="taro-card rounded-[1.6rem] p-8 text-center">
         <p className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-3xl shadow-soft dark:bg-slate-900" aria-hidden>
-          🌤️
+          ☁️
         </p>
         <p className="mt-3 font-display text-2xl">No Delivery Scheduled</p>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Sunday is a day off. Enjoy your meal at home!</p>

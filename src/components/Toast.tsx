@@ -11,7 +11,7 @@ const AlertContext = createContext<(message: string, tone?: Tone) => void>(() =>
 
 const TONE: Record<Tone, { emoji: string; title: string; header: string; ring: string; button: string }> = {
   success: {
-    emoji: '✅',
+    emoji: '💜',
     title: 'Done',
     header: 'from-emerald-100/90 dark:from-emerald-950/20',
     ring: 'ring-emerald-200/80 dark:ring-emerald-900',

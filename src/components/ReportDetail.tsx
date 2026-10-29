@@ -5,7 +5,7 @@ import { PERIOD_LABEL } from '../domain/schedule';
 import { metricBreakdown, type CurryFilter, type DayTypeFilter, type DeliveryFilter, type ReportMetric } from '../domain/stats';
 import type { EffectiveMeal } from '../domain/types';
 import { badgeFor, deliveryLabel } from './MealCard';
-import { Button, DayTypeChip, FilterChips, StatusBadge } from './ui';
+import { Button, DayTypeChip, FilterChips, StatusBadge, NonVegIcon, VegIcon } from './ui';
 
 export const METRIC_INFO: Record<ReportMetric, { title: string; help: string }> = {
   success: { title: 'Delivery success', help: 'Every meal with an outcome so far: delivered and not delivered.' },
@@ -106,8 +106,8 @@ export function ReportDetailSheet({
                 onChange={setDayType}
                 options={[
                   { value: 'all', label: 'All' },
-                  { value: 'veg', label: '🌸 Veg' },
-                  { value: 'nonveg', label: '🍗 Non-Veg' },
+                  { value: 'veg', label: <><VegIcon />Veg</> },
+                  { value: 'nonveg', label: <><NonVegIcon />Non-Veg</> },
                 ]}
               />
             </div>
@@ -149,7 +149,7 @@ export function ReportDetailSheet({
 
         <div className="overflow-y-auto p-5 pt-3">
           {groups.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-600 dark:text-slate-300">Nothing here for this period. 🌿</p>
+            <p className="py-8 text-center text-sm text-slate-600 dark:text-slate-300">Nothing here for this period. ✿</p>
           ) : (
             <ol className="space-y-3">
               {groups.map((g) => (

@@ -40,12 +40,36 @@ const DAY_TYPE_STYLE: Record<DayType, string> = {
   none: 'bg-slate-200 text-slate-700 dark:bg-slate-900 dark:text-slate-200',
 };
 
-export const DAY_TYPE_EMOJI: Record<DayType, string> = { veg: '🌸', nonveg: '🍗', none: '🌤️' };
+/** Veg mark: a square with a dot, like the label on Indian food packets. */
+export function VegIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" className={className} aria-hidden>
+      <rect x="1.5" y="1.5" width="13" height="13" rx="2.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="8" cy="8" r="3.3" fill="currentColor" />
+    </svg>
+  );
+}
+
+/** Non-veg mark: a square with a triangle, like the label on Indian food packets. */
+export function NonVegIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" className={className} aria-hidden>
+      <rect x="1.5" y="1.5" width="13" height="13" rx="2.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M8 4.3 11.6 11H4.4Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function DayTypeIcon({ type }: { type: DayType }) {
+  if (type === 'veg') return <VegIcon />;
+  if (type === 'nonveg') return <NonVegIcon />;
+  return <span aria-hidden>☁️</span>;
+}
 
 export function DayTypeChip({ type, className = '' }: { type: DayType; className?: string }) {
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${DAY_TYPE_STYLE[type]} ${className}`}>
-      <span aria-hidden>{DAY_TYPE_EMOJI[type]}</span>
+      <DayTypeIcon type={type} />
       {DAY_TYPE_LABEL[type]}
     </span>
   );
@@ -67,7 +91,7 @@ const BADGE: Record<BadgeKind, { label: string; className: string; title: string
   },
   awaiting: {
     label: 'Pending',
-    className: 'bg-white text-emerald-700 ring-emerald-200 dark:bg-emerald-900 dark:text-emerald-50 dark:ring-emerald-700',
+    className: 'bg-white text-emerald-700 ring-emerald-200 dark:bg-emerald-900 dark:text-emerald-50 dark:ring-transparent',
     title: 'Not yet assumed delivered. Lunch counts as delivered from 2 PM, dinner from 10 PM, unless someone marks it.',
   },
   unsynced: {
@@ -233,7 +257,7 @@ export function FilterChips<T extends string>({
 }: {
   label: string;
   value: T;
-  options: Array<{ value: T; label: string }>;
+  options: Array<{ value: T; label: ReactNode }>;
   onChange: (v: T) => void;
 }) {
   return (
@@ -247,7 +271,7 @@ export function FilterChips<T extends string>({
             role="radio"
             aria-checked={selected}
             onClick={() => onChange(o.value)}
-            className={`min-h-9 rounded-full px-3.5 py-1 text-xs font-semibold ring-1 ring-inset transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
+            className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-semibold ring-1 ring-inset transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
               selected
                 ? 'bg-emerald-600 text-white ring-emerald-600'
                 : 'bg-white/80 text-slate-700 ring-slate-300 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-50 dark:ring-slate-600'

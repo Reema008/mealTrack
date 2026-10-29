@@ -24,7 +24,18 @@ const queryClient = new QueryClient({
 });
 
 initTheme();
-registerSW({ immediate: true });
+registerSW({
+  immediate: true,
+  // A new version reloads the app automatically (autoUpdate). Phones keep an
+  // installed app alive in the background, so check again when it comes back.
+  onRegisteredSW(_url, registration) {
+    if (!registration) return;
+    const check = () => void registration.update().catch(() => {});
+    window.setInterval(check, 15 * 60_000);
+    document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && check());
+    window.addEventListener('online', check);
+  },
+});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -11,7 +11,7 @@ function Screen({ subtitle, children }: { subtitle: string; children: ReactNode 
         <ThemeToggle />
       </div>
       <div className="mb-6 text-center">
-        <img src="./icons/icon.svg" alt="" className="mx-auto h-20 w-20 rounded-[1.75rem] shadow-soft" />
+        <img src="./icons/icon.svg" alt="" className="taro-logo mx-auto h-20 w-20 rounded-[1.75rem]" />
         <h1 className="mt-4 text-4xl text-slate-900 dark:text-slate-50">MealTrack</h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{subtitle}</p>
       </div>

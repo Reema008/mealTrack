@@ -1,3 +1,4 @@
+import { NonVegIcon, VegIcon } from './ui';
 import { addDays, eachDay, endOfMonth, formatDate, formatLong, startOfMonth, startOfWeek, weekdayShort } from '../domain/dates';
 import { mealsForDate, overrideKey } from '../domain/meals';
 import { getDayType } from '../domain/schedule';
@@ -97,23 +98,23 @@ export function MonthCalendar({
               } ${isToday && !isSel ? 'ring-2 ring-emerald-600 dark:ring-emerald-500' : ''} ${d > today && !isSel && inMonth ? 'opacity-80' : ''}`}
             >
               <span>{Number(formatDate(d, { day: 'numeric' }))}</span>
-              <span className="mt-0.5 flex h-1.5 items-center gap-0.5" aria-hidden>
-                <span className={`h-1.5 w-1.5 rounded-full ${TYPE_DOT[s.dayType]}`} />
-                {s.notReceived > 0 && <span className="h-1.5 w-1.5 rounded-full bg-rose-600" />}
-                {s.explicit > 0 && s.notReceived === 0 && <span className="h-1.5 w-1.5 rounded-full bg-sky-600" />}
+              <span className="mt-0.5 flex h-2 items-center gap-0.5" aria-hidden>
+                {s.dayType === 'none' ? <span className={`h-1.5 w-1.5 rounded-full ${TYPE_DOT.none}`} /> : s.dayType === 'veg' ? <VegIcon className="h-2 w-2" /> : <NonVegIcon className="h-2 w-2" />}
+                {s.notReceived > 0 && <span className="st-missed h-1.5 w-1.5 rounded-full" />}
+                {s.explicit > 0 && s.notReceived === 0 && <span className="st-planned h-1.5 w-1.5 rounded-full" />}
               </span>
-              {s.pending > 0 && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-amber-500" aria-hidden />}
+              {s.pending > 0 && <span className="st-pending absolute right-1 top-1 h-2.5 w-2.5 rounded-full" aria-hidden />}
             </button>
           );
         })}
       </div>
       <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
-        <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-400" />Veg</li>
-        <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-orange-500" />Non-Veg</li>
+        <li className="flex items-center gap-1.5"><VegIcon className="h-3 w-3" />Veg</li>
+        <li className="flex items-center gap-1.5"><NonVegIcon className="h-3 w-3" />Non-Veg</li>
         <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-slate-300" />No delivery</li>
-        <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-rose-600" />Not received</li>
-        <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-sky-600" />Changed (saved)</li>
-        <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" />Pending sync</li>
+        <li className="flex items-center gap-1.5"><span className="st-missed h-2.5 w-2.5 rounded-full" />Not received</li>
+        <li className="flex items-center gap-1.5"><span className="st-planned h-2.5 w-2.5 rounded-full" />Changed (saved)</li>
+        <li className="flex items-center gap-1.5"><span className="st-pending h-2.5 w-2.5 rounded-full" />Pending sync</li>
       </ul>
     </div>
   );
@@ -155,8 +156,8 @@ export function WeekStrip({
               <span className="text-base font-semibold">{Number(formatDate(d, { day: 'numeric' }))}</span>
               <span className="flex items-center gap-1">
                 {label}
-                {s.notReceived > 0 && <span className="h-1.5 w-1.5 rounded-full bg-rose-500" aria-hidden />}
-                {s.pending > 0 && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" aria-hidden />}
+                {s.notReceived > 0 && <span className="st-missed h-1.5 w-1.5 rounded-full" aria-hidden />}
+                {s.pending > 0 && <span className="st-pending h-2 w-2 rounded-full" aria-hidden />}
               </span>
             </button>
           </li>

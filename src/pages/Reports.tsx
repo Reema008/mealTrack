@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CategoryTile, DailyChart, SplitBar, StatCard } from '../components/Charts';
-import { Card, ErrorNote, Spinner, TextField } from '../components/ui';
+import { Card, ErrorNote, NonVegIcon, Spinner, TextField, VegIcon } from '../components/ui';
 import { addDays, addMonths, endOfMonth, endOfWeek, formatMonth, formatShort, isISODate, startOfMonth, startOfWeek } from '../domain/dates';
 import { computeStats, formatPercent, listMeals, type ReportMetric } from '../domain/stats';
 import { subscriptionPeriods } from '../domain/subscription';
@@ -133,7 +133,7 @@ export function ReportsPage() {
             <StatCard label="Not received" emoji="🚫" tint="blush" value={a.notReceived} hint="tap for the dates" onClick={open('notReceived')} />
             <StatCard label="Scheduled meals" emoji="🗓️" tint="lavender" value={s.scheduledTotal} hint={`${s.scheduledLunch} lunch · ${s.scheduledDinner} dinner`} onClick={open('scheduled')} />
             <StatCard label="Scheduled days" emoji="📅" tint="cream" value={s.scheduledDays} hint="Sundays excluded" onClick={open('scheduledDays')} />
-            {s.pending > 0 && <StatCard label="Pending today" emoji="⏳" tint="butter" value={s.pending} hint="lunch 2 PM · dinner 10 PM" onClick={open('pending')} />}
+            {s.pending > 0 && <StatCard label="Pending today" emoji="💫" tint="butter" value={s.pending} hint="lunch 2 PM · dinner 10 PM" onClick={open('pending')} />}
             <StatCard label="Planned" emoji="🔮" tint="lavender" value={s.planned.meals} hint="future, not counted yet" onClick={open('planned')} />
             <StatCard label="Extra curries" emoji="🥄" tint="peach" value={a.extraCurryReceived} hint={`of ${a.nonVegMeals} delivered non-veg · ${a.extraCurryMissing} missing`} onClick={open('extraCurry')} />
           </div>
@@ -141,8 +141,8 @@ export function ReportsPage() {
           <section aria-labelledby="by-category" className="space-y-3">
             <h2 id="by-category" className="text-xl">By category</h2>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
-              <CategoryTile label="Veg" emoji="🌸" tint="sage" stats={s.categories.veg} onClick={open('veg')} />
-              <CategoryTile label="Non-Veg" emoji="🍗" tint="peach" stats={s.categories.nonveg} onClick={open('nonveg')} />
+              <CategoryTile label="Veg" emoji={<VegIcon className="inline h-[1em] w-[1em] align-[-0.1em] text-emerald-600 dark:text-emerald-300" />} tint="sage" stats={s.categories.veg} onClick={open('veg')} />
+              <CategoryTile label="Non-Veg" emoji={<NonVegIcon className="inline h-[1em] w-[1em] align-[-0.1em] text-emerald-800 dark:text-emerald-100" />} tint="peach" stats={s.categories.nonveg} onClick={open('nonveg')} />
               <CategoryTile label="Lunch" emoji="☀️" tint="butter" stats={s.categories.lunch} onClick={open('lunch')} />
               <CategoryTile label="Dinner" emoji="🌙" tint="lavender" stats={s.categories.dinner} onClick={open('dinner')} />
             </div>
@@ -152,11 +152,11 @@ export function ReportsPage() {
             <SplitBar
               title="Meal outcomes"
               parts={[
-                { label: 'Delivered (edited)', value: a.deliveredExplicit, className: 'bg-emerald-400' },
-                { label: 'Delivered (as scheduled)', value: a.deliveredAssumed, className: 'bg-emerald-300' },
-                { label: 'Not received', value: a.notReceived, className: 'bg-rose-500' },
-                { label: 'Pending', value: s.pending, className: 'bg-orange-300' },
-                { label: 'Planned', value: s.planned.meals, className: 'bg-slate-300' },
+                { label: 'Delivered (edited)', value: a.deliveredExplicit, className: 'st-delivered' },
+                { label: 'Delivered (as scheduled)', value: a.deliveredAssumed, className: 'st-delivered-soft' },
+                { label: 'Not received', value: a.notReceived, className: 'st-missed' },
+                { label: 'Pending', value: s.pending, className: 'st-pending' },
+                { label: 'Planned', value: s.planned.meals, className: 'st-planned' },
               ]}
             />
             <DailyChart daily={s.daily} />

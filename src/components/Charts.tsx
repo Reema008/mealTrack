@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { formatDate } from '../domain/dates';
 import type { MealStats } from '../domain/stats';
 
@@ -26,7 +27,7 @@ export function StatCard({
   value: string | number;
   hint?: string;
   tint?: Tint;
-  emoji?: string;
+  emoji?: ReactNode;
   onClick?: () => void;
 }) {
   const body = (
@@ -76,7 +77,7 @@ export function SplitBar({ title, parts }: { title: string; parts: Array<{ label
       <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
         {parts.map((p) => (
           <li key={p.label} className="flex items-center gap-1.5">
-            <span className={`h-2.5 w-2.5 rounded-full ${p.className}`} aria-hidden />
+            <span className={`h-3 w-3 rounded ${p.className}`} aria-hidden />
             {p.label}: <span className="font-semibold tabular-nums text-slate-900 dark:text-slate-50">{p.value}</span>
           </li>
         ))}
@@ -94,6 +95,11 @@ export function DailyChart({ daily }: { daily: MealStats['daily'] }) {
     <figure>
       <figcaption className="mb-2 font-display text-lg">Meals per day</figcaption>
       <svg viewBox="0 0 100 44" preserveAspectRatio="none" className="h-36 w-full" role="img" aria-label="Meals per scheduled day: delivered, not received, pending and planned">
+        <defs>
+          <pattern id="st-pending-stripes" width="1.6" height="1.6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <rect width="0.8" height="1.6" style={{ fill: 'var(--st-pending)' }} />
+          </pattern>
+        </defs>
         {daily.map((d, i) => {
           const x = i * barW + barW * 0.18;
           const w = barW * 0.64;
@@ -107,10 +113,10 @@ export function DailyChart({ daily }: { daily: MealStats['daily'] }) {
           return (
             <g key={d.date}>
               <title>{`${d.date}: ${d.delivered} delivered, ${d.notReceived} not received, ${d.pending} pending, ${d.planned} planned`}</title>
-              {seg(d.delivered, 'fill-emerald-300', 'd')}
-              {seg(d.notReceived, 'fill-rose-500', 'n')}
-              {seg(d.pending, 'fill-orange-300', 'p')}
-              {seg(d.planned, 'fill-slate-300 dark:fill-slate-600', 'f')}
+              {seg(d.delivered, 'stf-delivered', 'd')}
+              {seg(d.notReceived, 'stf-missed', 'n')}
+              {seg(d.pending, 'stf-pending', 'p')}
+              {seg(d.planned, 'stf-planned', 'f')}
             </g>
           );
         })}
@@ -123,10 +129,10 @@ export function DailyChart({ daily }: { daily: MealStats['daily'] }) {
         </div>
       )}
       <ul className="mt-2 flex flex-wrap gap-x-4 text-xs text-slate-600 dark:text-slate-300">
-        <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />Delivered</li>
-        <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-rose-500" />Not received</li>
-        <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-orange-300" />Pending</li>
-        <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-slate-300" />Planned</li>
+        <li className="flex items-center gap-1.5"><span className="st-delivered h-3 w-3 rounded" />Delivered</li>
+        <li className="flex items-center gap-1.5"><span className="st-missed h-3 w-3 rounded" />Not received</li>
+        <li className="flex items-center gap-1.5"><span className="st-pending h-3 w-3 rounded" />Pending</li>
+        <li className="flex items-center gap-1.5"><span className="st-planned h-3 w-3 rounded" />Planned</li>
       </ul>
     </figure>
   );
@@ -141,7 +147,7 @@ export function CategoryTile({
   onClick,
 }: {
   label: string;
-  emoji: string;
+  emoji: ReactNode;
   tint: Tint;
   stats: { scheduled: number; meals: number; delivered: number; notReceived: number; upcoming: number; successRate: number | null };
   onClick: () => void;
@@ -163,9 +169,9 @@ export function CategoryTile({
         <span className="font-display text-2xl tabular-nums">{pct}</span>
       </span>
       <span className="taro-grow mt-2 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-white/70 dark:bg-white/10" aria-hidden>
-        {stats.delivered > 0 && <span className="rounded-full bg-emerald-300" style={{ width: `${(stats.delivered / total) * 100}%` }} />}
-        {stats.notReceived > 0 && <span className="rounded-full bg-rose-500" style={{ width: `${(stats.notReceived / total) * 100}%` }} />}
-        {stats.upcoming > 0 && <span className="rounded-full bg-slate-300" style={{ width: `${(stats.upcoming / total) * 100}%` }} />}
+        {stats.delivered > 0 && <span className="st-delivered rounded-full" style={{ width: `${(stats.delivered / total) * 100}%` }} />}
+        {stats.notReceived > 0 && <span className="st-missed rounded-full" style={{ width: `${(stats.notReceived / total) * 100}%` }} />}
+        {stats.upcoming > 0 && <span className="st-planned rounded-full" style={{ width: `${(stats.upcoming / total) * 100}%` }} />}
       </span>
       <span className="mt-2 block text-xs text-slate-700 dark:text-slate-200">
         <strong>{stats.delivered}</strong> delivered · <strong>{stats.notReceived}</strong> not received
