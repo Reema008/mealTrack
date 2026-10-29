@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { FamilyAccountsSection, MyAccountSection } from '../components/AccountSettings';
 import { useToast } from '../components/Toast';
 import { Button, Card, Segmented } from '../components/ui';
 import { Link } from 'react-router-dom';
@@ -171,9 +172,12 @@ function RemindersSection() {
 }
 
 export function SettingsPage() {
+  const { isAdmin } = useHousehold();
   return (
     <div className="space-y-4">
       <h1 className="text-3xl">Settings</h1>
+      <MyAccountSection />
+      {isAdmin && <FamilyAccountsSection />}
       <SubscriptionSection />
       <AppearanceSection />
       <TimezoneSection />

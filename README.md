@@ -1,6 +1,6 @@
 # MealTrack
 
-A mobile-first PWA that tracks a family's lunch and dinner deliveries from a recurring food subscription. There is **no sign-in, PIN or approval**: anyone who opens the link goes straight in. Everyone sees the same records, which update live across phones.
+A mobile-first PWA that tracks a family's lunch and dinner deliveries from a recurring food subscription. People sign in with a **username and password that an admin creates** for them. Everyone sees the same records, which update live across phones.
 
 **Nobody has to log meals every day.** Each scheduled meal is assumed delivered by default. You only record an exception, for example a meal that didn't arrive, an egg dish instead of chicken, or missing extra curries.
 
@@ -68,8 +68,10 @@ Everything comes from `computeStats` in [src/domain/stats.ts](src/domain/stats.t
 - A meal is reported as saved only after the server confirms it.
 
 ### Security and access
-- **Open access.** There is no sign-in, PIN or approval. Each phone automatically gets its own invisible anonymous Supabase session and is let in by `enter_mealtrack()`. **Anyone who has or finds the app link can view and edit the meal records.**
-- Each phone still has its own session, so realtime sync, per-phone reminders and the conflict checks keep working.
+- **Admin-created accounts.** Only an admin can create accounts (Settings → Family accounts), using `create_account()`. There is no self sign-up. Supabase Auth needs an email, so a username is stored as `<username>@mealtrack.invalid`. No email is ever sent, and an admin resets forgotten passwords in the app.
+- New accounts and admin resets get a temporary password, and the person must choose their own when they first sign in.
+- The first admin is created once in the SQL Editor: `select public.create_first_admin('admin', '<temporary password>');`
+- Admins can make others admin, reset passwords and delete accounts. Deleting an account removes the login, membership and push registrations, but meal records are kept.
 - RLS is enabled on every table. Requests with no session at all (`anon`) get no table access.
 - Meal rows are validated by database rules (no Sunday rows, dish/curry only on delivered non-veg meals) and by the conflict-aware `save_meal_override` RPC.
 - Only the public anon key and the public VAPID key are shipped to the browser. The service-role key and the VAPID private key live only in Edge Function secrets.
@@ -135,12 +137,12 @@ Option B also applies the cron migration (`…_cron.sql`). That's fine: the job 
 
 To check it worked: in **Table Editor** you should see `households`, `household_members`, `household_invites`, `meal_overrides`, `notification_preferences`, `push_subscriptions`, `notification_log` and `family_pin_attempts`, each with RLS **enabled**.
 
-### 2. Turn on anonymous sign-ins (required)
-Go to **Authentication → Sign In / Providers** (called **Providers** in some dashboard versions), turn on **Allow anonymous sign-ins**, and click **Save**.
-
-If this is off, the app shows a screen explaining how to turn it on.
-
-> Supabase limits anonymous sign-ins to 30 per hour per IP address by default, which is plenty for a family.
+### 2. Create the first admin and lock down sign-ups
+1. In the SQL Editor run `select public.create_first_admin('admin', '<temporary password>');`.
+2. Under **Authentication → Sign In / Providers**:
+   - Turn **off** "Allow new users to sign up". Accounts are created by the admin inside the app, which doesn't need this.
+   - Turn **off** "Allow anonymous sign-ins".
+   - Keep the **Email** provider enabled. It is what username + password sign-in uses.
 
 ### 3. Realtime
 The migrations add `meal_overrides` to the `supabase_realtime` publication. Under **Database → Publications → supabase_realtime**, `meal_overrides` should appear as enabled.
@@ -228,9 +230,10 @@ If you used the SQL Editor (Option A) for the schema, also run [supabase/migrati
 
 ## First-time setup
 
-1. Open the app. The first phone to open it creates MealTrack automatically. Every other phone goes straight in and sees the same records.
-2. The timezone defaults to Asia/Kolkata. Change it under **Settings → Timezone** if needed.
-3. To get the 10 PM reminder, go to **Settings → Daily 10 PM reminder → Turn on** on each phone.
+1. Sign in as `admin` with the temporary password and choose your own password.
+2. Go to **Settings → Family accounts → + Add person**. Enter their name, a username and a temporary password, then tell them the username and password. They choose their own password the first time they sign in.
+3. The timezone defaults to Asia/Kolkata. Change it under **Settings → Timezone** if needed.
+4. To get the 10 PM reminder, go to **Settings → Daily 10 PM reminder → Turn on** on each phone.
 
 ---
 
@@ -269,7 +272,7 @@ Desktop Chrome and Edge can install the app too (install icon in the address bar
    - Mark Tuesday lunch **Not received**. The card hides Main dish and Extra curries.
    - Tap **No delivery this whole day**. Both meals turn Not Received.
    - Tap **Mark whole day as delivered**. Both return to Assumed.
-9. **Open access.** Open the link on a new phone or in a private window. It goes straight in with the same records. `npm test` covers this (`tests/db/open-access.test.ts`).
+9. **Accounts.** A new phone or private window shows the sign-in screen. Only accounts created by the admin can sign in. `npm test` covers this (`tests/db/accounts.test.ts`).
 10. **Reminders.** Follow "Test before relying on it" above.
 
 ---
@@ -281,7 +284,7 @@ These need your Supabase, GitHub or phone accounts:
 | Step | Where |
 |---|---|
 | Apply the schema (SQL Editor paste, or `npx supabase login` + `link` + `db push`) | Supabase |
-| Turn on **Allow anonymous sign-ins** | Supabase → Authentication → Sign In / Providers |
+| Create the first admin (`create_first_admin`), then turn off new sign-ups and anonymous sign-ins | Supabase SQL Editor, Authentication → Sign In / Providers |
 | Set `APP_URL` and `VAPID_SUBJECT` in `supabase/functions/.env` | local file |
 | `npx supabase secrets set …` and `npx supabase functions deploy …` | terminal (needs `supabase login`) |
 | Create the two Vault secrets (and run the cron migration if you used the SQL Editor) | Supabase SQL Editor |

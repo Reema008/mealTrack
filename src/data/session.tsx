@@ -1,21 +1,22 @@
 import type { Session } from '@supabase/supabase-js';
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { toAppError } from '../lib/errors';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { NetworkError, toAppError } from '../lib/errors';
 import { supabase } from '../lib/supabase';
 
 /**
- * Every phone gets its own anonymous Supabase session automatically (no
- * email or password). The session persists on the device; the phone then
- * is linked to a person when they sign in with their name and personal PIN.
+ * Sign-in with a username and password that an admin created. Supabase Auth
+ * needs an email, so each username is stored as "<username>@mealtrack.invalid"
+ * (no mail is ever sent). The session stays on the phone until sign out.
  */
+export const LOGIN_DOMAIN = 'mealtrack.invalid';
+export const loginEmail = (username: string) => `${username.trim().toLowerCase()}@${LOGIN_DOMAIN}`;
+export const usernameFromEmail = (email: string | undefined) => (email ?? '').replace(`@${LOGIN_DOMAIN}`, '');
+
 interface SessionState {
   session: Session | null;
   loading: boolean;
-  /** Error starting a session (e.g. anonymous sign-ins disabled, offline). */
-  error: string | null;
-  /** Set when the phone lost its session and must sign in again with name + PIN. */
+  /** Set when the phone was signed out without the person asking (e.g. account deleted). */
   notice: string | null;
-  retry(): void;
 }
 
 const SessionContext = createContext<SessionState | null>(null);
@@ -23,62 +24,33 @@ const SessionContext = createContext<SessionState | null>(null);
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const signingIn = useRef(false);
-  const intentionalSignOut = useRef(false);
-
-  const ensureSession = useCallback(async () => {
-    if (signingIn.current) return;
-    signingIn.current = true;
-    setError(null);
-    try {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        setSession(data.session);
-        return;
-      }
-      const { data: anon, error: anonErr } = await supabase.auth.signInAnonymously();
-      if (anonErr) throw anonErr;
-      setSession(anon.session);
-    } catch (err) {
-      const msg = (err as Error).message ?? '';
-      setError(
-        /anonymous sign-ins are disabled/i.test(msg)
-          ? 'anonymous-disabled'
-          : toAppError(err).message,
-      );
-    } finally {
-      signingIn.current = false;
-      setLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
-    const onSignOut = () => (intentionalSignOut.current = true);
+    let intentional = false;
+    const onSignOut = () => (intentional = true);
     window.addEventListener('mealtrack:signout', onSignOut);
-    void ensureSession();
 
+    void supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setLoading(false);
+    });
     const { data } = supabase.auth.onAuthStateChange((event, next) => {
       setSession(next);
+      setLoading(false);
+      if (event === 'SIGNED_IN') setNotice(null);
       if (event === 'SIGNED_OUT') {
-        if (!intentionalSignOut.current) setNotice('This phone was reconnected to MealTrack.');
-        intentionalSignOut.current = false;
-        // Start a fresh anonymous session for this phone.
-        window.setTimeout(() => void ensureSession(), 0);
+        if (!intentional) setNotice('You were signed out. Please sign in again.');
+        intentional = false;
       }
     });
     return () => {
       data.subscription.unsubscribe();
       window.removeEventListener('mealtrack:signout', onSignOut);
     };
-  }, [ensureSession]);
+  }, []);
 
-  return (
-    <SessionContext.Provider value={{ session, loading, error, notice, retry: () => void ensureSession() }}>
-      {children}
-    </SessionContext.Provider>
-  );
+  return <SessionContext.Provider value={{ session, loading, notice }}>{children}</SessionContext.Provider>;
 }
 
 export function useSession(): SessionState {
@@ -87,8 +59,28 @@ export function useSession(): SessionState {
   return ctx;
 }
 
-/** Forget this phone's session (it must re-enter the family PIN). */
+export async function signIn(username: string, password: string): Promise<void> {
+  const { error } = await supabase.auth.signInWithPassword({ email: loginEmail(username), password });
+  if (!error) return;
+  if (/invalid login credentials/i.test(error.message)) throw new Error('Wrong username or password.');
+  if (/rate limit|too many/i.test(error.message)) throw new Error('Too many attempts. Please wait a few minutes and try again.');
+  const e = toAppError(error);
+  throw e instanceof NetworkError ? new Error('No internet connection. Connect and try again.') : e;
+}
+
+/** Changes the signed-in person's own password. */
+export async function changePassword(password: string): Promise<void> {
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    if (/should be different/i.test(error.message)) throw new Error('Choose a password different from the current one.');
+    throw toAppError(error);
+  }
+  const { error: flagErr } = await supabase.rpc('password_changed');
+  if (flagErr) throw toAppError(flagErr);
+}
+
 export async function signOut() {
   window.dispatchEvent(new Event('mealtrack:signout'));
-  await supabase.auth.signOut();
+  // Only this phone: other phones signed in to the same account stay signed in.
+  await supabase.auth.signOut({ scope: 'local' });
 }

@@ -21,7 +21,16 @@ const SUPABASE_SHIM = `
   grant usage on schema extensions to anon, authenticated, service_role;
 
   create schema auth;
-  create table auth.users (id uuid primary key, email text);
+  create table auth.users (
+    instance_id uuid, id uuid primary key, aud text, role text, email text, encrypted_password text,
+    email_confirmed_at timestamptz, raw_app_meta_data jsonb, raw_user_meta_data jsonb,
+    created_at timestamptz, updated_at timestamptz, confirmation_token text, recovery_token text,
+    email_change text, email_change_token_new text, is_anonymous boolean not null default false
+  );
+  create table auth.identities (
+    id uuid primary key default gen_random_uuid(), provider_id text not null, user_id uuid not null references auth.users (id) on delete cascade,
+    identity_data jsonb not null, provider text not null, last_sign_in_at timestamptz, created_at timestamptz, updated_at timestamptz
+  );
   create function auth.uid() returns uuid language sql stable as $$
     select nullif(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub', '')::uuid
   $$;
@@ -107,23 +116,29 @@ export async function createTestDb(upTo?: string): Promise<TestDb> {
   };
 }
 
-/** PIN used when tests set MealTrack up. */
-export const FAMILY_PIN = '482913';
-
-/** First-time setup: `user` becomes the admin, signing in as `displayName` with `pin`. */
-export async function setupFamily(t: TestDb, user: TestUser, name = 'Family', pin = FAMILY_PIN, displayName = 'Owner'): Promise<string> {
-  return t.as(user, async (tx) => {
-    const r = await tx.query<{ r: { id: string } }>(`select public.setup_household($1, $2, $3) as r`, [name, displayName, pin]);
-    return r.rows[0].r.id;
-  });
+/** First-time setup: `user` becomes the admin of a new household. */
+export async function setupFamily(t: TestDb, user: TestUser, name = 'Family', displayName = 'Owner'): Promise<string> {
+  const h = await t.db.query<{ id: string }>('insert into public.households (name) values ($1) returning id', [name]);
+  await t.db.query(`insert into public.household_members (household_id, user_id, role, display_name, status) values ($1, $2, 'admin', $3, 'approved')`, [
+    h.rows[0].id,
+    user.id,
+    displayName,
+  ]);
+  return h.rows[0].id;
 }
 
-/** A phone opens MealTrack (open access: let in automatically). */
-export async function joinFamily(t: TestDb, user: TestUser) {
-  await t.as(user, (tx) => tx.query('select public.enter_mealtrack()'));
+/** `user` gets an account in the family (admins create accounts; tests add the row directly). */
+export async function joinFamily(t: TestDb, user: TestUser, role: 'admin' | 'member' = 'admin') {
+  let hid = (await t.db.query<{ id: string }>('select id from public.households order by created_at limit 1')).rows[0]?.id;
+  if (!hid) hid = (await t.db.query<{ id: string }>(`insert into public.households (name) values ('MealTrack') returning id`)).rows[0].id;
+  await t.db.query(
+    `insert into public.household_members (household_id, user_id, role, display_name, status) values ($1, $2, $3, $4, 'approved')
+     on conflict (user_id) do nothing`,
+    [hid, user.id, role, user.email],
+  );
 }
 
-/** Kept for older tests: with open access, opening the app is all it takes. */
+/** Kept for older tests. */
 export async function joinAndApprove(t: TestDb, _admin: TestUser, user: TestUser) {
   await joinFamily(t, user);
 }

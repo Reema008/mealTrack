@@ -1,14 +1,12 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { HashRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './components/AppShell';
 import { ErrorNote, Spinner } from './components/ui';
-import { enterMealTrack } from './data/api';
 import { HouseholdProvider, membershipKey, useMembership } from './data/household';
 import { signOut, useSession } from './data/session';
 import { AuthExpiredError } from './lib/errors';
 import { isSupabaseConfigured } from './lib/supabase';
-import { SessionErrorPage, SetupRequiredPage } from './pages/Auth';
+import { FirstPasswordPage, LoginPage, NoAccessPage, SetupRequiredPage } from './pages/Auth';
 import { CalendarPage } from './pages/Calendar';
 import { DayPage } from './pages/Day';
 import { HomePage } from './pages/Home';
@@ -41,45 +39,26 @@ function ScrollToTop() {
   return null;
 }
 
-/** Every phone is let in automatically: no sign-in, PIN or approval. */
+/** Signed in: open MealTrack once the account's membership has loaded. */
 function SignedIn() {
   const { session } = useSession();
   const membership = useMembership();
-  const qc = useQueryClient();
-  const [enterError, setEnterError] = useState<Error | null>(null);
-  const needsEntry = membership.isSuccess && (!membership.data || membership.data.status !== 'approved');
 
   useEffect(() => {
     if (membership.error instanceof AuthExpiredError) void signOut();
   }, [membership.error]);
 
-  useEffect(() => {
-    if (!needsEntry) return;
-    let cancelled = false;
-    enterMealTrack()
-      .then(() => qc.invalidateQueries({ queryKey: membershipKey(session?.user.id) }))
-      .catch((e: Error) => !cancelled && setEnterError(e));
-    return () => {
-      cancelled = true;
-    };
-  }, [needsEntry, qc, session?.user.id]);
-
-  const error = membership.error ?? enterError;
-  if (error) {
+  if (membership.error) {
     return (
       <div className="mx-auto max-w-sm p-6">
-        <ErrorNote
-          error={error}
-          onRetry={() => {
-            setEnterError(null);
-            void membership.refetch();
-          }}
-        />
+        <ErrorNote error={membership.error} onRetry={() => void membership.refetch()} />
       </div>
     );
   }
-  if (membership.isLoading || needsEntry || !membership.data || membership.data.status !== 'approved') {
-    return <Spinner label="Opening MealTrack" />;
+  if (membership.isLoading) return <Spinner label="Opening MealTrack" />;
+  if (!membership.data || membership.data.status !== 'approved') return <NoAccessPage />;
+  if (membership.data.must_change_password) {
+    return <FirstPasswordPage name={membership.data.display_name} membershipKey={membershipKey(session?.user.id)} />;
   }
 
   return (
@@ -100,7 +79,7 @@ function SignedIn() {
 }
 
 export function App() {
-  const { session, loading, error, retry } = useSession();
+  const { session, loading, notice } = useSession();
   if (!isSupabaseConfigured) return <SetupRequiredPage />;
   return (
     <HashRouter>
@@ -108,10 +87,8 @@ export function App() {
       <ServiceWorkerNavigation />
       {loading ? (
         <Spinner label="Starting MealTrack" />
-      ) : error && !session ? (
-        <SessionErrorPage error={error} onRetry={retry} />
       ) : !session ? (
-        <Spinner label="Starting MealTrack" />
+        <LoginPage notice={notice} />
       ) : (
         <SignedIn />
       )}

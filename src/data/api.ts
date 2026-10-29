@@ -16,6 +16,9 @@ export type MemberStatus = 'pending' | 'approved';
 export interface Membership {
   role: 'admin' | 'member';
   display_name: string;
+  username: string | null;
+  /** Set for new accounts and after an admin reset: the person must pick their own password. */
+  must_change_password: boolean;
   status: MemberStatus;
   household: Household;
 }
@@ -52,7 +55,7 @@ const OVERRIDE_COLUMNS =
 export async function fetchMembership(userId: string): Promise<Membership | PendingMembership | null> {
   const { data, error } = await supabase
     .from('household_members')
-    .select('role, display_name, status, household:households(id, name, timezone, subscription_start)')
+    .select('role, display_name, username, must_change_password, status, household:households(id, name, timezone, subscription_start)')
     .eq('user_id', userId)
     .maybeSingle();
   if (error) throw toAppError(error);
@@ -88,9 +91,45 @@ export async function saveMealOverride(req: SaveRequest): Promise<SaveOutcome> {
   return data as SaveOutcome;
 }
 
-/** Let this phone into MealTrack (no sign-in): creates MealTrack on first use. */
-export async function enterMealTrack(): Promise<void> {
-  const { error } = await supabase.rpc('enter_mealtrack');
+export interface Account {
+  user_id: string;
+  display_name: string;
+  username: string | null;
+  role: 'admin' | 'member';
+  must_change_password: boolean;
+}
+
+/** Everyone with an account in this family. */
+export async function fetchAccounts(householdId: string): Promise<Account[]> {
+  const { data, error } = await supabase
+    .from('household_members')
+    .select('user_id, display_name, username, role, must_change_password')
+    .eq('household_id', householdId)
+    .eq('status', 'approved')
+    .order('display_name');
+  if (error) throw toAppError(error);
+  return (data ?? []) as Account[];
+}
+
+/** Admin only: create a login for someone. */
+export async function createAccount(displayName: string, username: string, password: string, role: 'admin' | 'member'): Promise<void> {
+  const { error } = await supabase.rpc('create_account', { p_display_name: displayName, p_username: username, p_password: password, p_role: role });
+  if (error) throw toAppError(error);
+}
+
+/** Admin only: give someone a new password (they must change it after signing in). */
+export async function resetAccountPassword(userId: string, password: string): Promise<void> {
+  const { error } = await supabase.rpc('reset_account_password', { p_user_id: userId, p_password: password });
+  if (error) throw toAppError(error);
+}
+
+export async function deleteAccount(userId: string): Promise<void> {
+  const { error } = await supabase.rpc('delete_account', { p_user_id: userId });
+  if (error) throw toAppError(error);
+}
+
+export async function setAccountRole(userId: string, role: 'admin' | 'member'): Promise<void> {
+  const { error } = await supabase.rpc('set_member_role', { p_user_id: userId, p_role: role });
   if (error) throw toAppError(error);
 }
 

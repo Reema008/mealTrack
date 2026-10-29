@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createOtherHousehold, createTestDb, saveMeal, setupFamily, type TestDb, type TestUser } from './harness';
+import { createOtherHousehold, createTestDb, joinFamily, saveMeal, setupFamily, type TestDb, type TestUser } from './harness';
 
 const TUE = '2026-10-27';
 
@@ -22,8 +22,7 @@ beforeAll(async () => {
   homeId = await setupFamily(t, admin, 'Home');
   otherId = await createOtherHousehold(t, outsider);
 
-  const token = await t.as(admin, async (tx) => (await tx.query<{ token: string }>(`select token from public.create_invite('member@example.com')`)).rows[0].token);
-  await t.as(member, (tx) => tx.query(`select public.accept_invite($1, 'Member')`, [token]));
+  await joinFamily(t, member, 'member');
 
   const r = await t.as(admin, (tx) => saveMeal(tx, TUE, 'lunch', { dish: 'egg', curry: true }, null));
   homeRowId = r.row!.id;
@@ -95,29 +94,9 @@ describe('13. access rules', () => {
     expect(hid).toBe(homeId);
   });
 
-  it('only admins can create invites or see them', async () => {
-    await expect(t.as(member, (tx) => tx.query(`select public.create_invite('x@example.com')`))).rejects.toThrow(/administrators/);
-    await t.as(member, async (tx) => {
-      expect(count((await tx.query('select 1 from public.household_invites')).rows)).toBe(0);
-    });
-    await t.as(admin, async (tx) => {
-      expect(count((await tx.query('select 1 from public.household_invites')).rows)).toBe(1);
-    });
-  });
-
-  it('an invite can only be accepted by the invited email, once, before expiry', async () => {
-    const token = await t.as(admin, async (tx) => (await tx.query<{ token: string }>(`select token from public.create_invite('invitee@example.com')`)).rows[0].token);
-    await expect(t.as(stranger, (tx) => tx.query(`select public.accept_invite($1, 'S')`, [token]))).rejects.toThrow(/different email/);
-    await expect(t.as(stranger, (tx) => tx.query(`select public.accept_invite('bogus', 'S')`))).rejects.toThrow(/not valid/);
-
-    const invitee = await t.createUser('invitee@example.com');
-    await t.as(invitee, (tx) => tx.query(`select public.accept_invite($1, 'Invitee')`, [token]));
-    await expect(t.as(invitee, (tx) => tx.query(`select public.accept_invite($1, 'Invitee')`, [token]))).rejects.toThrow(/already been used/);
-
-    const expired = await t.as(admin, async (tx) => (await tx.query<{ token: string }>(`select token from public.create_invite('late@example.com')`)).rows[0].token);
-    await t.db.query(`update public.household_invites set expires_at = now() - interval '1 day' where token = $1`, [expired]);
-    const late = await t.createUser('late@example.com');
-    await expect(t.as(late, (tx) => tx.query(`select public.accept_invite($1, 'Late')`, [expired]))).rejects.toThrow(/expired/);
+  it('nobody can join through the old invite functions', async () => {
+    await expect(t.as(admin, (tx) => tx.query(`select public.create_invite('x@example.com')`))).rejects.toThrow(/permission denied/);
+    await expect(t.as(stranger, (tx) => tx.query(`select public.accept_invite('bogus', 'S')`))).rejects.toThrow(/permission denied/);
   });
 
   it('members cannot promote themselves or rename the household', async () => {
