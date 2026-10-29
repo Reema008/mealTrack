@@ -3,17 +3,21 @@ import { DailyChart, SplitBar, StatCard } from '../components/Charts';
 import { Card, ErrorNote, Spinner, TextField } from '../components/ui';
 import { addDays, addMonths, endOfMonth, endOfWeek, formatMonth, formatShort, isISODate, startOfMonth, startOfWeek } from '../domain/dates';
 import { computeStats, formatPercent, listMeals, type ReportMetric } from '../domain/stats';
+import { periodAt, periodFor } from '../domain/subscription';
 import { ReportDetailSheet } from '../components/ReportDetail';
 import { useHousehold } from '../data/household';
 import { useOverrides } from '../data/meals';
 
-type Mode = 'week' | 'month' | 'custom';
+type Mode = 'subscription' | 'week' | 'month' | 'custom';
 const MAX_CUSTOM_DAYS = 366;
 
 export function ReportsPage() {
-  const { today, nowMinutes } = useHousehold();
+  const { today, nowMinutes, household } = useHousehold();
+  const renewal = household.subscription_start;
   const [detail, setDetail] = useState<ReportMetric | null>(null);
-  const [mode, setMode] = useState<Mode>('week');
+  const [mode, setMode] = useState<Mode>(renewal ? 'subscription' : 'week');
+  const currentPeriod = renewal ? periodFor(renewal, today).index : 0;
+  const [periodIndex, setPeriodIndex] = useState(currentPeriod);
   const [anchor, setAnchor] = useState(today);
   const [customStart, setCustomStart] = useState(startOfMonth(today));
   const [customEnd, setCustomEnd] = useState(today);
@@ -22,7 +26,12 @@ export function ReportsPage() {
   let end: string;
   let title: string;
   let rangeError: string | null = null;
-  if (mode === 'week') {
+  if (mode === 'subscription' && renewal) {
+    const p = periodAt(renewal, periodIndex);
+    start = p.start;
+    end = p.end;
+    title = `${formatShort(start)} – ${formatShort(end)}`;
+  } else if (mode === 'week') {
     start = startOfWeek(anchor);
     end = endOfWeek(anchor);
     title = `${formatShort(start)} – ${formatShort(end)}`;
@@ -50,7 +59,12 @@ export function ReportsPage() {
   const open = (m: ReportMetric) => () => setDetail(m);
   const a = s.actual;
 
-  const shift = (delta: number) => setAnchor(mode === 'week' ? addDays(anchor, 7 * delta) : addMonths(anchor, delta));
+  const shift = (delta: number) => {
+    if (mode === 'subscription') setPeriodIndex((i) => i + delta);
+    else setAnchor(mode === 'week' ? addDays(anchor, 7 * delta) : addMonths(anchor, delta));
+  };
+  const modes: Mode[] = renewal ? ['subscription', 'week', 'month', 'custom'] : ['week', 'month', 'custom'];
+  const MODE_LABEL: Record<Mode, string> = { subscription: '4 weeks', week: 'Weekly', month: 'Monthly', custom: 'Custom' };
 
   return (
     <div className="space-y-4">
@@ -58,8 +72,8 @@ export function ReportsPage() {
         <h1 className="text-3xl">Reports</h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">Tap any box to see the dates behind it.</p>
       </div>
-      <div className="grid grid-cols-3 gap-1 rounded-full bg-white/70 p-1 shadow-soft ring-1 ring-slate-200/70 dark:bg-slate-800" role="tablist" aria-label="Report period">
-        {(['week', 'month', 'custom'] as const).map((m) => (
+      <div className={`grid ${modes.length === 4 ? 'grid-cols-4' : 'grid-cols-3'} gap-1 rounded-full bg-white/70 p-1 shadow-soft ring-1 ring-slate-200/70 dark:bg-slate-800`} role="tablist" aria-label="Report period">
+        {modes.map((m) => (
           <button
             key={m}
             role="tab"
@@ -67,10 +81,11 @@ export function ReportsPage() {
             onClick={() => {
               setMode(m);
               setAnchor(today);
+              setPeriodIndex(currentPeriod);
             }}
             className={`min-h-10 rounded-full text-sm font-semibold capitalize ${mode === m ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
           >
-            {m === 'week' ? 'Weekly' : m === 'month' ? 'Monthly' : 'Custom'}
+            {MODE_LABEL[m]}
           </button>
         ))}
       </div>
@@ -82,9 +97,16 @@ export function ReportsPage() {
         </div>
       ) : (
         <div className="flex items-center justify-between">
-          <button onClick={() => shift(-1)} className="min-h-11 min-w-11 rounded-xl text-lg hover:bg-slate-200 dark:hover:bg-slate-800" aria-label={`Previous ${mode}`}>←</button>
-          <p className="font-display text-lg" aria-live="polite">{title}</p>
-          <button onClick={() => shift(1)} className="min-h-11 min-w-11 rounded-xl text-lg hover:bg-slate-200 dark:hover:bg-slate-800" aria-label={`Next ${mode}`}>→</button>
+          <button onClick={() => shift(-1)} className="min-h-11 min-w-11 rounded-xl text-lg hover:bg-slate-200 dark:hover:bg-slate-800" aria-label={mode === 'subscription' ? 'Previous period' : `Previous ${mode}`}>←</button>
+          <div className="text-center" aria-live="polite">
+            <p className="font-display text-lg">{title}</p>
+            {mode === 'subscription' && (
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                {periodIndex === currentPeriod ? 'Current subscription period' : periodIndex < currentPeriod ? 'Earlier period' : 'Upcoming period'}
+              </p>
+            )}
+          </div>
+          <button onClick={() => shift(1)} className="min-h-11 min-w-11 rounded-xl text-lg hover:bg-slate-200 dark:hover:bg-slate-800" aria-label={mode === 'subscription' ? 'Next period' : `Next ${mode}`}>→</button>
         </div>
       )}
 

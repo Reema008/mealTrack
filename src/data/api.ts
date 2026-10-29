@@ -6,6 +6,8 @@ export interface Household {
   id: string;
   name: string;
   timezone: string;
+  /** Subscription renewal date; each period lasts 4 weeks from it. */
+  subscription_start: string | null;
 }
 
 export type MemberStatus = 'pending' | 'approved';
@@ -47,7 +49,7 @@ const OVERRIDE_COLUMNS =
 export async function fetchMembership(userId: string): Promise<Membership | PendingMembership | null> {
   const { data, error } = await supabase
     .from('household_members')
-    .select('role, display_name, status, household:households(id, name, timezone)')
+    .select('role, display_name, status, household:households(id, name, timezone, subscription_start)')
     .eq('user_id', userId)
     .maybeSingle();
   if (error) throw toAppError(error);
@@ -88,7 +90,7 @@ export async function enterMealTrack(): Promise<void> {
   if (error) throw toAppError(error);
 }
 
-export async function updateHousehold(id: string, patch: { name?: string; timezone?: string }): Promise<void> {
+export async function updateHousehold(id: string, patch: { name?: string; timezone?: string; subscription_start?: string | null }): Promise<void> {
   const { error } = await supabase.from('households').update(patch).eq('id', id);
   if (error) throw toAppError(error);
 }

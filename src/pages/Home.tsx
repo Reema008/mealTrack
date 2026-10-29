@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { WeekStrip } from '../components/Calendar';
 import { DayMeals } from '../components/DayMeals';
+import { SubscriptionCard } from '../components/SubscriptionCard';
 import { Card, DayTypeChip, ErrorNote, Spinner } from '../components/ui';
 import { endOfWeek, formatLong, startOfWeek } from '../domain/dates';
 import { getDayType } from '../domain/schedule';
@@ -9,7 +10,8 @@ import { useHousehold } from '../data/household';
 import { useOverrides } from '../data/meals';
 
 export function HomePage() {
-  const { today, nowMinutes, membership } = useHousehold();
+  const { today, nowMinutes } = useHousehold();
+  const greeting = nowMinutes < 12 * 60 ? 'Good morning ☀️' : nowMinutes < 17 * 60 ? 'Good afternoon 🌿' : 'Good evening 🌙';
   const navigate = useNavigate();
   const weekStart = startOfWeek(today);
   const weekEnd = endOfWeek(today);
@@ -19,7 +21,7 @@ export function HomePage() {
   return (
     <div className="space-y-5">
       <section aria-labelledby="today-heading">
-        <p className="text-sm text-slate-600 dark:text-slate-400">Hi {membership.display_name} 👋</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400">{greeting}</p>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
           <h1 id="today-heading" className="text-3xl">
             {formatLong(today)}
@@ -36,9 +38,11 @@ export function HomePage() {
         <DayMeals date={today} map={map} pendingKeys={pendingKeys} today={today} />
       )}
 
+      <SubscriptionCard />
+
       <Card>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-semibold">This week</h2>
+          <h2 className="text-xl">This week</h2>
           <Link to="/calendar" className="rounded-lg px-2 py-1 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-slate-800">
             Calendar & history →
           </Link>

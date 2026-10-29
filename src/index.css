@@ -40,6 +40,16 @@ h2,
   letter-spacing: -0.01em;
 }
 
+/* Countdown bar on self-closing alert pop-ups. */
+@keyframes shrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

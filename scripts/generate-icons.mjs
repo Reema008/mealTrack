@@ -74,8 +74,8 @@ const WOOD_TOP = hex('#9a6a43');
 const WOOD_BOTTOM = hex('#7a5032');
 const WOOD_RIM = hex('#b07d53');
 const STEAM = hex('#a88a6c');
-const LEAF = hex('#a9c1a0');
-const LEAF_VEIN = hex('#86a57c');
+const LEAF = hex('#3f6b3a');
+const LEAF_VEIN = hex('#2c4f29');
 const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 
 // Two wavy steam lines, sampled as short segments (matches icon.svg).
@@ -104,9 +104,9 @@ function art(x, y, scale) {
   const u = (x - 0.5) / scale + 0.5;
   const v = (y - 0.5) / scale + 0.5;
 
-  // Sage leaf lying sideways on the bowl.
-  const [lx, ly] = toLocal(u, v, 0.6, 0.63, -35);
-  if ((lx / 0.11) ** 2 + (ly / 0.046) ** 2 <= 1) return Math.abs(ly) < 0.007 && Math.abs(lx) < 0.1 ? LEAF_VEIN : LEAF;
+  // Dark green leaf, tilted, beside the steam lines.
+  const [lx, ly] = toLocal(u, v, 0.72, 0.29, -40);
+  if ((lx / 0.105) ** 2 + (ly / 0.044) ** 2 <= 1) return Math.abs(ly) < 0.0065 && Math.abs(lx) < 0.095 ? LEAF_VEIN : LEAF;
 
   // Wooden bowl: lighter rim band, body darkening towards the bottom.
   if (v >= 0.5 && dist(u, v, 0.5, 0.5) <= 0.32) return v <= 0.545 ? WOOD_RIM : mix(WOOD_TOP, WOOD_BOTTOM, (v - 0.5) / 0.32);

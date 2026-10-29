@@ -1,46 +1,127 @@
-import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 
 type Tone = 'success' | 'error' | 'info';
-interface ToastItem {
+interface Alert {
   id: number;
   tone: Tone;
   message: string;
 }
 
-const ToastContext = createContext<(message: string, tone?: Tone) => void>(() => {});
+const AlertContext = createContext<(message: string, tone?: Tone) => void>(() => {});
 
+const TONE: Record<Tone, { emoji: string; title: string; header: string; ring: string; button: string }> = {
+  success: {
+    emoji: '✅',
+    title: 'Done',
+    header: 'from-emerald-100/90 dark:from-emerald-950/60',
+    ring: 'ring-emerald-200/80 dark:ring-emerald-900',
+    button: 'bg-emerald-600 hover:bg-emerald-700',
+  },
+  info: {
+    emoji: '💬',
+    title: 'Good to know',
+    header: 'from-sky-100/90 dark:from-sky-950/60',
+    ring: 'ring-sky-200/80 dark:ring-sky-900',
+    button: 'bg-sky-600 hover:bg-sky-700',
+  },
+  error: {
+    emoji: '⚠️',
+    title: 'Something went wrong',
+    header: 'from-rose-100/90 dark:from-rose-950/60',
+    ring: 'ring-rose-200/80 dark:ring-rose-900',
+    button: 'bg-rose-600 hover:bg-rose-700',
+  },
+};
+
+/** Success and info pop-ups close by themselves; errors wait for OK. */
+const AUTO_CLOSE_MS = 2600;
+
+/**
+ * App-wide alerts shown as modal pop-ups (one at a time, queued).
+ * Keeps the old toast API: `const toast = useToast(); toast('Saved', 'success')`.
+ */
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<ToastItem[]>([]);
+  const [queue, setQueue] = useState<Alert[]>([]);
   const nextId = useRef(1);
 
   const show = useCallback((message: string, tone: Tone = 'success') => {
     const id = nextId.current++;
-    setItems((all) => [...all.slice(-2), { id, tone, message }]);
-    window.setTimeout(() => setItems((all) => all.filter((t) => t.id !== id)), tone === 'error' ? 6000 : 3500);
+    // Keep the queue short; the newest message matters most.
+    setQueue((all) => [...all.slice(-2), { id, tone, message }]);
   }, []);
 
-  const toneClass: Record<Tone, string> = {
-    success: 'bg-emerald-700 text-white',
-    error: 'bg-rose-700 text-white',
-    info: 'bg-slate-800 text-white',
-  };
+  const current = queue[0];
+  const close = useCallback(() => setQueue((all) => all.slice(1)), []);
 
   return (
-    <ToastContext.Provider value={show}>
+    <AlertContext.Provider value={show}>
       {children}
-      <div
-        className="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex flex-col items-center gap-2 px-4"
-        role="status"
-        aria-live="polite"
-      >
-        {items.map((t) => (
-          <div key={t.id} className={`pointer-events-auto max-w-sm rounded-xl px-4 py-3 text-sm font-medium shadow-lg ${toneClass[t.tone]}`}>
-            {t.message}
-          </div>
-        ))}
-      </div>
-    </ToastContext.Provider>
+      {current && <AlertModal key={current.id} alert={current} onClose={close} />}
+    </AlertContext.Provider>
   );
 }
 
-export const useToast = () => useContext(ToastContext);
+function AlertModal({ alert, onClose }: { alert: Alert; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const t = TONE[alert.tone];
+
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    ref.current?.querySelector<HTMLElement>('button')?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Enter') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    const timer = alert.tone === 'error' ? undefined : window.setTimeout(onClose, AUTO_CLOSE_MS);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      if (timer) window.clearTimeout(timer);
+      previous?.focus?.();
+    };
+  }, [alert.tone, onClose]);
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="presentation">
+      <div className="absolute inset-0 bg-slate-900/35 backdrop-blur-[3px]" onClick={onClose} aria-hidden />
+      <div
+        ref={ref}
+        role={alert.tone === 'error' ? 'alertdialog' : 'dialog'}
+        aria-modal="true"
+        aria-labelledby="alert-title"
+        aria-describedby="alert-message"
+        className="relative w-full max-w-xs overflow-hidden rounded-[2rem] bg-slate-50 text-center shadow-soft ring-1 ring-white/70 dark:bg-slate-900 dark:ring-slate-800"
+      >
+        <div className={`bg-gradient-to-b ${t.header} to-transparent px-6 pb-1 pt-6`}>
+          <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-2xl shadow-soft ring-4 dark:bg-slate-800 ${t.ring}`} aria-hidden>
+            {t.emoji}
+          </div>
+          <h2 id="alert-title" className="mt-3 text-xl">
+            {t.title}
+          </h2>
+        </div>
+        <p id="alert-message" className="px-6 pt-1 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+          {alert.message}
+        </p>
+        <div className="p-5 pt-5">
+          <button
+            type="button"
+            onClick={onClose}
+            className={`inline-flex min-h-11 w-full items-center justify-center rounded-full px-5 text-sm font-semibold text-white shadow-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${t.button}`}
+          >
+            OK
+          </button>
+        </div>
+        {alert.tone !== 'error' && (
+          <div className="absolute inset-x-0 bottom-0 h-1 bg-slate-200/60 dark:bg-slate-800" aria-hidden>
+            <div className={`h-full ${t.button} origin-left animate-[shrink_2.6s_linear_forwards]`} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export const useToast = () => useContext(AlertContext);

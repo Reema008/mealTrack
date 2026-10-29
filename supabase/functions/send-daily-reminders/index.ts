@@ -1,11 +1,11 @@
-// Supabase Edge Function: sends the daily 10 PM "Daily Food Check" Web Push.
+// Supabase Edge Function: sends the daily 10 PM reminder Web Push.
 //
 // Invoked two ways:
 //  1. By pg_cron every 15 minutes with header `x-cron-secret` (see the
 //     *_cron.sql migration). For each household it checks the LOCAL time in the
 //     household timezone and sends Mon–Sat between 22:00 and 23:59, once per
 //     device per local date (deduplicated by claim_daily_reminder).
-//  2. By a signed-in user from Settings with {"mode":"test"}: sends a test
+//  2. By a phone from Settings with {"mode":"test"}: sends a test
 //     notification to that user's own devices only.
 //
 // Secrets (set with `supabase secrets set`): VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY,
@@ -148,9 +148,9 @@ async function runDaily(admin: SupabaseClient, appUrl: string, now: Date) {
 
 async function runTest(admin: SupabaseClient, appUrl: string, authHeader: string | null) {
   const jwt = authHeader?.replace(/^Bearer\s+/i, '');
-  if (!jwt) return json({ error: 'Sign in required' }, 401);
+  if (!jwt) return json({ error: 'Could not identify this phone. Close and reopen MealTrack.' }, 401);
   const { data: userData, error: uErr } = await admin.auth.getUser(jwt);
-  if (uErr || !userData.user) return json({ error: 'Your session has expired. Please sign in again.' }, 401);
+  if (uErr || !userData.user) return json({ error: 'This phone lost its connection. Close and reopen MealTrack.' }, 401);
   const userId = userData.user.id;
 
   const { data: member } = await admin
@@ -158,7 +158,7 @@ async function runTest(admin: SupabaseClient, appUrl: string, authHeader: string
     .select('household_id, status, households(timezone)')
     .eq('user_id', userId)
     .maybeSingle();
-  if (!member || member.status !== 'approved') return json({ error: 'You are not approved to use MealTrack yet' }, 403);
+  if (!member || member.status !== 'approved') return json({ error: 'This phone is not connected to MealTrack yet. Reopen the app.' }, 403);
 
   const tz = (member.households as unknown as { timezone: string }).timezone;
   const date = reminderPlan(new Date(), tz).reminderDate;
