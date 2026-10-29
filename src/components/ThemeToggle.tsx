@@ -16,7 +16,7 @@ export function ThemeToggle() {
     <div
       role="radiogroup"
       aria-label="Appearance"
-      className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-white/80 p-1 shadow-soft ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700"
+      className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-white/80 p-1 shadow-soft ring-1 ring-slate-200 dark:bg-slate-950 dark:ring-slate-800"
     >
       {OPTIONS.map((o) => {
         const selected = theme === o.value;

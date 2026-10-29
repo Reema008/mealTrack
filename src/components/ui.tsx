@@ -7,9 +7,9 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 const VARIANTS: Record<Variant, string> = {
   primary: 'bg-emerald-600 text-white shadow-soft hover:bg-emerald-700 disabled:bg-emerald-600/50 disabled:shadow-none',
   secondary:
-    'bg-white text-slate-800 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-50 dark:ring-slate-600 dark:hover:bg-slate-700',
+    'bg-white text-slate-800 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-50 dark:ring-slate-600 dark:hover:bg-slate-700',
   ghost: 'text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-slate-800',
-  danger: 'bg-white text-rose-700 ring-1 ring-inset ring-rose-300 hover:bg-rose-50 dark:bg-slate-800 dark:text-rose-300 dark:ring-rose-700',
+  danger: 'bg-white text-rose-700 ring-1 ring-inset ring-rose-300 hover:bg-rose-50 dark:bg-slate-900 dark:text-rose-300 dark:ring-rose-700',
 };
 
 export function Button({
@@ -28,7 +28,7 @@ export function Button({
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-3xl bg-white/85 p-5 shadow-soft ring-1 ring-slate-200/70 backdrop-blur-sm dark:bg-white/[0.04] dark:ring-white/[0.06] ${className}`}>
+    <section className={`rounded-3xl bg-white/85 p-5 shadow-soft ring-1 ring-slate-200/70 backdrop-blur-sm dark:bg-black/25 dark:ring-white/[0.05] ${className}`}>
       {children}
     </section>
   );
@@ -37,7 +37,7 @@ export function Card({ children, className = '' }: { children: ReactNode; classN
 const DAY_TYPE_STYLE: Record<DayType, string> = {
   veg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200',
   nonveg: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-200',
-  none: 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
+  none: 'bg-slate-200 text-slate-700 dark:bg-slate-900 dark:text-slate-200',
 };
 
 export const DAY_TYPE_EMOJI: Record<DayType, string> = { veg: '🥗', nonveg: '🍗', none: '🌤️' };
@@ -140,7 +140,7 @@ export function Segmented<T extends string | boolean>({
               className={`min-h-12 rounded-xl px-3 py-1.5 text-sm leading-tight font-semibold ring-1 ring-inset transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
                 selected
                   ? tone
-                  : 'bg-white text-slate-700 ring-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-50 dark:ring-slate-600'
+                  : 'bg-white text-slate-700 ring-slate-300 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-50 dark:ring-slate-600'
               }`}
             >
               {o.label}
@@ -171,7 +171,7 @@ export function PasswordField({
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
-          className="block min-h-11 w-full rounded-xl border-0 bg-white py-2 pl-3 pr-12 text-base text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-600 dark:bg-slate-800 dark:text-slate-50 dark:ring-slate-600"
+          className="block min-h-11 w-full rounded-xl border-0 bg-white py-2 pl-3 pr-12 text-base text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-600 dark:bg-slate-900 dark:text-slate-50 dark:ring-slate-600"
           {...props}
         />
         <button
@@ -217,7 +217,7 @@ export function TextField({
       </label>
       <input
         id={id}
-        className="block min-h-11 w-full rounded-xl border-0 bg-white px-3 text-base text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-600 dark:bg-slate-800 dark:text-slate-50 dark:ring-slate-600"
+        className="block min-h-11 w-full rounded-xl border-0 bg-white px-3 text-base text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-600 dark:bg-slate-900 dark:text-slate-50 dark:ring-slate-600"
         {...props}
       />
     </div>
@@ -250,7 +250,7 @@ export function FilterChips<T extends string>({
             className={`min-h-9 rounded-full px-3.5 py-1 text-xs font-semibold ring-1 ring-inset transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
               selected
                 ? 'bg-emerald-600 text-white ring-emerald-600'
-                : 'bg-white/80 text-slate-700 ring-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-50 dark:ring-slate-600'
+                : 'bg-white/80 text-slate-700 ring-slate-300 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-50 dark:ring-slate-600'
             }`}
           >
             {o.label}

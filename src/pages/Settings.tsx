@@ -73,7 +73,7 @@ function TimezoneSection() {
           aria-label="Timezone"
           value={tz}
           onChange={(e) => setTz(e.target.value)}
-          className="block min-h-11 min-w-0 flex-1 rounded-2xl border-0 bg-white px-3 text-slate-900 ring-1 ring-inset ring-slate-300 dark:bg-slate-800 dark:text-slate-50 dark:ring-slate-600"
+          className="block min-h-11 min-w-0 flex-1 rounded-2xl border-0 bg-white px-3 text-slate-900 ring-1 ring-inset ring-slate-300 dark:bg-slate-900 dark:text-slate-50 dark:ring-slate-600"
         >
           {[...new Set([household.timezone, ...TIMEZONES])].map((z) => (
             <option key={z} value={z}>{z}</option>

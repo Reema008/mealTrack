@@ -86,18 +86,18 @@ function ConfirmDialog({ options, onClose }: { options: ConfirmOptions; onClose:
         aria-modal="true"
         aria-labelledby="confirm-title"
         aria-describedby={options.message ? 'confirm-message' : undefined}
-        className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-sm overflow-y-auto rounded-[2rem] bg-slate-50 text-center shadow-soft ring-1 ring-white/70 dark:bg-slate-900 dark:ring-white/[0.06]"
+        className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-sm overflow-y-auto rounded-[2rem] bg-slate-50 text-center shadow-soft ring-1 ring-white/70 dark:bg-slate-900 dark:ring-white/[0.05]"
       >
         <div
           className={`px-6 pb-2 pt-7 ${
             danger
-              ? 'bg-gradient-to-b from-rose-100/90 to-transparent dark:from-rose-950/60'
-              : 'bg-gradient-to-b from-emerald-100/90 to-transparent dark:from-emerald-950/60'
+              ? 'bg-gradient-to-b from-rose-100/90 to-transparent dark:from-rose-950/20'
+              : 'bg-gradient-to-b from-emerald-100/90 to-transparent dark:from-emerald-950/20'
           }`}
         >
           <div
             className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full text-3xl shadow-soft ring-4 ${
-              danger ? 'bg-white ring-rose-200/80 dark:bg-slate-800 dark:ring-rose-900' : 'bg-white ring-emerald-200/80 dark:bg-slate-800 dark:ring-emerald-900'
+              danger ? 'bg-white ring-rose-200/80 dark:bg-slate-900 dark:ring-rose-900' : 'bg-white ring-emerald-200/80 dark:bg-slate-900 dark:ring-emerald-900'
             }`}
             aria-hidden
           >

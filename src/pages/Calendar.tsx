@@ -36,14 +36,14 @@ export function CalendarPage() {
         <Button variant="secondary" onClick={() => goMonth(1)} aria-label="Next month">→</Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-200 p-1 dark:bg-slate-800" role="tablist" aria-label="Calendar view">
+      <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-200 p-1 dark:bg-slate-900" role="tablist" aria-label="Calendar view">
         {(['month', 'list'] as const).map((v) => (
           <button
             key={v}
             role="tab"
             aria-selected={view === v}
             onClick={() => setView(v)}
-            className={`min-h-10 rounded-lg text-sm font-semibold ${view === v ? 'bg-white shadow-sm dark:bg-slate-900' : 'text-slate-600 dark:text-slate-300'}`}
+            className={`min-h-10 rounded-lg text-sm font-semibold ${view === v ? 'bg-white shadow-sm dark:bg-slate-700' : 'text-slate-600 dark:text-slate-300'}`}
           >
             {v === 'month' ? 'Month' : 'List'}
           </button>
@@ -77,7 +77,7 @@ export function CalendarPage() {
               <li key={d}>
                 <Link
                   to={`/day/${d}`}
-                  className={`block rounded-2xl bg-white p-3 ring-1 hover:bg-slate-50 dark:bg-white/[0.05] dark:hover:bg-white/10 ${d === today ? 'ring-2 ring-emerald-600' : 'ring-slate-200 dark:ring-white/[0.06]'}`}
+                  className={`block rounded-2xl bg-white p-3 ring-1 hover:bg-slate-50 dark:bg-black/25 dark:hover:bg-white/10 ${d === today ? 'ring-2 ring-emerald-600' : 'ring-slate-200 dark:ring-white/[0.05]'}`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-medium">{formatShort(d)}</span>

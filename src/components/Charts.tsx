@@ -4,12 +4,12 @@ import type { MealStats } from '../domain/stats';
 type Tint = 'sage' | 'peach' | 'butter' | 'blush' | 'lavender' | 'cream';
 
 const TINTS: Record<Tint, string> = {
-  sage: 'bg-emerald-100/80 dark:bg-emerald-950/35',
-  peach: 'bg-orange-100/80 dark:bg-orange-950/30',
-  butter: 'bg-amber-100/80 dark:bg-amber-950/30',
-  blush: 'bg-rose-100/80 dark:bg-rose-950/30',
-  lavender: 'bg-sky-100/80 dark:bg-sky-950/30',
-  cream: 'bg-white/85 dark:bg-white/[0.04]',
+  sage: 'bg-emerald-100/80 dark:bg-emerald-950/20',
+  peach: 'bg-orange-100/80 dark:bg-orange-950/20',
+  butter: 'bg-amber-100/80 dark:bg-amber-950/20',
+  blush: 'bg-rose-100/80 dark:bg-rose-950/20',
+  lavender: 'bg-sky-100/80 dark:bg-sky-950/20',
+  cream: 'bg-white/85 dark:bg-black/25',
 };
 
 /** A pastel report tile. When `onClick` is given it is a button that opens details. */
@@ -47,7 +47,7 @@ export function StatCard({
       )}
     </>
   );
-  const cls = `block w-full min-w-0 rounded-3xl p-4 text-left shadow-soft ring-1 ring-white/60 dark:ring-white/[0.06] ${TINTS[tint]}`;
+  const cls = `block w-full min-w-0 rounded-3xl p-4 text-left shadow-soft ring-1 ring-white/60 dark:ring-white/[0.05] ${TINTS[tint]}`;
   return onClick ? (
     <button
       type="button"
@@ -68,7 +68,7 @@ export function SplitBar({ title, parts }: { title: string; parts: Array<{ label
   return (
     <figure>
       <figcaption className="mb-2 font-display text-lg">{title}</figcaption>
-      <div className="flex h-4 gap-0.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" aria-hidden>
+      <div className="flex h-4 gap-0.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-900" aria-hidden>
         {total > 0 &&
           parts.map((p) => p.value > 0 && <div key={p.label} className={`${p.className} rounded-full`} style={{ width: `${(p.value / total) * 100}%` }} />)}
       </div>
@@ -152,7 +152,7 @@ export function CategoryTile({
       type="button"
       onClick={onClick}
       aria-label={`${label}: ${stats.delivered} delivered, ${stats.notReceived} not received, ${stats.upcoming} upcoming. View details`}
-      className={`block w-full min-w-0 rounded-3xl p-4 text-left shadow-soft ring-1 ring-white/60 transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:ring-white/[0.06] ${TINTS[tint]}`}
+      className={`block w-full min-w-0 rounded-3xl p-4 text-left shadow-soft ring-1 ring-white/60 transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:ring-white/[0.05] ${TINTS[tint]}`}
     >
       <span className="flex flex-wrap items-center justify-between gap-x-2">
         <span className="font-display text-lg">
@@ -161,7 +161,7 @@ export function CategoryTile({
         </span>
         <span className="font-display text-2xl tabular-nums">{pct}</span>
       </span>
-      <span className="mt-2 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-white/70 dark:bg-slate-800" aria-hidden>
+      <span className="mt-2 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-white/70 dark:bg-slate-900" aria-hidden>
         {stats.delivered > 0 && <span className="rounded-full bg-emerald-400" style={{ width: `${(stats.delivered / total) * 100}%` }} />}
         {stats.notReceived > 0 && <span className="rounded-full bg-rose-400" style={{ width: `${(stats.notReceived / total) * 100}%` }} />}
         {stats.upcoming > 0 && <span className="rounded-full bg-sky-300" style={{ width: `${(stats.upcoming / total) * 100}%` }} />}

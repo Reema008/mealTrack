@@ -29,8 +29,8 @@ export function deliveryLabel(meal: EffectiveMeal): string {
 }
 
 const PERIOD_STYLE: Record<MealPeriod, { emoji: string; tint: string }> = {
-  lunch: { emoji: '☀️', tint: 'bg-amber-50/90 dark:bg-amber-950/25' },
-  dinner: { emoji: '🌙', tint: 'bg-sky-50/90 dark:bg-sky-950/25' },
+  lunch: { emoji: '☀️', tint: 'bg-amber-50/90 dark:bg-amber-950/20' },
+  dinner: { emoji: '🌙', tint: 'bg-sky-50/90 dark:bg-sky-950/20' },
 };
 
 function Row({ label, value, bad }: { label: string; value: string; bad?: boolean }) {
@@ -49,7 +49,7 @@ export function MealCard({ meal, pending, onEdit }: { meal: EffectiveMeal; pendi
   return (
     <article
       className={`rounded-3xl p-5 shadow-soft ring-1 ${style.tint} ${
-        notReceived ? 'ring-rose-300 dark:ring-rose-800' : 'ring-white/60 dark:ring-white/[0.06]'
+        notReceived ? 'ring-rose-300 dark:ring-rose-800' : 'ring-white/60 dark:ring-white/[0.05]'
       }`}
       aria-label={`${PERIOD_LABEL[meal.period]}, ${formatLong(meal.date)}`}
     >

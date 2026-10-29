@@ -22,7 +22,7 @@ export function SubscriptionCard() {
 
   if (status.kind === 'none') {
     return (
-      <Card className="bg-gradient-to-br from-amber-50/90 to-white/80 dark:from-amber-950/40 dark:to-slate-900/80">
+      <Card className="bg-gradient-to-br from-amber-50/90 to-white/80 dark:from-amber-950/20 dark:to-black/20">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0 flex-1 basis-48">
             <h2 className="text-xl">Subscription</h2>
@@ -36,7 +36,7 @@ export function SubscriptionCard() {
 
   if (status.kind === 'ended') {
     return (
-      <Card className="bg-gradient-to-br from-rose-50/90 to-white/80 dark:from-rose-950/40 dark:to-slate-900/80">
+      <Card className="bg-gradient-to-br from-rose-50/90 to-white/80 dark:from-rose-950/20 dark:to-black/20">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0 flex-1 basis-48">
             <h2 className="text-xl">Renewal due</h2>
@@ -72,7 +72,7 @@ export function SubscriptionCard() {
   const pct = Math.round((day / p.days) * 100);
 
   return (
-    <Card className="bg-gradient-to-br from-emerald-50/90 via-white/80 to-sky-50/80 dark:from-emerald-950/40 dark:via-slate-900/80 dark:to-sky-950/40">
+    <Card className="bg-gradient-to-br from-emerald-50/90 via-white/80 to-sky-50/80 dark:from-emerald-950/20 dark:via-black/20 dark:to-sky-950/20">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-xl">Subscription</h2>
@@ -86,7 +86,7 @@ export function SubscriptionCard() {
         </div>
       </div>
       <div
-        className="mt-3 h-3 overflow-hidden rounded-full bg-white/80 ring-1 ring-slate-200/70 dark:bg-slate-800 dark:ring-slate-700"
+        className="mt-3 h-3 overflow-hidden rounded-full bg-white/80 ring-1 ring-slate-200/70 dark:bg-slate-900 dark:ring-slate-700"
         role="progressbar"
         aria-label="Subscription progress"
         aria-valuemin={1}

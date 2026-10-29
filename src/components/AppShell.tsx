@@ -133,7 +133,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
         <main className="flex-1 px-4 pb-28 pt-2">{children}</main>
         <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-          <ul className="mx-auto grid max-w-md grid-cols-4 gap-1 rounded-full bg-white/90 p-1.5 shadow-soft ring-1 ring-slate-200/70 backdrop-blur-md dark:bg-slate-900/90 dark:ring-white/[0.06]">
+          <ul className="mx-auto grid max-w-md grid-cols-4 gap-1 rounded-full bg-white/90 p-1.5 shadow-soft ring-1 ring-slate-200/70 backdrop-blur-md dark:bg-slate-950/90 dark:ring-white/[0.05]">
             {NAV.map((n) => (
               <li key={n.to}>
                 <NavLink

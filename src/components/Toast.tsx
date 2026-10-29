@@ -13,21 +13,21 @@ const TONE: Record<Tone, { emoji: string; title: string; header: string; ring: s
   success: {
     emoji: '✅',
     title: 'Done',
-    header: 'from-emerald-100/90 dark:from-emerald-950/60',
+    header: 'from-emerald-100/90 dark:from-emerald-950/20',
     ring: 'ring-emerald-200/80 dark:ring-emerald-900',
     button: 'bg-emerald-600 hover:bg-emerald-700',
   },
   info: {
     emoji: '💬',
     title: 'Good to know',
-    header: 'from-sky-100/90 dark:from-sky-950/60',
+    header: 'from-sky-100/90 dark:from-sky-950/20',
     ring: 'ring-sky-200/80 dark:ring-sky-900',
     button: 'bg-sky-600 hover:bg-sky-700',
   },
   error: {
     emoji: '⚠️',
     title: 'Something went wrong',
-    header: 'from-rose-100/90 dark:from-rose-950/60',
+    header: 'from-rose-100/90 dark:from-rose-950/20',
     ring: 'ring-rose-200/80 dark:ring-rose-900',
     button: 'bg-rose-600 hover:bg-rose-700',
   },
@@ -92,10 +92,10 @@ function AlertModal({ alert, onClose }: { alert: Alert; onClose: () => void }) {
         aria-modal="true"
         aria-labelledby="alert-title"
         aria-describedby="alert-message"
-        className="relative max-h-[calc(100dvh-2rem)] w-full max-w-xs overflow-y-auto rounded-[2rem] bg-slate-50 text-center shadow-soft ring-1 ring-white/70 dark:bg-slate-900 dark:ring-white/[0.06]"
+        className="relative max-h-[calc(100dvh-2rem)] w-full max-w-xs overflow-y-auto rounded-[2rem] bg-slate-50 text-center shadow-soft ring-1 ring-white/70 dark:bg-slate-900 dark:ring-white/[0.05]"
       >
         <div className={`bg-gradient-to-b ${t.header} to-transparent px-6 pb-1 pt-6`}>
-          <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-2xl shadow-soft ring-4 dark:bg-slate-800 ${t.ring}`} aria-hidden>
+          <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-2xl shadow-soft ring-4 dark:bg-slate-900 ${t.ring}`} aria-hidden>
             {t.emoji}
           </div>
           <h2 id="alert-title" className="mt-3 text-xl">
@@ -115,7 +115,7 @@ function AlertModal({ alert, onClose }: { alert: Alert; onClose: () => void }) {
           </button>
         </div>
         {alert.tone !== 'error' && (
-          <div className="absolute inset-x-0 bottom-0 h-1 bg-slate-200/60 dark:bg-slate-800" aria-hidden>
+          <div className="absolute inset-x-0 bottom-0 h-1 bg-slate-200/60 dark:bg-slate-900" aria-hidden>
             <div className={`h-full ${t.button} origin-left animate-[shrink_2.6s_linear_forwards]`} />
           </div>
         )}
