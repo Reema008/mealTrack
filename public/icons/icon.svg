@@ -11,14 +11,11 @@
   </defs>
   <rect width="100" height="100" rx="24" fill="url(#bg)"/>
   <g fill="none" stroke="#a88a6c" stroke-width="3.8" stroke-linecap="round">
-    <path d="M43 40c-4-4.5 4-8 0-13s4-8 0-12"/>
-    <path d="M57 40c-4-4.5 4-8 0-13s4-8 0-12"/>
+    <path d="M36 40c-4-4.5 4-8 0-13s4-8 0-12"/>
+    <path d="M50 40c-4-4.5 4-8 0-13s4-8 0-12"/>
+    <path d="M64 40c-4-4.5 4-8 0-13s4-8 0-12"/>
   </g>
   <path d="M18 50h64a32 32 0 0 1-64 0z" fill="url(#wood)"/>
   <rect x="18" y="50" width="64" height="4.5" rx="2" fill="#b07d53"/>
   <rect x="38" y="81" width="24" height="5" rx="2.5" fill="#7a5032"/>
-  <g transform="rotate(-40 72 29)">
-    <ellipse cx="72" cy="29" rx="10.5" ry="4.4" fill="#3f6b3a"/>
-    <path d="M62.5 29h19" stroke="#2c4f29" stroke-width="1.3" stroke-linecap="round"/>
-  </g>
 </svg>

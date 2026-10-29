@@ -74,12 +74,10 @@ const WOOD_TOP = hex('#9a6a43');
 const WOOD_BOTTOM = hex('#7a5032');
 const WOOD_RIM = hex('#b07d53');
 const STEAM = hex('#a88a6c');
-const LEAF = hex('#3f6b3a');
-const LEAF_VEIN = hex('#2c4f29');
 const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 
-// Two wavy steam lines, sampled as short segments (matches icon.svg).
-const steam = [0.43, 0.57].map((cx) =>
+// Three wavy steam lines, sampled as short segments (matches icon.svg).
+const steam = [0.36, 0.5, 0.64].map((cx) =>
   Array.from({ length: 25 }, (_, i) => {
     const y = 0.4 - (i / 24) * 0.25;
     return [cx + 0.032 * Math.sin((i / 24) * Math.PI * 2.4), y];
@@ -91,22 +89,10 @@ function nearSteam(u, v) {
       if (segDist(u, v, line[i - 1][0], line[i - 1][1], line[i][0], line[i][1]) < 0.019) return true;
   return false;
 }
-/** Point in a rotated ellipse's local coordinates (deg follows SVG rotate()). */
-function toLocal(u, v, cx, cy, deg) {
-  const a = (deg * Math.PI) / 180;
-  const dx = u - cx;
-  const dy = v - cy;
-  return [dx * Math.cos(a) + dy * Math.sin(a), -dx * Math.sin(a) + dy * Math.cos(a)];
-}
-
 /** Bowl artwork; returns a colour, or null for background. scale < 1 shrinks it (maskable safe zone). */
 function art(x, y, scale) {
   const u = (x - 0.5) / scale + 0.5;
   const v = (y - 0.5) / scale + 0.5;
-
-  // Dark green leaf, tilted, beside the steam lines.
-  const [lx, ly] = toLocal(u, v, 0.72, 0.29, -40);
-  if ((lx / 0.105) ** 2 + (ly / 0.044) ** 2 <= 1) return Math.abs(ly) < 0.0065 && Math.abs(lx) < 0.095 ? LEAF_VEIN : LEAF;
 
   // Wooden bowl: lighter rim band, body darkening towards the bottom.
   if (v >= 0.5 && dist(u, v, 0.5, 0.5) <= 0.32) return v <= 0.545 ? WOOD_RIM : mix(WOOD_TOP, WOOD_BOTTOM, (v - 0.5) / 0.32);
