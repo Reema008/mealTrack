@@ -112,7 +112,7 @@ function ConfirmDialog({ options, onClose }: { options: ConfirmOptions; onClose:
             {options.message}
           </div>
         )}
-        <div className="grid grid-cols-2 gap-2 p-5 pt-6">
+        <div className="flex justify-end gap-2 p-5 pt-6">
           <Button variant="secondary" data-cancel onClick={() => onClose(false)}>
             {options.cancelLabel ?? 'Cancel'}
           </Button>

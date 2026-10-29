@@ -4,11 +4,13 @@ import { PERIOD_LABEL } from '../domain/schedule';
 import type { EffectiveMeal, MealPeriod } from '../domain/types';
 import { Button, StatusBadge, type BadgeKind } from './ui';
 
-export function badgeFor(meal: EffectiveMeal, unsynced: boolean): BadgeKind {
+/** Tag for a meal: none when it simply follows the schedule. */
+export function badgeFor(meal: EffectiveMeal, unsynced: boolean): BadgeKind | null {
   if (unsynced) return 'unsynced';
+  if (meal.source === 'explicit') return 'saved';
   if (meal.timing === 'pending') return 'awaiting';
   if (meal.timing === 'future') return 'planned';
-  return meal.source === 'explicit' ? 'saved' : 'assumed';
+  return null;
 }
 
 /** "2 PM" / "10 PM": when today's meal becomes assumed delivered. */

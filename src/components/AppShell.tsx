@@ -84,15 +84,15 @@ function OfflineConflictDialog({ conflict, onDone }: { conflict: SyncConflict; o
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 sm:items-center">
       <div role="alertdialog" aria-modal="true" aria-labelledby="conflict-title" className="w-full max-w-md rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] dark:bg-slate-900 sm:rounded-3xl">
-        <h2 id="conflict-title" className="text-lg font-semibold">Offline change needs review</h2>
+        <h2 id="conflict-title" className="text-2xl">Someone else changed this meal</h2>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-          {PERIOD_LABEL[conflict.period]} on {formatLong(conflict.date)} was changed by someone else before your offline edit synced.
+          {PERIOD_LABEL[conflict.period]} on {formatLong(conflict.date)} was changed on another phone just before your change was saved.
         </p>
         <dl className="mt-3 space-y-1 text-sm">
           <div><dt className="inline font-medium">Now saved: </dt><dd className="inline">{theirs ? describe(theirs, nonveg) : 'Standard default'}</dd></div>
           <div><dt className="inline font-medium">Your edit: </dt><dd className="inline">{describe(conflict.mine, nonveg)}</dd></div>
         </dl>
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="mt-4 flex justify-end gap-2">
           <Button variant="secondary" onClick={onDone} disabled={busy}>Keep theirs</Button>
           <Button onClick={useMine} disabled={busy}>{busy ? 'Saving…' : 'Use mine'}</Button>
         </div>

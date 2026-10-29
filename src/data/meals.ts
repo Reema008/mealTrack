@@ -1,7 +1,7 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { getDayType } from '../domain/schedule';
-import { isDefault, overrideKey, toOverrideMap } from '../domain/meals';
+import { isDefault, normalizeValues, overrideKey, toOverrideMap } from '../domain/meals';
 import type { ISODate, MealOverride, OverrideMap } from '../domain/types';
 import { AuthExpiredError, isNetworkFailure, toAppError } from '../lib/errors';
 import { flushOutbox, outbox, type OutboxItem } from '../lib/outbox';
@@ -40,7 +40,7 @@ export function useOverrides(start: ISODate, end: ISODate) {
       const dayType = getDayType(item.date);
       if (dayType === 'none') continue;
       keys.add(item.key);
-      if (isDefault(dayType, item.values)) {
+      if (!item.keep && isDefault(dayType, item.values)) {
         m.delete(item.key);
       } else {
         m.set(item.key, localOverride(household.id, item, m.get(item.key)));
@@ -74,7 +74,51 @@ export type SaveResult =
   | { kind: 'queued' }
   | { kind: 'conflict'; outcome: SaveOutcome };
 
-/** Save a meal; queues offline, never reports success before the server confirms. */
+/** Put the value the user chose straight into every cached range, so the screen updates instantly. */
+function applyLocally(qc: QueryClient, householdId: string, req: SaveRequest, row: MealOverride | null) {
+  qc.setQueriesData<MealOverride[]>({ queryKey: overridesKey(householdId) }, (old) => {
+    if (!old) return old;
+    const rest = old.filter((r) => !(r.meal_date === req.date && r.meal_period === req.period));
+    return row ? [...rest, row] : rest;
+  });
+}
+
+/** What the saved row will look like, before the server confirms it. */
+function predictedRow(householdId: string, req: SaveRequest, previous: MealOverride | undefined): MealOverride | null {
+  const dayType = getDayType(req.date);
+  if (dayType === 'none') return null;
+  const values = normalizeValues(dayType, req.values);
+  if (!req.keep && isDefault(dayType, values)) return null;
+  const now = new Date().toISOString();
+  return {
+    id: previous?.id ?? `local-${req.date}-${req.period}`,
+    household_id: householdId,
+    meal_date: req.date,
+    meal_period: req.period,
+    delivery_status: values.deliveryStatus,
+    main_dish: values.mainDish,
+    extra_curry_received: values.extraCurryReceived,
+    created_by: previous?.created_by ?? null,
+    updated_by: null,
+    created_at: previous?.created_at ?? now,
+    updated_at: now,
+    version: previous?.version ?? 0,
+  };
+}
+
+function findCached(qc: QueryClient, householdId: string, req: SaveRequest): MealOverride | undefined {
+  for (const [, rows] of qc.getQueriesData<MealOverride[]>({ queryKey: overridesKey(householdId) })) {
+    const hit = rows?.find((r) => r.meal_date === req.date && r.meal_period === req.period);
+    if (hit) return hit;
+  }
+  return undefined;
+}
+
+/**
+ * Save a meal. The screen updates immediately (optimistic); the cloud save
+ * runs in the background. On a conflict or an error the cached value is put
+ * back to what the server has. Offline edits are queued.
+ */
 export function useSaveMeal() {
   const { household } = useHousehold();
   const qc = useQueryClient();
@@ -87,13 +131,21 @@ export function useSaveMeal() {
       };
       // Keep ordering: if this meal already has a queued edit, queue behind it.
       if (!navigator.onLine || outbox.get(household.id, req.date, req.period)) return queue();
+
+      const refresh = () => void qc.invalidateQueries({ queryKey: overridesKey(household.id) });
+      applyLocally(qc, household.id, req, predictedRow(household.id, req, findCached(qc, household.id, req)));
       try {
         const outcome = await saveMealOverride(req);
-        await qc.invalidateQueries({ queryKey: overridesKey(household.id) });
-        if (outcome.status === 'conflict') return { kind: 'conflict', outcome };
+        if (outcome.status === 'conflict') {
+          refresh(); // show what is really saved
+          return { kind: 'conflict', outcome };
+        }
+        // Use the confirmed row (real id/version) without waiting for a refetch.
+        applyLocally(qc, household.id, req, outcome.status === 'deleted' ? null : outcome.row);
         return { kind: outcome.status, outcome };
       } catch (err) {
         if (isNetworkFailure(err)) return queue();
+        refresh(); // roll back to the server's value
         const appErr = toAppError(err);
         if (appErr instanceof AuthExpiredError) void signOut();
         throw appErr;
@@ -186,6 +238,7 @@ export function useHouseholdSync(onSynced: (count: number) => void) {
     failedItems: pending.filter((p) => p.lastError),
     conflicts,
     dismissConflict: (c: SyncConflict) => setConflicts((all) => all.filter((x) => x !== c)),
+    reportConflict: (c: SyncConflict) => setConflicts((all) => [...all, c]),
     flush,
   };
 }

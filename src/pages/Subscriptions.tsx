@@ -84,9 +84,9 @@ function SubscriptionForm({
         </div>
       </div>
       {error && <p role="alert" className="text-sm text-rose-700 dark:text-rose-300">{error}</p>}
-      <div className="flex gap-2">
+      <div className="flex justify-end gap-2">
+        {onCancel && <Button variant="secondary" onClick={onCancel}>Cancel</Button>}
         <Button type="submit" disabled={busy}>{busy ? 'Saving…' : submitLabel}</Button>
-        {onCancel && <Button variant="ghost" onClick={onCancel}>Cancel</Button>}
       </div>
     </form>
   );

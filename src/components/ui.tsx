@@ -51,18 +51,14 @@ export function DayTypeChip({ type, className = '' }: { type: DayType; className
   );
 }
 
-export type BadgeKind = 'assumed' | 'saved' | 'planned' | 'awaiting' | 'unsynced';
+/** Tag shown on a meal. Meals following the normal schedule get no tag. */
+export type BadgeKind = 'saved' | 'planned' | 'awaiting' | 'unsynced';
 
 const BADGE: Record<BadgeKind, { label: string; className: string; title: string }> = {
-  assumed: {
-    label: 'Assumed',
-    className: 'bg-slate-100 text-slate-700 ring-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-600',
-    title: 'No one has changed this meal; the standard schedule is assumed.',
-  },
   saved: {
-    label: 'Saved',
+    label: 'Edited',
     className: 'bg-emerald-50 text-emerald-800 ring-emerald-300 dark:bg-emerald-950 dark:text-emerald-200 dark:ring-emerald-700',
-    title: 'Someone saved this meal explicitly.',
+    title: 'Someone changed this meal from the standard schedule, or confirmed it.',
   },
   planned: {
     label: 'Planned',
@@ -81,7 +77,8 @@ const BADGE: Record<BadgeKind, { label: string; className: string; title: string
   },
 };
 
-export function StatusBadge({ kind }: { kind: BadgeKind }) {
+export function StatusBadge({ kind }: { kind: BadgeKind | null }) {
+  if (!kind) return null;
   const b = BADGE[kind];
   return (
     <span title={b.title} className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${b.className}`}>

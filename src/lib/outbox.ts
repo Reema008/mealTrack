@@ -14,6 +14,8 @@ export interface OutboxItem {
   expectedVersion: number | null;
   queuedAt: string;
   attempts: number;
+  /** Save even if the values equal the default. */
+  keep?: boolean;
   lastError?: string;
 }
 
@@ -62,6 +64,7 @@ export class Outbox {
       expectedVersion: existing ? existing.expectedVersion : req.expectedVersion,
       queuedAt: existing?.queuedAt ?? now.toISOString(),
       attempts: 0,
+      keep: req.keep,
     };
     this.write([...this.list().filter((i) => !(i.householdId === householdId && i.key === key)), item]);
     return item;
@@ -121,6 +124,7 @@ export async function flushOutbox(
         period: item.period,
         values: item.values,
         expectedVersion: item.expectedVersion,
+        keep: item.keep,
       });
       outbox.remove(householdId, item.key);
       if (outcome.status === 'conflict') result.conflicts.push({ item, outcome });

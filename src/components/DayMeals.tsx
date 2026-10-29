@@ -99,8 +99,7 @@ export function DayMeals({
     setBusy(false);
     if (errors.length) toast(`Could not save the whole day: ${errors[0]}`, 'error');
     else if (conflicts.length) toast(`Someone else just changed ${conflicts.join(' and ')}. Please check and try again.`, 'error');
-    else if (queued) toast('Saved on this device. It will sync when you are back online.', 'info');
-    else toast(toNotDelivered ? 'Whole day marked as not delivered.' : 'Whole day restored to delivered.');
+    else if (queued) toast('Saved on this phone. It will sync when you are back online.', 'info');
   }
 
   return (

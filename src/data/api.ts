@@ -38,6 +38,8 @@ export interface SaveRequest {
   values: MealValues;
   /** Version of the override the user was editing (null = they saw the default). */
   expectedVersion: number | null;
+  /** Save even if the values equal the default (confirming a meal before its cutoff). */
+  keep?: boolean;
 }
 
 const OVERRIDE_COLUMNS =
@@ -73,13 +75,14 @@ export async function fetchOverrides(householdId: string, start: ISODate, end: I
 }
 
 export async function saveMealOverride(req: SaveRequest): Promise<SaveOutcome> {
-  const { data, error } = await supabase.rpc('save_meal_override', {
+  const { data, error } = await supabase.rpc('save_meal', {
     p_date: req.date,
     p_period: req.period,
     p_delivery_status: req.values.deliveryStatus,
     p_main_dish: req.values.mainDish,
     p_extra_curry: req.values.extraCurryReceived,
     p_expected_version: req.expectedVersion,
+    p_keep: req.keep ?? false,
   });
   if (error) throw toAppError(error);
   return data as SaveOutcome;
