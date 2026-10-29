@@ -116,6 +116,8 @@ h2,
   --st-pending: #9d88bd;
   --st-planned-edge: #ab94d3;
   --st-planned-fill: #ffffff;
+  --st-on: #ffffff;
+  --st-on-missed: #ffffff;
 }
 .dark {
   --st-delivered: #bba6dc;
@@ -124,6 +126,8 @@ h2,
   --st-pending: #bba6dc;
   --st-planned-edge: #8c78ad;
   --st-planned-fill: transparent;
+  --st-on: #19161f;
+  --st-on-missed: #19161f;
 }
 .st-delivered { background-color: var(--st-delivered); }
 .st-delivered-soft { background-color: var(--st-delivered-soft); }

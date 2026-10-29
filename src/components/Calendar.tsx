@@ -1,46 +1,122 @@
 import { NonVegIcon, VegIcon } from './ui';
 import { addDays, eachDay, endOfMonth, formatDate, formatLong, startOfMonth, startOfWeek, weekdayShort } from '../domain/dates';
-import { mealsForDate, overrideKey } from '../domain/meals';
+import { mealsForDate } from '../domain/meals';
 import { getDayType } from '../domain/schedule';
 import { useHousehold } from '../data/household';
-import type { ISODate, OverrideMap } from '../domain/types';
+import type { EffectiveMeal, ISODate, OverrideMap } from '../domain/types';
+
+/** What the calendar shows for one meal: only delivered, not delivered or pending. */
+export type MealMark = 'delivered' | 'missed' | 'pending' | null;
 
 export interface DaySummary {
   dayType: ReturnType<typeof getDayType>;
-  explicit: number;
-  notReceived: number;
-  pending: number;
+  /** Lunch then dinner; null = nothing to show yet (a normal future meal). */
+  meals: MealMark[];
+  /** A delivered non-veg meal came without the extra curries. */
+  noExtra: boolean;
 }
 
-export function summarizeDay(
-  date: ISODate,
-  map: OverrideMap,
-  pendingKeys: ReadonlySet<string>,
-  today: ISODate,
-  nowMinutes?: number,
-): DaySummary {
+function markFor(m: EffectiveMeal): MealMark {
+  if (m.deliveryStatus === 'not_received') return 'missed';
+  if (m.timing === 'pending') return 'pending';
+  if (m.timing === 'future') return null;
+  return 'delivered';
+}
+
+export function summarizeDay(date: ISODate, map: OverrideMap, today: ISODate, nowMinutes?: number): DaySummary {
   const meals = mealsForDate(date, map, today, nowMinutes);
   return {
     dayType: getDayType(date),
-    explicit: meals.filter((m) => m.source === 'explicit').length,
-    notReceived: meals.filter((m) => m.deliveryStatus === 'not_received').length,
-    pending: meals.filter((m) => pendingKeys.has(overrideKey(m.date, m.period))).length,
+    meals: meals.map(markFor),
+    noExtra: meals.some(
+      (m) => m.dayType === 'nonveg' && m.deliveryStatus === 'delivered' && m.extraCurryReceived === false && (m.timing === 'past' || m.timing === 'today'),
+    ),
   };
 }
 
-const TYPE_DOT: Record<string, string> = {
-  veg: 'bg-emerald-400',
-  nonveg: 'bg-orange-500',
-  none: 'bg-slate-300 dark:bg-slate-600',
+const MARK_TEXT: Record<Exclude<MealMark, null>, string> = {
+  delivered: 'delivered',
+  missed: 'not delivered',
+  pending: 'pending',
 };
 
-function describeDay(date: ISODate, s: DaySummary, today: ISODate): string {
+function describeDay(date: ISODate, s: DaySummary): string {
   const parts = [formatLong(date), s.dayType === 'none' ? 'no delivery' : s.dayType === 'veg' ? 'veg' : 'non-veg'];
-  if (date > today && s.dayType !== 'none') parts.push('planned');
-  if (s.notReceived) parts.push(`${s.notReceived} not received`);
-  if (s.explicit) parts.push(`${s.explicit} saved`);
-  if (s.pending) parts.push(`${s.pending} pending sync`);
+  ['lunch', 'dinner'].forEach((name, i) => {
+    const mark = s.meals[i];
+    if (mark) parts.push(`${name} ${MARK_TEXT[mark]}`);
+  });
+  if (s.noExtra) parts.push('no extra curry');
   return parts.join(', ');
+}
+
+const TYPE_COLOR = { veg: 'text-emerald-600 dark:text-emerald-300', nonveg: 'text-emerald-800 dark:text-emerald-100', none: '' } as const;
+
+function TypeMark({ type, className }: { type: DaySummary['dayType']; className: string }) {
+  if (type === 'veg') return <VegIcon className={`${className} ${TYPE_COLOR.veg}`} />;
+  if (type === 'nonveg') return <NonVegIcon className={`${className} ${TYPE_COLOR.nonveg}`} />;
+  return null;
+}
+
+/** Small status icon for one meal: ✓ delivered, ✕ not delivered, clock = pending. */
+export function MealIcon({ mark, className = 'h-3 w-3' }: { mark: Exclude<MealMark, null>; className?: string }) {
+  return (
+    <svg viewBox="0 0 12 12" className={className} aria-hidden>
+      {mark === 'delivered' && (
+        <>
+          <circle cx="6" cy="6" r="5.5" style={{ fill: 'var(--st-delivered)' }} />
+          <path d="M3.4 6.2 5.2 8l3.4-3.8" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: 'var(--st-on)' }} />
+        </>
+      )}
+      {mark === 'missed' && (
+        <>
+          <circle cx="6" cy="6" r="5.5" style={{ fill: 'var(--st-missed)' }} />
+          <path d="M4 4l4 4M8 4 4 8" fill="none" strokeWidth="1.5" strokeLinecap="round" style={{ stroke: 'var(--st-on-missed)' }} />
+        </>
+      )}
+      {mark === 'pending' && (
+        <>
+          <circle cx="6" cy="6" r="4.9" fill="none" strokeWidth="1.3" style={{ stroke: 'var(--st-pending)' }} />
+          <path d="M6 3.4V6l1.8 1.2" fill="none" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: 'var(--st-pending)' }} />
+        </>
+      )}
+    </svg>
+  );
+}
+
+/** One icon per meal: lunch first, then dinner. */
+function MealIcons({ meals, className }: { meals: MealMark[]; className?: string }) {
+  if (!meals.some(Boolean)) return <span className="h-3" aria-hidden />;
+  return (
+    <span className="flex items-center gap-0.5" aria-hidden>
+      {meals.map((m, i) => (m ? <MealIcon key={i} mark={m} className={className} /> : <span key={i} className="h-3 w-3" />))}
+    </span>
+  );
+}
+
+/** A curry bowl with a line through it: a non-veg meal came without the extra curries. */
+export function NoExtraMark({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 12 12" className={`${className} text-emerald-700 dark:text-emerald-200`} aria-hidden>
+      <path d="M1.6 5.6h8.8a4.4 4.4 0 0 1-8.8 0Z" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+      <path d="M4.4 3.8c-.5-.6.5-1 0-1.7M7.6 3.8c-.5-.6.5-1 0-1.7" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+      <path d="M1.5 10.8 10.5 1.6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function CalendarLegend() {
+  return (
+    <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-slate-700 dark:text-slate-200 sm:grid-cols-3">
+      <li className="flex items-center gap-2"><TypeMark type="veg" className="h-3.5 w-3.5" />Veg day</li>
+      <li className="flex items-center gap-2"><TypeMark type="nonveg" className="h-3.5 w-3.5" />Non-veg day</li>
+      <li className="flex items-center gap-2"><MealIcon mark="delivered" className="h-3.5 w-3.5" />Delivered</li>
+      <li className="flex items-center gap-2"><MealIcon mark="missed" className="h-3.5 w-3.5" />Not delivered</li>
+      <li className="flex items-center gap-2"><MealIcon mark="pending" className="h-3.5 w-3.5" />Pending</li>
+      <li className="flex items-center gap-2"><NoExtraMark className="h-3.5 w-3.5" />No extra curry</li>
+      <li className="col-span-full text-slate-500 dark:text-slate-300">Each day shows two icons: lunch first, then dinner.</li>
+    </ul>
+  );
 }
 
 export function MonthCalendar({
@@ -48,14 +124,13 @@ export function MonthCalendar({
   selected,
   today,
   map,
-  pendingKeys,
   onSelect,
 }: {
   month: ISODate;
   selected: ISODate;
   today: ISODate;
   map: OverrideMap;
-  pendingKeys: ReadonlySet<string>;
+  pendingKeys?: ReadonlySet<string>;
   onSelect: (d: ISODate) => void;
 }) {
   const { nowMinutes } = useHousehold();
@@ -68,7 +143,7 @@ export function MonthCalendar({
 
   return (
     <div>
-      <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-slate-500 dark:text-slate-300" aria-hidden>
+      <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-slate-500 dark:text-slate-300" aria-hidden>
         {headers.map((d) => (
           <div key={d} className="py-1">
             {weekdayShort(d)}
@@ -78,7 +153,7 @@ export function MonthCalendar({
       <div className="grid grid-cols-7 gap-1" role="grid" aria-label="Month calendar">
         {days.map((d) => {
           const inMonth = d >= first && d <= last;
-          const s = summarizeDay(d, map, pendingKeys, today, nowMinutes);
+          const s = summarizeDay(d, map, today, nowMinutes);
           const isSel = d === selected;
           const isToday = d === today;
           return (
@@ -87,35 +162,25 @@ export function MonthCalendar({
               type="button"
               role="gridcell"
               aria-selected={isSel}
-              aria-label={describeDay(d, s, today)}
+              aria-label={describeDay(d, s)}
               onClick={() => onSelect(d)}
-              className={`relative flex aspect-square min-h-11 flex-col items-center justify-center rounded-xl text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 ${
-                isSel
-                  ? 'btn-taro font-bold'
-                  : inMonth
-                    ? 'taro-inset text-slate-900 hover:bg-white dark:text-slate-50 dark:hover:bg-white/10'
-                    : 'text-slate-400 dark:text-slate-400'
-              } ${isToday && !isSel ? 'ring-2 ring-emerald-600 dark:ring-emerald-500' : ''} ${d > today && !isSel && inMonth ? 'opacity-80' : ''}`}
+              className={`flex min-h-[3.6rem] flex-col items-center justify-center gap-0.5 rounded-xl py-1 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 ${
+                inMonth ? 'taro-inset text-slate-900 hover:bg-white dark:text-slate-50 dark:hover:bg-white/10' : 'text-slate-400 opacity-60 dark:text-slate-400'
+              } ${isSel ? 'ring-2 ring-emerald-500 dark:ring-emerald-300' : ''}`}
             >
-              <span>{Number(formatDate(d, { day: 'numeric' }))}</span>
-              <span className="mt-0.5 flex h-2 items-center gap-0.5" aria-hidden>
-                {s.dayType === 'none' ? <span className={`h-1.5 w-1.5 rounded-full ${TYPE_DOT.none}`} /> : s.dayType === 'veg' ? <VegIcon className="h-2 w-2" /> : <NonVegIcon className="h-2 w-2" />}
-                {s.notReceived > 0 && <span className="st-missed h-1.5 w-1.5 rounded-full" />}
-                {s.explicit > 0 && s.notReceived === 0 && <span className="st-planned h-1.5 w-1.5 rounded-full" />}
+              <span className="flex h-2.5 items-center gap-0.5" aria-hidden>
+                <TypeMark type={s.dayType} className="h-2.5 w-2.5" />
+                {s.noExtra && <NoExtraMark className="h-2.5 w-2.5" />}
               </span>
-              {s.pending > 0 && <span className="st-pending absolute right-1 top-1 h-2.5 w-2.5 rounded-full" aria-hidden />}
+              <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[13px] leading-none ${isToday ? 'btn-taro font-bold' : isSel ? 'font-bold' : ''}`}>
+                {Number(formatDate(d, { day: 'numeric' }))}
+              </span>
+              <MealIcons meals={s.meals} />
             </button>
           );
         })}
       </div>
-      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
-        <li className="flex items-center gap-1.5"><VegIcon className="h-3 w-3" />Veg</li>
-        <li className="flex items-center gap-1.5"><NonVegIcon className="h-3 w-3" />Non-Veg</li>
-        <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-slate-300" />No delivery</li>
-        <li className="flex items-center gap-1.5"><span className="st-missed h-2.5 w-2.5 rounded-full" />Not received</li>
-        <li className="flex items-center gap-1.5"><span className="st-planned h-2.5 w-2.5 rounded-full" />Changed (saved)</li>
-        <li className="flex items-center gap-1.5"><span className="st-pending h-2.5 w-2.5 rounded-full" />Pending sync</li>
-      </ul>
+      <CalendarLegend />
     </div>
   );
 }
@@ -124,41 +189,40 @@ export function WeekStrip({
   start,
   today,
   map,
-  pendingKeys,
   onSelect,
 }: {
   start: ISODate;
   today: ISODate;
   map: OverrideMap;
-  pendingKeys: ReadonlySet<string>;
+  pendingKeys?: ReadonlySet<string>;
   onSelect: (d: ISODate) => void;
 }) {
   const { nowMinutes } = useHousehold();
   return (
     <ol className="grid grid-cols-7 gap-1.5">
       {eachDay(start, addDays(start, 6)).map((d) => {
-        const s = summarizeDay(d, map, pendingKeys, today, nowMinutes);
-        const label = s.dayType === 'none' ? 'Off' : s.dayType === 'veg' ? 'Veg' : 'NV';
+        const s = summarizeDay(d, map, today, nowMinutes);
+        const isToday = d === today;
         return (
           <li key={d}>
             <button
               type="button"
               onClick={() => onSelect(d)}
-              aria-label={describeDay(d, s, today)}
-              aria-current={d === today ? 'date' : undefined}
-              className={`flex w-full min-w-0 flex-col items-center gap-0.5 rounded-xl px-0.5 py-2 text-xs leading-tight ring-1 transition-colors ${
-                d === today
-                  ? 'btn-taro ring-transparent'
-                  : 'taro-inset text-slate-700 ring-transparent hover:bg-white dark:text-slate-50 dark:hover:bg-white/10'
+              aria-label={describeDay(d, s)}
+              aria-current={isToday ? 'date' : undefined}
+              className={`taro-inset flex w-full min-w-0 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-xs leading-tight text-slate-700 transition-colors hover:bg-white dark:text-slate-50 dark:hover:bg-white/10 ${
+                isToday ? 'ring-2 ring-emerald-500 dark:ring-emerald-300' : ''
               }`}
             >
-              <span className="font-medium">{weekdayShort(d)}</span>
-              <span className="text-base font-semibold">{Number(formatDate(d, { day: 'numeric' }))}</span>
-              <span className="flex items-center gap-1">
-                {label}
-                {s.notReceived > 0 && <span className="st-missed h-1.5 w-1.5 rounded-full" aria-hidden />}
-                {s.pending > 0 && <span className="st-pending h-2 w-2 rounded-full" aria-hidden />}
+              <span className="font-semibold">{weekdayShort(d)}</span>
+              <span className={`flex h-7 min-w-7 items-center justify-center rounded-full text-base font-bold ${isToday ? 'btn-taro' : ''}`}>
+                {Number(formatDate(d, { day: 'numeric' }))}
               </span>
+              <span className="flex h-3.5 items-center gap-1">
+                <TypeMark type={s.dayType} className="h-3 w-3" />
+                {s.noExtra && <NoExtraMark className="h-2.5 w-2.5" />}
+              </span>
+              <MealIcons meals={s.meals} />
             </button>
           </li>
         );
