@@ -33,8 +33,9 @@ const butter = {
 
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
-  // Dark mode follows the `dark` class on <html> (Settings → Appearance).
-  darkMode: 'class',
+  // Dark mode follows the `dark` class on <html> (Settings → Appearance). A plain
+  // descendant selector (not :is/:where) so older phone browsers apply it too.
+  darkMode: ['variant', '.dark &'],
   theme: {
     extend: {
       fontFamily: {

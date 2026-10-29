@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
-import { createAccount, deleteAccount, fetchAccounts, resetAccountPassword, setAccountRole, type Account } from '../data/api';
-import { useHousehold } from '../data/household';
+import { changeUsername, createAccount, deleteAccount, fetchAccounts, resetAccountPassword, setAccountRole, type Account } from '../data/api';
+import { membershipKey, useHousehold } from '../data/household';
 import { signOut } from '../data/session';
 import { ChangePasswordForm } from '../pages/Auth';
 import { useConfirm } from './Confirm';
@@ -10,11 +10,71 @@ import { Button, Card, ErrorNote, PasswordField, Segmented, Spinner, TextField }
 
 const accountsKey = (householdId: string) => ['accounts', householdId] as const;
 
-/** Signed-in person: who they are, change password, sign out. */
-export function MyAccountSection() {
-  const { membership } = useHousehold();
+/** New username for one person; their password stays the same. */
+function ChangeUsernameForm({ userId, current, name, onClose }: { userId: string; current: string | null; name: string; onClose: () => void }) {
+  const { userId: me, household } = useHousehold();
+  const qc = useQueryClient();
   const toast = useToast();
-  const [changing, setChanging] = useState(false);
+  const [username, setUsername] = useState(current ?? '');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const isMe = userId === me;
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      await changeUsername(userId, username);
+      const next = username.trim().toLowerCase();
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: accountsKey(household.id) }),
+        isMe ? qc.invalidateQueries({ queryKey: membershipKey(me) }) : Promise.resolve(),
+      ]);
+      toast(isMe ? `Username changed. Next time, sign in as “${next}”.` : `${name} now signs in as “${next}”. Their password is unchanged.`);
+      onClose();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="mt-3 space-y-3" onSubmit={submit}>
+      <TextField
+        id={`username-${userId}`}
+        label={isMe ? 'New username' : `New username for ${name}`}
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        required
+      />
+      <p className="-mt-1 text-xs text-slate-600 dark:text-slate-400">3–30 characters: letters, numbers, dot, dash or underscore. The password stays the same.</p>
+      {error && (
+        <p role="alert" className="text-sm text-rose-700 dark:text-rose-300">
+          {error}
+        </p>
+      )}
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button variant="secondary" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={busy || !username.trim() || username.trim().toLowerCase() === current}>
+          {busy ? 'Saving…' : 'Save username'}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+/** Signed-in person: who they are, change username or password, sign out. */
+export function MyAccountSection() {
+  const { membership, userId } = useHousehold();
+  const toast = useToast();
+  const [changing, setChanging] = useState<'password' | 'username' | null>(null);
 
   return (
     <Card>
@@ -24,18 +84,23 @@ export function MyAccountSection() {
         {membership.username && <> · username <strong className="text-slate-900 dark:text-slate-100">{membership.username}</strong></>}
         {membership.role === 'admin' && ' · admin'}
       </p>
-      {changing ? (
+      {changing === 'password' ? (
         <ChangePasswordForm
-          onCancel={() => setChanging(false)}
+          onCancel={() => setChanging(null)}
           onDone={() => {
-            setChanging(false);
+            setChanging(null);
             toast('Password changed.');
           }}
         />
+      ) : changing === 'username' ? (
+        <ChangeUsernameForm userId={userId} current={membership.username} name={membership.display_name} onClose={() => setChanging(null)} />
       ) : (
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={() => setChanging(true)}>
+          <Button variant="secondary" onClick={() => setChanging('password')}>
             Change password
+          </Button>
+          <Button variant="secondary" onClick={() => setChanging('username')}>
+            Change username
           </Button>
           <Button variant="ghost" onClick={() => void signOut()}>
             Sign out
@@ -173,7 +238,7 @@ function AccountRow({ account }: { account: Account }) {
   const qc = useQueryClient();
   const toast = useToast();
   const confirm = useConfirm();
-  const [resetting, setResetting] = useState(false);
+  const [editing, setEditing] = useState<'password' | 'username' | null>(null);
   const isMe = account.user_id === userId;
   const refresh = () => qc.invalidateQueries({ queryKey: accountsKey(household.id) });
 
@@ -201,10 +266,13 @@ function AccountRow({ account }: { account: Account }) {
           </p>
         </div>
       </div>
-      {!isMe && !resetting && (
+      {!isMe && !editing && (
         <div className="mt-2 flex flex-wrap gap-1">
-          <Button variant="ghost" className="min-h-9 px-3 text-xs" onClick={() => setResetting(true)}>
+          <Button variant="ghost" className="min-h-9 px-3 text-xs" onClick={() => setEditing('password')}>
             Reset password
+          </Button>
+          <Button variant="ghost" className="min-h-9 px-3 text-xs" onClick={() => setEditing('username')}>
+            Change username
           </Button>
           <Button
             variant="ghost"
@@ -236,7 +304,10 @@ function AccountRow({ account }: { account: Account }) {
           </Button>
         </div>
       )}
-      {resetting && <ResetPasswordForm account={account} onClose={() => setResetting(false)} />}
+      {editing === 'password' && <ResetPasswordForm account={account} onClose={() => setEditing(null)} />}
+      {editing === 'username' && (
+        <ChangeUsernameForm userId={account.user_id} current={account.username} name={account.display_name} onClose={() => setEditing(null)} />
+      )}
     </li>
   );
 }

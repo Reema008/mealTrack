@@ -128,6 +128,12 @@ export async function deleteAccount(userId: string): Promise<void> {
   if (error) throw toAppError(error);
 }
 
+/** Rename a login (admins: anyone; everyone: themselves). The password stays the same. */
+export async function changeUsername(userId: string, username: string): Promise<void> {
+  const { error } = await supabase.rpc('change_username', { p_user_id: userId, p_username: username.trim().toLowerCase() });
+  if (error) throw toAppError(error);
+}
+
 export async function setAccountRole(userId: string, role: 'admin' | 'member'): Promise<void> {
   const { error } = await supabase.rpc('set_member_role', { p_user_id: userId, p_role: role });
   if (error) throw toAppError(error);

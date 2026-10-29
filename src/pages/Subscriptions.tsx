@@ -185,7 +185,7 @@ function PeriodCard({
           <Button variant="ghost" className="min-h-9 px-3 text-xs" onClick={() => setEditing(true)}>Edit</Button>
           <Button
             variant="ghost"
-            className="min-h-9 px-3 text-xs text-rose-700"
+            className="min-h-9 px-3 text-xs !text-rose-700 dark:!text-rose-300"
             onClick={async () => {
               const ok = await confirm({
                 emoji: '🗑️',

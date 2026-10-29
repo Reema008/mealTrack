@@ -13,6 +13,7 @@ html {
 
 /* Warm cream backdrop with soft pastel blobs. */
 body {
+  color: theme('colors.cocoa.900');
   background-color: theme('colors.cocoa.50');
   background-image:
     radial-gradient(38rem 26rem at 110% -5%, rgba(248, 205, 180, 0.55), transparent 60%),
@@ -26,6 +27,7 @@ body {
 }
 
 .dark body {
+  color: theme('colors.cocoa.100');
   background-color: theme('colors.cocoa.950');
   background-image:
     radial-gradient(38rem 26rem at 110% -5%, rgba(134, 58, 36, 0.25), transparent 60%),

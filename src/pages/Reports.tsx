@@ -80,7 +80,7 @@ export function ReportsPage() {
         <h1 className="text-3xl">Reports</h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">Tap any box to see the dates behind it.</p>
       </div>
-      <div className="flex flex-wrap gap-1 rounded-3xl bg-white/70 p-1 shadow-soft ring-1 ring-slate-200/70 dark:bg-slate-800" role="tablist" aria-label="Report period">
+      <div className="flex flex-wrap gap-1 rounded-3xl bg-white/70 p-1 shadow-soft ring-1 ring-slate-200/70 dark:bg-slate-800 dark:ring-slate-700" role="tablist" aria-label="Report period">
         {modes.map((m) => (
           <button
             key={m}
