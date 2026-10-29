@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { formatLong } from '../domain/dates';
+import { formatShort } from '../domain/dates';
 import { defaultValues, mealsForDate, overrideKey } from '../domain/meals';
 import type { EffectiveMeal, ISODate, MealPeriod, MealValues, OverrideMap } from '../domain/types';
+import { useHousehold } from '../data/household';
 import { useSaveMeal } from '../data/meals';
 import { MealCard } from './MealCard';
 import { MealEditSheet } from './MealEditSheet';
+import { useConfirm } from './Confirm';
 import { useToast } from './Toast';
 import { Button } from './ui';
 
@@ -26,15 +28,17 @@ export function DayMeals({
   const [busy, setBusy] = useState(false);
   const save = useSaveMeal();
   const toast = useToast();
-  const meals = mealsForDate(date, map, today);
+  const confirm = useConfirm();
+  const { nowMinutes } = useHousehold();
+  const meals = mealsForDate(date, map, today, nowMinutes);
 
   if (meals.length === 0) {
     return (
-      <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
-        <p className="text-3xl" aria-hidden>
+      <div className="rounded-3xl bg-gradient-to-br from-sky-100/90 via-white/80 to-amber-100/80 p-8 text-center shadow-soft ring-1 ring-white/60 dark:from-sky-950/50 dark:via-slate-900/80 dark:to-amber-950/40 dark:ring-slate-800">
+        <p className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-3xl shadow-soft dark:bg-slate-800" aria-hidden>
           🌤️
         </p>
-        <p className="mt-2 font-semibold">No Delivery Scheduled</p>
+        <p className="mt-3 font-display text-2xl">No Delivery Scheduled</p>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Sunday is a day off. Enjoy your meal at home!</p>
       </div>
     );
@@ -46,10 +50,33 @@ export function DayMeals({
 
   /** Apply one status to both meals (not delivered, or back to the standard defaults). */
   async function markWholeDay(toNotDelivered: boolean) {
-    const question = toNotDelivered
-      ? `Mark both lunch and dinner on ${formatLong(date)} as ${future ? 'no delivery' : 'not delivered'}?`
-      : `Mark both meals on ${formatLong(date)} as delivered (standard schedule)?`;
-    if (!confirm(question)) return;
+    const ok = await confirm(
+      toNotDelivered
+        ? {
+            emoji: '🚫',
+            tone: 'danger',
+            title: future ? 'Skip this whole day?' : 'No delivery this day?',
+            message: (
+              <>
+                Both <strong>lunch</strong> and <strong>dinner</strong> on <strong>{formatShort(date)}</strong> will be marked{' '}
+                {future ? 'as not expected' : 'as not delivered'}. Everyone in the family will see this.
+              </>
+            ),
+            confirmLabel: future ? 'Skip day' : 'Mark not delivered',
+          }
+        : {
+            emoji: '🥡',
+            title: 'Mark the whole day delivered?',
+            message: (
+              <>
+                Lunch and dinner on <strong>{formatShort(date)}</strong> go back to the standard schedule: delivered
+                {meals.some((m) => m.dayType === 'nonveg') ? ', chicken and extra curries' : ''}.
+              </>
+            ),
+            confirmLabel: 'Mark delivered',
+          },
+    );
+    if (!ok) return;
     setBusy(true);
     let queued = 0;
     const conflicts: string[] = [];

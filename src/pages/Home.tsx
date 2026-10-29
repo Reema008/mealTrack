@@ -9,19 +9,19 @@ import { useHousehold } from '../data/household';
 import { useOverrides } from '../data/meals';
 
 export function HomePage() {
-  const { today, membership } = useHousehold();
+  const { today, nowMinutes, membership } = useHousehold();
   const navigate = useNavigate();
   const weekStart = startOfWeek(today);
   const weekEnd = endOfWeek(today);
   const { map, pendingKeys, isLoading, error, refetch } = useOverrides(weekStart, weekEnd);
-  const week = computeStats(weekStart, weekEnd, map, today);
+  const week = computeStats(weekStart, weekEnd, map, today, nowMinutes);
 
   return (
     <div className="space-y-5">
       <section aria-labelledby="today-heading">
         <p className="text-sm text-slate-600 dark:text-slate-400">Hi {membership.display_name} 👋</p>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-          <h1 id="today-heading" className="text-xl font-semibold">
+          <h1 id="today-heading" className="text-3xl">
             {formatLong(today)}
           </h1>
           <DayTypeChip type={getDayType(today)} />

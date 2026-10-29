@@ -1,6 +1,7 @@
 import { addDays, eachDay, endOfMonth, formatDate, formatLong, startOfMonth, startOfWeek, weekdayShort } from '../domain/dates';
 import { mealsForDate, overrideKey } from '../domain/meals';
 import { getDayType } from '../domain/schedule';
+import { useHousehold } from '../data/household';
 import type { ISODate, OverrideMap } from '../domain/types';
 
 export interface DaySummary {
@@ -10,8 +11,14 @@ export interface DaySummary {
   pending: number;
 }
 
-export function summarizeDay(date: ISODate, map: OverrideMap, pendingKeys: ReadonlySet<string>, today: ISODate): DaySummary {
-  const meals = mealsForDate(date, map, today);
+export function summarizeDay(
+  date: ISODate,
+  map: OverrideMap,
+  pendingKeys: ReadonlySet<string>,
+  today: ISODate,
+  nowMinutes?: number,
+): DaySummary {
+  const meals = mealsForDate(date, map, today, nowMinutes);
   return {
     dayType: getDayType(date),
     explicit: meals.filter((m) => m.source === 'explicit').length,
@@ -50,6 +57,7 @@ export function MonthCalendar({
   pendingKeys: ReadonlySet<string>;
   onSelect: (d: ISODate) => void;
 }) {
+  const { nowMinutes } = useHousehold();
   const first = startOfMonth(month);
   const last = endOfMonth(month);
   const gridStart = startOfWeek(first);
@@ -69,7 +77,7 @@ export function MonthCalendar({
       <div className="grid grid-cols-7 gap-1" role="grid" aria-label="Month calendar">
         {days.map((d) => {
           const inMonth = d >= first && d <= last;
-          const s = summarizeDay(d, map, pendingKeys, today);
+          const s = summarizeDay(d, map, pendingKeys, today, nowMinutes);
           const isSel = d === selected;
           const isToday = d === today;
           return (
@@ -124,10 +132,11 @@ export function WeekStrip({
   pendingKeys: ReadonlySet<string>;
   onSelect: (d: ISODate) => void;
 }) {
+  const { nowMinutes } = useHousehold();
   return (
     <ol className="grid grid-cols-7 gap-1.5">
       {eachDay(start, addDays(start, 6)).map((d) => {
-        const s = summarizeDay(d, map, pendingKeys, today);
+        const s = summarizeDay(d, map, pendingKeys, today, nowMinutes);
         const label = s.dayType === 'none' ? 'Off' : s.dayType === 'veg' ? 'Veg' : 'NV';
         return (
           <li key={d}>

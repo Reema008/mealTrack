@@ -6,8 +6,6 @@ import { deflateSync } from 'node:zlib';
 const OUT = new URL('../public/icons/', import.meta.url);
 mkdirSync(OUT, { recursive: true });
 
-const EMERALD = [5, 150, 105];
-const WHITE = [255, 255, 255];
 
 function crc32(buf) {
   let c = ~0;
@@ -69,34 +67,57 @@ function roundedSquare(x, y, r) {
   return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - r <= 0;
 }
 
-/** scale < 1 shrinks the artwork (maskable safe zone). */
+const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const PEACH_LIGHT = hex('#fce7da');
+const PEACH = hex('#f2ac86');
+const CREAM = hex('#fbf7f2');
+const BUTTER = hex('#f8e28f');
+const SAGE = hex('#86a57c');
+const SAGE_LIGHT = hex('#a9c1a0');
+const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+
+// Wavy steam lines, sampled as short segments (matches icon.svg).
+const steam = [0.38, 0.5, 0.62].map((cx) =>
+  Array.from({ length: 25 }, (_, i) => {
+    const y = 0.34 - (i / 24) * 0.21;
+    return [cx + 0.03 * Math.sin((i / 24) * Math.PI * 2.2), y];
+  }),
+);
+function nearSteam(u, v) {
+  for (const line of steam)
+    for (let i = 1; i < line.length; i++)
+      if (segDist(u, v, line[i - 1][0], line[i - 1][1], line[i][0], line[i][1]) < 0.018) return true;
+  return false;
+}
+function inRotatedEllipse(u, v, cx, cy, rx, ry, deg) {
+  const a = (deg * Math.PI) / 180;
+  const dx = u - cx;
+  const dy = v - cy;
+  const x = dx * Math.cos(a) + dy * Math.sin(a);
+  const y = -dx * Math.sin(a) + dy * Math.cos(a);
+  return (x / rx) ** 2 + (y / ry) ** 2 <= 1;
+}
+
+/** Bowl artwork; returns a colour, or null for background. scale < 1 shrinks it (maskable safe zone). */
 function art(x, y, scale) {
   const u = (x - 0.5) / scale + 0.5;
   const v = (y - 0.5) / scale + 0.5;
-  const d = dist(u, v, 0.5, 0.5);
-  const check = Math.min(segDist(u, v, 0.36, 0.51, 0.46, 0.61), segDist(u, v, 0.46, 0.61, 0.65, 0.41)) < 0.035;
-  if (check) return 'emerald';
-  if (d < 0.25 && d > 0.215) return 'emerald'; // plate rim
-  if (d < 0.32) return 'white';
+  const inBowl = v >= 0.52 && dist(u, v, 0.5, 0.52) <= 0.31;
+  if (inBowl) return v <= 0.575 ? SAGE_LIGHT : CREAM;
+  if (u >= 0.39 && u <= 0.61 && v >= 0.81 && v <= 0.86) return CREAM; // foot
+  if (inRotatedEllipse(u, v, 0.62, 0.41, 0.085, 0.036, -30)) return SAGE; // leaf
+  if (v < 0.52 && ((u - 0.5) / 0.25) ** 2 + ((v - 0.52) / 0.12) ** 2 <= 1) return BUTTER; // food
+  if (nearSteam(u, v)) return CREAM;
   return null;
 }
 
+const background = (x, y) => mix(PEACH_LIGHT, PEACH, (x + y) / 2);
 const solid = (rgb, a = 255) => [...rgb, a];
 
-const fullBleed = (scale) => (x, y) => {
-  const a = art(x, y, scale);
-  return solid(a === 'white' ? WHITE : EMERALD);
-};
-const rounded = (x, y) => {
-  if (!roundedSquare(x, y, 0.22)) return [0, 0, 0, 0];
-  const a = art(x, y, 1);
-  return solid(a === 'white' ? WHITE : EMERALD);
-};
-// Monochrome notification badge: white plate silhouette on transparent.
-const badge = (x, y) => {
-  const a = art(x, y, 1.35);
-  return a === 'white' ? solid(WHITE) : [0, 0, 0, 0];
-};
+const fullBleed = (scale) => (x, y) => solid(art(x, y, scale) ?? background(x, y));
+const rounded = (x, y) => (roundedSquare(x, y, 0.24) ? solid(art(x, y, 1) ?? background(x, y)) : [0, 0, 0, 0]);
+// Monochrome notification badge: white bowl + steam silhouette on transparent.
+const badge = (x, y) => (art(x, y, 1.25) ? solid([255, 255, 255]) : [0, 0, 0, 0]);
 
 writeFileSync(new URL('icon-192.png', OUT), png(192, rounded));
 writeFileSync(new URL('icon-512.png', OUT), png(512, rounded));

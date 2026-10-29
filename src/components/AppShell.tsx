@@ -121,13 +121,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <SyncContext.Provider value={sync}>
       <div className="mx-auto flex min-h-dvh max-w-2xl flex-col">
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-2 bg-slate-50/90 px-4 pb-2 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur dark:bg-slate-950/90">
-          <div className="min-w-0">
-            <p className="text-lg font-bold tracking-tight text-emerald-700 dark:text-emerald-400">MealTrack</p>
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-2 bg-slate-50/75 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur-md dark:bg-slate-950/75">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <img src="./icons/icon.svg" alt="" className="h-10 w-10 rounded-2xl shadow-soft" />
+            <div className="min-w-0">
+            <p className="font-display text-2xl leading-none text-slate-900 dark:text-slate-50">MealTrack</p>
             <p className="truncate text-xs text-slate-600 dark:text-slate-400">
               {membership.display_name}
               {isAdmin && ' · Admin'}
             </p>
+            </div>
           </div>
           <SyncIndicator sync={sync} />
         </header>
@@ -150,20 +153,20 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
         <main className="flex-1 px-4 pb-28 pt-2">{children}</main>
-        <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
-          <ul className="mx-auto grid max-w-2xl grid-cols-4">
+        <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+          <ul className="mx-auto grid max-w-md grid-cols-4 gap-1 rounded-full bg-white/90 p-1.5 shadow-soft ring-1 ring-slate-200/70 backdrop-blur-md dark:bg-slate-900/90 dark:ring-slate-800">
             {NAV.map((n) => (
               <li key={n.to}>
                 <NavLink
                   to={n.to}
                   end={n.to === '/'}
                   className={({ isActive }) =>
-                    `flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium ${
-                      isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'
+                    `flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-semibold transition-colors ${
+                      isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200' : 'text-slate-600 dark:text-slate-400'
                     }`
                   }
                 >
-                  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                     <path d={n.icon} />
                   </svg>
                   {n.label}

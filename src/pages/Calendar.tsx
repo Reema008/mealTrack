@@ -12,7 +12,7 @@ import { useHousehold } from '../data/household';
 import { useOverrides } from '../data/meals';
 
 export function CalendarPage() {
-  const { today } = useHousehold();
+  const { today, nowMinutes } = useHousehold();
   const [params, setParams] = useSearchParams();
   const monthParam = params.get('month');
   const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? `${monthParam}-01` : startOfMonth(today);
@@ -72,7 +72,7 @@ export function CalendarPage() {
       ) : (
         <ol className="space-y-2">
           {eachDay(start, end).map((d) => {
-            const meals = mealsForDate(d, map, today);
+            const meals = mealsForDate(d, map, today, nowMinutes);
             return (
               <li key={d}>
                 <Link

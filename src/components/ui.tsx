@@ -5,7 +5,7 @@ import { DAY_TYPE_LABEL } from '../domain/schedule';
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-emerald-600/50',
+  primary: 'bg-emerald-600 text-white shadow-soft hover:bg-emerald-700 disabled:bg-emerald-600/50 disabled:shadow-none',
   secondary:
     'bg-white text-slate-800 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600 dark:hover:bg-slate-700',
   ghost: 'text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-slate-800',
@@ -20,7 +20,7 @@ export function Button({
   return (
     <button
       type="button"
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed ${VARIANTS[variant]} ${className}`}
       {...props}
     />
   );
@@ -28,7 +28,7 @@ export function Button({
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800 ${className}`}>
+    <section className={`rounded-3xl bg-white/85 p-5 shadow-soft ring-1 ring-slate-200/70 backdrop-blur-sm dark:bg-slate-900/85 dark:ring-slate-800 ${className}`}>
       {children}
     </section>
   );
@@ -40,15 +40,18 @@ const DAY_TYPE_STYLE: Record<DayType, string> = {
   none: 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
 };
 
+export const DAY_TYPE_EMOJI: Record<DayType, string> = { veg: '🥗', nonveg: '🍗', none: '🌤️' };
+
 export function DayTypeChip({ type, className = '' }: { type: DayType; className?: string }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${DAY_TYPE_STYLE[type]} ${className}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${DAY_TYPE_STYLE[type]} ${className}`}>
+      <span aria-hidden>{DAY_TYPE_EMOJI[type]}</span>
       {DAY_TYPE_LABEL[type]}
     </span>
   );
 }
 
-export type BadgeKind = 'assumed' | 'saved' | 'planned' | 'pending';
+export type BadgeKind = 'assumed' | 'saved' | 'planned' | 'awaiting' | 'unsynced';
 
 const BADGE: Record<BadgeKind, { label: string; className: string; title: string }> = {
   assumed: {
@@ -66,9 +69,14 @@ const BADGE: Record<BadgeKind, { label: string; className: string; title: string
     className: 'bg-sky-50 text-sky-800 ring-sky-300 dark:bg-sky-950 dark:text-sky-200 dark:ring-sky-700',
     title: 'A future meal. Shown as scheduled, not as a confirmed delivery.',
   },
-  pending: {
-    label: 'Pending sync',
+  awaiting: {
+    label: 'Pending',
     className: 'bg-amber-50 text-amber-900 ring-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:ring-amber-700',
+    title: 'Not yet assumed delivered. Lunch counts as delivered from 2 PM, dinner from 10 PM, unless someone marks it.',
+  },
+  unsynced: {
+    label: 'Not synced',
+    className: 'bg-rose-50 text-rose-800 ring-rose-300 dark:bg-rose-950 dark:text-rose-200 dark:ring-rose-700',
     title: 'Saved on this device only. It will sync when you are back online.',
   },
 };
@@ -76,7 +84,7 @@ const BADGE: Record<BadgeKind, { label: string; className: string; title: string
 export function StatusBadge({ kind }: { kind: BadgeKind }) {
   const b = BADGE[kind];
   return (
-    <span title={b.title} className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${b.className}`}>
+    <span title={b.title} className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${b.className}`}>
       {b.label}
     </span>
   );
@@ -93,7 +101,7 @@ export function Spinner({ label = 'Loading' }: { label?: string }) {
 
 export function ErrorNote({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   return (
-    <div role="alert" className="rounded-xl bg-rose-50 p-4 text-sm text-rose-800 ring-1 ring-rose-200 dark:bg-rose-950 dark:text-rose-200 dark:ring-rose-800">
+    <div role="alert" className="rounded-2xl bg-rose-50 p-4 text-sm text-rose-800 ring-1 ring-rose-200 dark:bg-rose-950 dark:text-rose-200 dark:ring-rose-800">
       <p>{(error as Error)?.message ?? 'Something went wrong.'}</p>
       {onRetry && (
         <Button variant="secondary" className="mt-3" onClick={onRetry}>

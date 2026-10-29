@@ -9,8 +9,12 @@ export type MainDish = 'egg' | 'chicken';
 
 /** Where a meal's state came from. */
 export type MealSource = 'assumed' | 'explicit';
-/** A meal's position relative to the household's "today". */
-export type MealTiming = 'past' | 'today' | 'future';
+/**
+ * A meal's position relative to the household's current local time.
+ * 'pending' = today's meal before its cutoff (lunch 2 PM, dinner 10 PM)
+ * with nothing saved yet: not yet assumed delivered.
+ */
+export type MealTiming = 'past' | 'today' | 'pending' | 'future';
 
 /** Row shape of public.meal_overrides. */
 export interface MealOverride {

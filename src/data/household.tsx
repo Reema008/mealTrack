@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { todayInTimeZone } from '../domain/dates';
+import { nowInTimeZone } from '../domain/dates';
 import type { ISODate } from '../domain/types';
 import { fetchMembership, type Household, type Membership } from './api';
 import { useSession } from './session';
@@ -28,6 +28,8 @@ interface HouseholdState {
   isAdmin: boolean;
   /** Today's date in the household timezone; updates at local midnight. */
   today: ISODate;
+  /** Minutes after local midnight (household timezone); drives the 2 PM / 10 PM cutoffs. */
+  nowMinutes: number;
 }
 
 const HouseholdContext = createContext<HouseholdState | null>(null);
@@ -43,10 +45,10 @@ export function HouseholdProvider({
   email: string;
   children: ReactNode;
 }) {
-  const today = useToday(membership.household.timezone);
+  const { date: today, minutes: nowMinutes } = useLocalNow(membership.household.timezone);
   return (
     <HouseholdContext.Provider
-      value={{ userId, email, membership, household: membership.household, isAdmin: membership.role === 'admin', today }}
+      value={{ userId, email, membership, household: membership.household, isAdmin: membership.role === 'admin', today, nowMinutes }}
     >
       {children}
     </HouseholdContext.Provider>
@@ -59,10 +61,15 @@ export function useHousehold(): HouseholdState {
   return ctx;
 }
 
-function useToday(timeZone: string): ISODate {
-  const [today, setToday] = useState(() => todayInTimeZone(timeZone));
+/** Local date + minutes in the household timezone, refreshed every 30 s and on app focus. */
+function useLocalNow(timeZone: string): { date: ISODate; minutes: number } {
+  const [now, setNow] = useState(() => nowInTimeZone(timeZone));
   useEffect(() => {
-    const tick = () => setToday(todayInTimeZone(timeZone));
+    const tick = () =>
+      setNow((prev) => {
+        const next = nowInTimeZone(timeZone);
+        return prev.date === next.date && prev.minutes === next.minutes ? prev : next;
+      });
     tick();
     const id = window.setInterval(tick, 30_000);
     document.addEventListener('visibilitychange', tick);
@@ -71,5 +78,5 @@ function useToday(timeZone: string): ISODate {
       document.removeEventListener('visibilitychange', tick);
     };
   }, [timeZone]);
-  return today;
+  return now;
 }

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { DailyChart, SplitBar, StatCard } from '../components/Charts';
 import { Card, ErrorNote, Spinner, TextField } from '../components/ui';
 import { addDays, addMonths, endOfMonth, endOfWeek, formatMonth, formatShort, isISODate, startOfMonth, startOfWeek } from '../domain/dates';
-import { computeStats, formatPercent } from '../domain/stats';
+import { computeStats, formatPercent, listMeals, type ReportMetric } from '../domain/stats';
+import { ReportDetailSheet } from '../components/ReportDetail';
 import { useHousehold } from '../data/household';
 import { useOverrides } from '../data/meals';
 
@@ -10,7 +11,8 @@ type Mode = 'week' | 'month' | 'custom';
 const MAX_CUSTOM_DAYS = 366;
 
 export function ReportsPage() {
-  const { today } = useHousehold();
+  const { today, nowMinutes } = useHousehold();
+  const [detail, setDetail] = useState<ReportMetric | null>(null);
   const [mode, setMode] = useState<Mode>('week');
   const [anchor, setAnchor] = useState(today);
   const [customStart, setCustomStart] = useState(startOfMonth(today));
@@ -41,16 +43,22 @@ export function ReportsPage() {
     }
   }
 
-  const { map, isLoading, error, refetch } = useOverrides(start, end);
-  const s = computeStats(start, end, map, today);
+  const { map, pendingKeys, isLoading, error, refetch } = useOverrides(start, end);
+  const s = computeStats(start, end, map, today, nowMinutes);
+  const meals = listMeals(start, end, map, today, nowMinutes);
+  const rangeLabel = mode === 'custom' ? `${formatShort(start)} – ${formatShort(end)}` : title;
+  const open = (m: ReportMetric) => () => setDetail(m);
   const a = s.actual;
 
   const shift = (delta: number) => setAnchor(mode === 'week' ? addDays(anchor, 7 * delta) : addMonths(anchor, delta));
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Reports</h1>
-      <div className="grid grid-cols-3 gap-1 rounded-xl bg-slate-200 p-1 dark:bg-slate-800" role="tablist" aria-label="Report period">
+      <div>
+        <h1 className="text-3xl">Reports</h1>
+        <p className="text-sm text-slate-600 dark:text-slate-400">Tap any box to see the dates behind it.</p>
+      </div>
+      <div className="grid grid-cols-3 gap-1 rounded-full bg-white/70 p-1 shadow-soft ring-1 ring-slate-200/70 dark:bg-slate-800" role="tablist" aria-label="Report period">
         {(['week', 'month', 'custom'] as const).map((m) => (
           <button
             key={m}
@@ -60,7 +68,7 @@ export function ReportsPage() {
               setMode(m);
               setAnchor(today);
             }}
-            className={`min-h-10 rounded-lg text-sm font-semibold capitalize ${mode === m ? 'bg-white shadow-sm dark:bg-slate-900' : 'text-slate-600 dark:text-slate-400'}`}
+            className={`min-h-10 rounded-full text-sm font-semibold capitalize ${mode === m ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
           >
             {m === 'week' ? 'Weekly' : m === 'month' ? 'Monthly' : 'Custom'}
           </button>
@@ -75,7 +83,7 @@ export function ReportsPage() {
       ) : (
         <div className="flex items-center justify-between">
           <button onClick={() => shift(-1)} className="min-h-11 min-w-11 rounded-xl text-lg hover:bg-slate-200 dark:hover:bg-slate-800" aria-label={`Previous ${mode}`}>←</button>
-          <p className="font-semibold" aria-live="polite">{title}</p>
+          <p className="font-display text-lg" aria-live="polite">{title}</p>
           <button onClick={() => shift(1)} className="min-h-11 min-w-11 rounded-xl text-lg hover:bg-slate-200 dark:hover:bg-slate-800" aria-label={`Next ${mode}`}>→</button>
         </div>
       )}
@@ -89,52 +97,58 @@ export function ReportsPage() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <StatCard label="Delivery success" value={formatPercent(a.successRate)} hint={`${a.delivered} of ${a.meals} meals to date`} tone={a.successRate !== null && a.successRate < 100 ? 'bad' : 'good'} />
-            <StatCard label="Delivered" value={a.delivered} hint={a.deliveredAssumed ? `${a.deliveredAssumed} assumed, ${a.deliveredExplicit} confirmed` : 'all confirmed'} tone="good" />
-            <StatCard label="Not received" value={a.notReceived} tone={a.notReceived ? 'bad' : undefined} />
-            <StatCard label="Scheduled meals" value={s.scheduledTotal} hint={`${s.scheduledLunch} lunch · ${s.scheduledDinner} dinner`} />
-            <StatCard label="Scheduled days" value={s.scheduledDays} hint="Sundays excluded" />
-            <StatCard label="Planned (future)" value={s.planned.meals} hint="not counted as delivered" />
-            <StatCard label="Chicken meals" value={a.chicken} hint="delivered" />
-            <StatCard label="Egg meals" value={a.egg} hint="delivered" />
-            <StatCard label="Extra curries" value={a.extraCurryReceived} hint={`${a.extraCurryMissing} missing of ${a.nonVegMeals}`} tone={a.extraCurryMissing ? 'bad' : undefined} />
+            <StatCard label="Delivery success" emoji="✨" tint="sage" value={formatPercent(a.successRate)} hint={`${a.delivered} of ${a.meals} meals so far`} onClick={open('success')} />
+            <StatCard label="Delivered" emoji="🥡" tint="cream" value={a.delivered} hint={a.deliveredAssumed ? `${a.deliveredAssumed} assumed, ${a.deliveredExplicit} confirmed` : 'all confirmed'} onClick={open('delivered')} />
+            <StatCard label="Not received" emoji="🚫" tint="blush" value={a.notReceived} hint="tap for the dates" onClick={open('notReceived')} />
+            <StatCard label="Scheduled meals" emoji="🗓️" tint="lavender" value={s.scheduledTotal} hint={`${s.scheduledLunch} lunch · ${s.scheduledDinner} dinner`} onClick={open('scheduled')} />
+            <StatCard label="Scheduled days" emoji="📅" tint="cream" value={s.scheduledDays} hint="Sundays excluded" onClick={open('scheduledDays')} />
+            {s.pending > 0 && <StatCard label="Pending today" emoji="⏳" tint="butter" value={s.pending} hint="lunch 2 PM · dinner 10 PM" onClick={open('pending')} />}
+            <StatCard label="Planned" emoji="🔮" tint="lavender" value={s.planned.meals} hint="future, not counted yet" onClick={open('planned')} />
+            <StatCard label="Chicken meals" emoji="🍗" tint="peach" value={a.chicken} hint="delivered" onClick={open('chicken')} />
+            <StatCard label="Egg meals" emoji="🍳" tint="butter" value={a.egg} hint="delivered" onClick={open('egg')} />
+            <StatCard label="Extra curries" emoji="🍛" tint="peach" value={a.extraCurryReceived} hint={`${a.extraCurryMissing} missing of ${a.nonVegMeals}`} onClick={open('extraCurry')} />
           </div>
 
           <Card className="space-y-5">
             <SplitBar
               title="Meal outcomes"
               parts={[
-                { label: 'Delivered (confirmed)', value: a.deliveredExplicit, className: 'bg-emerald-600' },
+                { label: 'Delivered (confirmed)', value: a.deliveredExplicit, className: 'bg-emerald-500' },
                 { label: 'Delivered (assumed)', value: a.deliveredAssumed, className: 'bg-emerald-300' },
-                { label: 'Not received', value: a.notReceived, className: 'bg-rose-500' },
+                { label: 'Not received', value: a.notReceived, className: 'bg-rose-400' },
+                { label: 'Pending', value: s.pending, className: 'bg-amber-300' },
                 { label: 'Planned', value: s.planned.meals, className: 'bg-sky-300' },
               ]}
             />
             <SplitBar
               title="Main dish (delivered non-veg meals)"
               parts={[
-                { label: 'Chicken', value: a.chicken, className: 'bg-orange-500' },
-                { label: 'Egg', value: a.egg, className: 'bg-yellow-400' },
+                { label: 'Chicken', value: a.chicken, className: 'bg-orange-300' },
+                { label: 'Egg', value: a.egg, className: 'bg-amber-300' },
               ]}
             />
             <DailyChart daily={s.daily} />
           </Card>
 
-          <details className="rounded-2xl bg-white p-4 text-sm text-slate-700 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800">
+          <details className="rounded-3xl bg-white/85 p-5 shadow-soft text-sm text-slate-700 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800">
             <summary className="cursor-pointer font-semibold">How these numbers are calculated</summary>
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>Monday–Saturday have lunch and dinner; Sundays are never counted.</li>
               <li>Meals nobody changed are <strong>assumed delivered</strong> (with chicken and extra curries on Tue/Wed/Fri). {a.assumedMeals} of {a.meals} meals here are assumed.</li>
+              <li>Today’s meals stay <strong>pending</strong> until 2 PM (lunch) and 10 PM (dinner) unless someone marks them.</li>
               <li>Future meals are <strong>planned</strong>. They are left out of delivered totals and the success rate.</li>
               <li>Egg and chicken totals count only delivered meals.</li>
               <li>Extra curries are counted for each non-veg meal; a meal that was not delivered had no extra curries.</li>
-              <li>Success rate = delivered ÷ scheduled meals up to and including today.</li>
+              <li>Success rate = delivered ÷ meals with an outcome so far (pending and planned meals are left out).</li>
             </ul>
             {s.planned.meals > 0 && (
               <p className="mt-2">Planned in this range: {s.planned.chicken} chicken, {s.planned.egg} egg, {s.planned.extraCurry} extra curries{s.planned.notExpected ? `, ${s.planned.notExpected} marked not expected` : ''}.</p>
             )}
           </details>
         </>
+      )}
+      {detail && (
+        <ReportDetailSheet metric={detail} meals={meals} pendingKeys={pendingKeys} rangeLabel={rangeLabel} onClose={() => setDetail(null)} />
       )}
     </div>
   );

@@ -11,6 +11,35 @@ html {
   font-family: theme('fontFamily.sans');
 }
 
+/* Warm cream backdrop with soft pastel blobs. */
+body {
+  background-color: theme('colors.cocoa.50');
+  background-image:
+    radial-gradient(38rem 26rem at 110% -5%, rgba(248, 205, 180, 0.55), transparent 60%),
+    radial-gradient(30rem 24rem at -15% 30%, rgba(203, 218, 196, 0.5), transparent 60%),
+    radial-gradient(34rem 26rem at 105% 85%, rgba(217, 213, 241, 0.5), transparent 60%);
+  background-attachment: fixed;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: theme('colors.cocoa.950');
+    background-image:
+      radial-gradient(38rem 26rem at 110% -5%, rgba(134, 58, 36, 0.25), transparent 60%),
+      radial-gradient(30rem 24rem at -15% 30%, rgba(56, 74, 51, 0.3), transparent 60%),
+      radial-gradient(34rem 26rem at 105% 85%, rgba(79, 66, 131, 0.25), transparent 60%);
+  }
+}
+
+/* Elegant serif for headings. */
+h1,
+h2,
+.font-display {
+  font-family: theme('fontFamily.display');
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

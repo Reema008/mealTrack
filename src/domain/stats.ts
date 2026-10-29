@@ -1,19 +1,20 @@
 import { eachDay } from './dates';
-import { mealsForDate } from './meals';
+import { END_OF_DAY_MINUTES, mealsForDate } from './meals';
 import { getDayType } from './schedule';
 import type { EffectiveMeal, ISODate, OverrideMap } from './types';
 
 /**
  * Report metrics. Definitions (used consistently everywhere):
  *  - "Scheduled" counts every lunch/dinner on Mon–Sat in the range; Sundays never count.
- *  - "Actual" covers meals dated on or before the household's today. Meals with no
- *    saved record count with their default (assumed) outcome and are reported in
- *    the assumed breakdown.
- *  - "Planned" covers future meals; they are never counted as delivered.
+ *  - "Actual" covers meals with an outcome: past days, and today's meals once
+ *    their cutoff has passed (lunch 2 PM, dinner 10 PM) or someone saved them.
+ *    Meals with no saved record count with their default (assumed) outcome.
+ *  - "Pending" covers today's meals before their cutoff with nothing saved.
+ *  - "Planned" covers future meals. Neither pending nor planned meals count as delivered.
  *  - Egg/chicken totals count DELIVERED main dishes only (food actually received).
  *  - Extra curries are counted per non-veg meal; a meal that was not
  *    delivered had no extra curries, so they count as missing.
- *  - Success % = actual delivered / actual scheduled × 100 (future meals excluded).
+ *  - Success % = actual delivered / actual meals × 100.
  */
 export interface MealStats {
   start: ISODate;
@@ -22,6 +23,8 @@ export interface MealStats {
   scheduledLunch: number;
   scheduledDinner: number;
   scheduledTotal: number;
+  /** Today's meals still before their cutoff time. */
+  pending: number;
   actual: {
     meals: number;
     delivered: number;
@@ -43,7 +46,7 @@ export interface MealStats {
     extraCurry: number;
     notExpected: number;
   };
-  daily: Array<{ date: ISODate; delivered: number; notReceived: number; planned: number }>;
+  daily: Array<{ date: ISODate; delivered: number; notReceived: number; pending: number; planned: number }>;
 }
 
 export function emptyStats(start: ISODate, end: ISODate): MealStats {
@@ -54,6 +57,7 @@ export function emptyStats(start: ISODate, end: ISODate): MealStats {
     scheduledLunch: 0,
     scheduledDinner: 0,
     scheduledTotal: 0,
+    pending: 0,
     actual: {
       meals: 0,
       delivered: 0,
@@ -73,21 +77,45 @@ export function emptyStats(start: ISODate, end: ISODate): MealStats {
   };
 }
 
-export function computeStats(start: ISODate, end: ISODate, overrides: OverrideMap, today: ISODate): MealStats {
+/** True when a meal has an outcome (delivered or not) to count. */
+export const isActual = (m: EffectiveMeal) => m.timing === 'past' || m.timing === 'today';
+
+/** Every scheduled meal in the range, in date order (Sundays have none). */
+export function listMeals(
+  start: ISODate,
+  end: ISODate,
+  overrides: OverrideMap,
+  today: ISODate,
+  nowMinutes: number = END_OF_DAY_MINUTES,
+): EffectiveMeal[] {
+  if (end < start) return [];
+  return eachDay(start, end).flatMap((d) => mealsForDate(d, overrides, today, nowMinutes));
+}
+
+export function computeStats(
+  start: ISODate,
+  end: ISODate,
+  overrides: OverrideMap,
+  today: ISODate,
+  nowMinutes: number = END_OF_DAY_MINUTES,
+): MealStats {
   const s = emptyStats(start, end);
   if (end < start) return s;
 
   for (const date of eachDay(start, end)) {
     if (getDayType(date) === 'none') continue;
     s.scheduledDays++;
-    const day = { date, delivered: 0, notReceived: 0, planned: 0 };
-    for (const meal of mealsForDate(date, overrides, today)) {
+    const day = { date, delivered: 0, notReceived: 0, pending: 0, planned: 0 };
+    for (const meal of mealsForDate(date, overrides, today, nowMinutes)) {
       s.scheduledTotal++;
       if (meal.period === 'lunch') s.scheduledLunch++;
       else s.scheduledDinner++;
       if (meal.timing === 'future') {
         addPlanned(s, meal);
         day.planned++;
+      } else if (meal.timing === 'pending') {
+        s.pending++;
+        day.pending++;
       } else {
         addActual(s, meal);
         if (meal.deliveryStatus === 'delivered') day.delivered++;
@@ -136,4 +164,62 @@ function addPlanned(s: MealStats, m: EffectiveMeal) {
 
 export function formatPercent(rate: number | null): string {
   return rate === null ? '—' : `${Math.round(rate * 10) / 10}%`;
+}
+
+// ---------------------------------------------------------------------------
+// Report drill-down: which meals sit behind each report box. Each filter
+// selects exactly the meals counted by the matching computeStats number.
+// ---------------------------------------------------------------------------
+export type ReportMetric =
+  | 'success'
+  | 'delivered'
+  | 'notReceived'
+  | 'scheduled'
+  | 'scheduledDays'
+  | 'pending'
+  | 'planned'
+  | 'chicken'
+  | 'egg'
+  | 'extraCurry';
+
+const delivered = (m: EffectiveMeal) => isActual(m) && m.deliveryStatus === 'delivered';
+
+export const METRIC_FILTERS: Record<ReportMetric, (m: EffectiveMeal) => boolean> = {
+  success: isActual,
+  delivered,
+  notReceived: (m) => isActual(m) && m.deliveryStatus === 'not_received',
+  scheduled: () => true,
+  scheduledDays: () => true,
+  pending: (m) => m.timing === 'pending',
+  planned: (m) => m.timing === 'future',
+  chicken: (m) => delivered(m) && m.mainDish === 'chicken',
+  egg: (m) => delivered(m) && m.mainDish === 'egg',
+  extraCurry: (m) => isActual(m) && m.dayType === 'nonveg',
+};
+
+export interface DayGroup {
+  date: ISODate;
+  meals: EffectiveMeal[];
+  /** Both scheduled meals of the day were not delivered. */
+  wholeDayMissed: boolean;
+}
+
+/** The meals behind a report box, grouped by date. */
+export function metricBreakdown(meals: readonly EffectiveMeal[], metric: ReportMetric): DayGroup[] {
+  const byDate = new Map<ISODate, EffectiveMeal[]>();
+  for (const m of meals) {
+    if (!byDate.has(m.date)) byDate.set(m.date, []);
+    if (METRIC_FILTERS[metric](m)) byDate.get(m.date)!.push(m);
+  }
+  const groups: DayGroup[] = [];
+  for (const [date, list] of byDate) {
+    if (list.length === 0) continue;
+    const dayMeals = meals.filter((m) => m.date === date);
+    groups.push({
+      date,
+      meals: list,
+      wholeDayMissed: dayMeals.length > 0 && dayMeals.every((m) => isActual(m) && m.deliveryStatus === 'not_received'),
+    });
+  }
+  return groups;
 }

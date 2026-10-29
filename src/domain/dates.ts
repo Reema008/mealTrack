@@ -77,6 +77,24 @@ export function todayInTimeZone(timeZone: string, now: Date = new Date()): ISODa
   return `${get('year')}-${get('month')}-${get('day')}`;
 }
 
+/** Local calendar date and minutes after midnight in an IANA timezone. */
+export function nowInTimeZone(timeZone: string, now: Date = new Date()): { date: ISODate; minutes: number } {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(now);
+  const get = (t: string) => parts.find((p) => p.type === t)!.value;
+  return {
+    date: `${get('year')}-${get('month')}-${get('day')}`,
+    minutes: (Number(get('hour')) % 24) * 60 + Number(get('minute')),
+  };
+}
+
 export function isValidTimeZone(timeZone: string): boolean {
   try {
     new Intl.DateTimeFormat('en-US', { timeZone });

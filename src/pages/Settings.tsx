@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type FormEvent } from 'react';
+import { useConfirm } from '../components/Confirm';
 import { useToast } from '../components/Toast';
 import { Button, Card, ErrorNote, PasswordField, Spinner, TextField } from '../components/ui';
 import { isValidTimeZone } from '../domain/dates';
@@ -81,6 +82,7 @@ function PeopleSection() {
   const { household, userId, isAdmin } = useHousehold();
   const qc = useQueryClient();
   const toast = useToast();
+  const confirm = useConfirm();
   const members = useQuery({ queryKey: ['members', household.id], queryFn: () => fetchMembers(household.id), refetchInterval: isAdmin ? 15_000 : false });
 
   const act = useMutation({
@@ -157,7 +159,16 @@ function PeopleSection() {
                       variant="ghost"
                       className="min-h-9 px-2 text-xs text-rose-700"
                       disabled={act.isPending}
-                      onClick={() => confirm(`Remove ${m.display_name} from MealTrack?`) && act.mutate({ kind: 'remove', userId: m.user_id })}
+                      onClick={async () => {
+                        const ok = await confirm({
+                          emoji: '👋',
+                          tone: 'danger',
+                          title: `Remove ${m.display_name}?`,
+                          message: 'They will lose access to MealTrack and stop getting reminders. To come back they sign in again and need approval.',
+                          confirmLabel: 'Remove',
+                        });
+                        if (ok) act.mutate({ kind: 'remove', userId: m.user_id });
+                      }}
                     >
                       Remove
                     </Button>
@@ -370,10 +381,18 @@ function RemindersSection() {
 export function SettingsPage() {
   const { isAdmin } = useHousehold();
   const toast = useToast();
+  const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
 
   async function signOutHere() {
-    if (!confirm('Sign out of MealTrack on this phone? The meal records stay safe. To use MealTrack again you sign in with your name and the PIN, and an admin approves you again.')) return;
+    const ok = await confirm({
+      emoji: '🚪',
+      tone: 'danger',
+      title: 'Sign out on this phone?',
+      message: 'Your meal records stay safe. To use MealTrack again, sign in with your name and the PIN, and an admin approves you again.',
+      confirmLabel: 'Sign out',
+    });
+    if (!ok) return;
     setBusy(true);
     try {
       await leaveHousehold();

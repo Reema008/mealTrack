@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import { App } from './App';
+import { ConfirmProvider } from './components/Confirm';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastProvider } from './components/Toast';
 import { SessionProvider } from './data/session';
@@ -29,7 +30,9 @@ createRoot(document.getElementById('root')!).render(
       <QueryClientProvider client={queryClient}>
         <SessionProvider>
           <ToastProvider>
-            <App />
+            <ConfirmProvider>
+              <App />
+            </ConfirmProvider>
           </ToastProvider>
         </SessionProvider>
       </QueryClientProvider>

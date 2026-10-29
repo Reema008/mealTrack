@@ -21,9 +21,9 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: 'MealTrack — Family Food Tracker',
           short_name: 'MealTrack',
-          description: 'Track lunch and dinner deliveries for your household food subscription.',
-          theme_color: '#059669',
-          background_color: '#f8fafc',
+          description: "Track lunch and dinner deliveries for your family's food subscription.",
+          theme_color: '#fbf7f2',
+          background_color: '#fbf7f2',
           display: 'standalone',
           orientation: 'portrait',
           start_url: base,
