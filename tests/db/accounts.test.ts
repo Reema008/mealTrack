@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createTestDb, type TestDb, type TestUser } from './harness';
+import { createTestDb, saveMeal, type TestDb, type TestUser } from './harness';
 
 let t: TestDb;
 let admin: TestUser;
@@ -81,10 +81,14 @@ describe('accounts created by the admin', () => {
     expect((await rpc(stranger, 'select 1 from public.meal_overrides')).rows).toHaveLength(0);
   });
 
-  it('the admin cannot delete themselves, but can delete others', async () => {
+  it('the admin cannot delete themselves, but can delete others (their saved meals are kept)', async () => {
+    const saved = await t.as(asUser(memberId), (tx) => saveMeal(tx, '2026-10-27', 'lunch', { status: 'not_received' }, null));
+    expect(saved.status).toBe('saved');
     await expect(rpc(admin, 'select public.delete_account($1)', [admin.id])).rejects.toThrow(/your own/);
     await rpc(admin, 'select public.delete_account($1)', [memberId]);
     expect((await t.db.query('select 1 from auth.users where id = $1', [memberId])).rows).toHaveLength(0);
     expect((await t.db.query('select 1 from public.household_members where user_id = $1', [memberId])).rows).toHaveLength(0);
+    const meal = (await t.db.query('select created_by, updated_by, version, delivery_status from public.meal_overrides where id = $1', [saved.row!.id])).rows[0];
+    expect(meal).toMatchObject({ created_by: null, updated_by: null, version: 1, delivery_status: 'not_received' });
   });
 });

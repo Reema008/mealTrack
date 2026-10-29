@@ -1855,6 +1855,40 @@ begin
 end;
 $$;
 
+-- When an account is deleted, the database clears created_by / updated_by on
+-- the meals it saved. That clearing must not be undone by the stamp trigger
+-- (or count as an edit), so changes made from inside another trigger, such as
+-- the foreign-key cascade, pass through untouched.
+create or replace function public.meal_overrides_stamp()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if tg_op = 'UPDATE' and pg_trigger_depth() > 1 then
+    return new;
+  end if;
+  if tg_op = 'INSERT' then
+    new.created_by := coalesce(auth.uid(), new.created_by);
+    new.updated_by := new.created_by;
+    new.created_at := now();
+    new.updated_at := now();
+    new.version := 1;
+  else
+    new.id := old.id;
+    new.household_id := old.household_id;
+    new.meal_date := old.meal_date;
+    new.meal_period := old.meal_period;
+    new.created_by := old.created_by;
+    new.created_at := old.created_at;
+    new.updated_by := coalesce(auth.uid(), new.updated_by);
+    new.updated_at := now();
+    new.version := old.version + 1;
+  end if;
+  return new;
+end;
+$$;
+
 -- Remove the anonymous phone sessions that open access created (their
 -- memberships, reminder settings and push registrations go with them).
 -- Meal records and subscriptions belong to the family and are kept.
