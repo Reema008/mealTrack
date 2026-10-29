@@ -1,11 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatShort } from '../domain/dates';
 import { PERIOD_LABEL } from '../domain/schedule';
-import { metricBreakdown, type ReportMetric } from '../domain/stats';
+import { metricBreakdown, type DeliveryFilter, type ReportMetric } from '../domain/stats';
 import type { EffectiveMeal } from '../domain/types';
 import { badgeFor, deliveryLabel } from './MealCard';
-import { Button, DayTypeChip, StatusBadge } from './ui';
+import { Button, DayTypeChip, FilterChips, StatusBadge } from './ui';
 
 export const METRIC_INFO: Record<ReportMetric, { title: string; help: string }> = {
   success: { title: 'Delivery success', help: 'Every meal with an outcome so far: delivered and not delivered.' },
@@ -53,7 +53,10 @@ export function ReportDetailSheet({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const info = METRIC_INFO[metric];
-  const groups = metricBreakdown(meals, metric);
+  // Boxes that list a mix of delivered and not-delivered meals get a filter.
+  const filterable = ['veg', 'nonveg', 'lunch', 'dinner', 'scheduled', 'scheduledDays', 'success'].includes(metric);
+  const [delivery, setDelivery] = useState<DeliveryFilter>('all');
+  const groups = metricBreakdown(meals, metric, filterable ? delivery : 'all');
   const total = groups.reduce((n, g) => n + g.meals.length, 0);
   const missedDays = groups.filter((g) => g.wholeDayMissed).length;
 
@@ -90,6 +93,20 @@ export function ReportDetailSheet({
             </Button>
           </div>
           <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">{info.help}</p>
+          {filterable && (
+            <div className="mt-3">
+              <FilterChips
+                label="Show"
+                value={delivery}
+                onChange={setDelivery}
+                options={[
+                  { value: 'all', label: 'All' },
+                  { value: 'delivered', label: 'Delivered' },
+                  { value: 'not_received', label: 'Not delivered' },
+                ]}
+              />
+            </div>
+          )}
           <p className="mt-2 text-sm font-semibold">
             {metric === 'scheduledDays' ? `${groups.length} day${groups.length === 1 ? '' : 's'}` : `${total} meal${total === 1 ? '' : 's'}`}
             {groups.length > 0 && metric !== 'scheduledDays' && ` across ${groups.length} day${groups.length === 1 ? '' : 's'}`}

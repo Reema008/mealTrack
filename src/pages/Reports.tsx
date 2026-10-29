@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { CategoryTile, DailyChart, SplitBar, StatCard } from '../components/Charts';
-import { Card, ErrorNote, Spinner, TextField } from '../components/ui';
+import { Card, ErrorNote, FilterChips, Spinner, TextField } from '../components/ui';
 import { addDays, addMonths, endOfMonth, endOfWeek, formatMonth, formatShort, isISODate, startOfMonth, startOfWeek } from '../domain/dates';
-import { computeStats, formatPercent, listMeals, type ReportMetric } from '../domain/stats';
+import { computeStats, formatPercent, listMeals, type DayTypeFilter, type ReportMetric } from '../domain/stats';
 import { subscriptionPeriods } from '../domain/subscription';
 import { useSubscriptions } from '../data/subscriptions';
 import { useSearchParams } from 'react-router-dom';
@@ -22,6 +22,7 @@ export function ReportsPage() {
   const latestStarted = Math.max(0, periods.filter((p) => p.start <= today).length - 1);
   const currentPeriod = requested && periods.some((p) => p.start === requested) ? periods.findIndex((p) => p.start === requested) : latestStarted;
   const [detail, setDetail] = useState<ReportMetric | null>(null);
+  const [dayFilter, setDayFilter] = useState<DayTypeFilter>('all');
   const [chosenMode, setMode] = useState<Mode | null>(null);
   const mode: Mode = chosenMode ?? (hasPeriods ? 'subscription' : 'week');
   const [chosenIndex, setPeriodIndex] = useState<number | null>(null);
@@ -61,9 +62,10 @@ export function ReportsPage() {
   }
 
   const { map, pendingKeys, isLoading, error, refetch } = useOverrides(start, end);
-  const s = computeStats(start, end, map, today, nowMinutes);
-  const meals = listMeals(start, end, map, today, nowMinutes);
-  const rangeLabel = mode === 'custom' ? `${formatShort(start)} – ${formatShort(end)}` : title;
+  const s = computeStats(start, end, map, today, nowMinutes, dayFilter);
+  const meals = listMeals(start, end, map, today, nowMinutes, dayFilter);
+  const filterLabel = dayFilter === 'veg' ? ' · Veg only' : dayFilter === 'nonveg' ? ' · Non-Veg only' : '';
+  const rangeLabel = (mode === 'custom' ? `${formatShort(start)} – ${formatShort(end)}` : title) + filterLabel;
   const open = (m: ReportMetric) => () => setDetail(m);
   const a = s.actual;
 
@@ -119,6 +121,17 @@ export function ReportsPage() {
         </div>
       )}
 
+      <FilterChips
+        label="Show meals"
+        value={dayFilter}
+        onChange={setDayFilter}
+        options={[
+          { value: 'all', label: 'All' },
+          { value: 'veg', label: '🥗 Veg' },
+          { value: 'nonveg', label: '🍗 Non-Veg' },
+        ]}
+      />
+
       {rangeError ? (
         <p role="alert" className="text-sm text-rose-700 dark:text-rose-300">{rangeError}</p>
       ) : error ? (
@@ -129,22 +142,20 @@ export function ReportsPage() {
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <StatCard label="Delivery success" emoji="✨" tint="sage" value={formatPercent(a.successRate)} hint={`${a.delivered} of ${a.meals} meals so far`} onClick={open('success')} />
-            <StatCard label="Delivered" emoji="🥡" tint="cream" value={a.delivered} hint={a.deliveredAssumed ? `${a.deliveredAssumed} assumed, ${a.deliveredExplicit} confirmed` : 'all confirmed'} onClick={open('delivered')} />
+            <StatCard label="Delivered" emoji="🥡" tint="cream" value={a.delivered} hint={a.deliveredExplicit ? `${a.deliveredExplicit} edited` : 'as scheduled'} onClick={open('delivered')} />
             <StatCard label="Not received" emoji="🚫" tint="blush" value={a.notReceived} hint="tap for the dates" onClick={open('notReceived')} />
             <StatCard label="Scheduled meals" emoji="🗓️" tint="lavender" value={s.scheduledTotal} hint={`${s.scheduledLunch} lunch · ${s.scheduledDinner} dinner`} onClick={open('scheduled')} />
             <StatCard label="Scheduled days" emoji="📅" tint="cream" value={s.scheduledDays} hint="Sundays excluded" onClick={open('scheduledDays')} />
             {s.pending > 0 && <StatCard label="Pending today" emoji="⏳" tint="butter" value={s.pending} hint="lunch 2 PM · dinner 10 PM" onClick={open('pending')} />}
             <StatCard label="Planned" emoji="🔮" tint="lavender" value={s.planned.meals} hint="future, not counted yet" onClick={open('planned')} />
-            <StatCard label="Chicken meals" emoji="🍗" tint="peach" value={a.chicken} hint="delivered" onClick={open('chicken')} />
-            <StatCard label="Egg meals" emoji="🍳" tint="butter" value={a.egg} hint="delivered" onClick={open('egg')} />
-            <StatCard label="Extra curries" emoji="🍛" tint="peach" value={a.extraCurryReceived} hint={`${a.extraCurryMissing} missing of ${a.nonVegMeals}`} onClick={open('extraCurry')} />
+            {dayFilter !== 'veg' && <StatCard label="Extra curries" emoji="🍛" tint="peach" value={a.extraCurryReceived} hint={`${a.extraCurryMissing} missing of ${a.nonVegMeals}`} onClick={open('extraCurry')} />}
           </div>
 
           <section aria-labelledby="by-category" className="space-y-3">
             <h2 id="by-category" className="text-xl">By category</h2>
             <div className="grid grid-cols-2 gap-3">
-              <CategoryTile label="Veg" emoji="🥗" tint="sage" stats={s.categories.veg} onClick={open('veg')} />
-              <CategoryTile label="Non-Veg" emoji="🍗" tint="peach" stats={s.categories.nonveg} onClick={open('nonveg')} />
+              {dayFilter !== 'nonveg' && <CategoryTile label="Veg" emoji="🥗" tint="sage" stats={s.categories.veg} onClick={open('veg')} />}
+              {dayFilter !== 'veg' && <CategoryTile label="Non-Veg" emoji="🍗" tint="peach" stats={s.categories.nonveg} onClick={open('nonveg')} />}
               <CategoryTile label="Lunch" emoji="☀️" tint="butter" stats={s.categories.lunch} onClick={open('lunch')} />
               <CategoryTile label="Dinner" emoji="🌙" tint="lavender" stats={s.categories.dinner} onClick={open('dinner')} />
             </div>
@@ -154,18 +165,11 @@ export function ReportsPage() {
             <SplitBar
               title="Meal outcomes"
               parts={[
-                { label: 'Delivered (confirmed)', value: a.deliveredExplicit, className: 'bg-emerald-500' },
-                { label: 'Delivered (assumed)', value: a.deliveredAssumed, className: 'bg-emerald-300' },
+                { label: 'Delivered (edited)', value: a.deliveredExplicit, className: 'bg-emerald-500' },
+                { label: 'Delivered (as scheduled)', value: a.deliveredAssumed, className: 'bg-emerald-300' },
                 { label: 'Not received', value: a.notReceived, className: 'bg-rose-400' },
                 { label: 'Pending', value: s.pending, className: 'bg-amber-300' },
                 { label: 'Planned', value: s.planned.meals, className: 'bg-sky-300' },
-              ]}
-            />
-            <SplitBar
-              title="Main dish (delivered non-veg meals)"
-              parts={[
-                { label: 'Chicken', value: a.chicken, className: 'bg-orange-300' },
-                { label: 'Egg', value: a.egg, className: 'bg-amber-300' },
               ]}
             />
             <DailyChart daily={s.daily} />
@@ -175,10 +179,10 @@ export function ReportsPage() {
             <summary className="cursor-pointer font-semibold">How these numbers are calculated</summary>
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>Monday–Saturday have lunch and dinner; Sundays are never counted.</li>
-              <li>Meals nobody changed are <strong>assumed delivered</strong> (with chicken and extra curries on Tue/Wed/Fri). {a.assumedMeals} of {a.meals} meals here are assumed.</li>
+              <li>Meals nobody changed count as <strong>delivered as scheduled</strong> (with extra curries on Tue/Wed/Fri). {a.assumedMeals} of {a.meals} meals here are as scheduled.</li>
+              <li>Use <strong>All / Veg / Non-Veg</strong> above to count only veg days (Mon, Thu, Sat) or only non-veg days (Tue, Wed, Fri).</li>
               <li>Today’s meals stay <strong>pending</strong> until 2 PM (lunch) and 10 PM (dinner) unless someone marks them.</li>
               <li>Future meals are <strong>planned</strong>. They are left out of delivered totals and the success rate.</li>
-              <li>Egg and chicken totals count only delivered meals.</li>
               <li>Extra curries are counted for each non-veg meal; a meal that was not delivered had no extra curries.</li>
               <li>Success rate = delivered ÷ meals with an outcome so far (pending and planned meals are left out).</li>
             </ul>

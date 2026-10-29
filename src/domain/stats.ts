@@ -28,6 +28,11 @@ export interface CategoryStats {
   successRate: number | null;
 }
 
+/** Report filter: every meal, or only veg / only non-veg days. */
+export type DayTypeFilter = 'all' | 'veg' | 'nonveg';
+
+const matchesFilter = (m: EffectiveMeal, filter: DayTypeFilter) => filter === 'all' || m.dayType === filter;
+
 export type MealCategory = 'veg' | 'nonveg' | 'lunch' | 'dinner';
 
 export interface MealStats {
@@ -116,9 +121,12 @@ export function listMeals(
   overrides: OverrideMap,
   today: ISODate,
   nowMinutes: number = END_OF_DAY_MINUTES,
+  filter: DayTypeFilter = 'all',
 ): EffectiveMeal[] {
   if (end < start) return [];
-  return eachDay(start, end).flatMap((d) => mealsForDate(d, overrides, today, nowMinutes));
+  return eachDay(start, end)
+    .flatMap((d) => mealsForDate(d, overrides, today, nowMinutes))
+    .filter((m) => matchesFilter(m, filter));
 }
 
 export function computeStats(
@@ -127,12 +135,14 @@ export function computeStats(
   overrides: OverrideMap,
   today: ISODate,
   nowMinutes: number = END_OF_DAY_MINUTES,
+  filter: DayTypeFilter = 'all',
 ): MealStats {
   const s = emptyStats(start, end);
   if (end < start) return s;
 
   for (const date of eachDay(start, end)) {
-    if (getDayType(date) === 'none') continue;
+    const type = getDayType(date);
+    if (type === 'none' || (filter !== 'all' && type !== filter)) continue;
     s.scheduledDays++;
     const day = { date, delivered: 0, notReceived: 0, pending: 0, planned: 0 };
     for (const meal of mealsForDate(date, overrides, today, nowMinutes)) {
@@ -237,6 +247,15 @@ export const METRIC_FILTERS: Record<ReportMetric, (m: EffectiveMeal) => boolean>
   dinner: (m) => m.period === 'dinner',
 };
 
+/** Detail-sheet filter: every meal, only delivered, or only not delivered. */
+export type DeliveryFilter = 'all' | 'delivered' | 'not_received';
+
+export function matchesDelivery(m: EffectiveMeal, filter: DeliveryFilter): boolean {
+  if (filter === 'all') return true;
+  if (!isActual(m)) return false; // pending / planned meals have no outcome yet
+  return m.deliveryStatus === filter;
+}
+
 export interface DayGroup {
   date: ISODate;
   meals: EffectiveMeal[];
@@ -245,11 +264,15 @@ export interface DayGroup {
 }
 
 /** The meals behind a report box, grouped by date. */
-export function metricBreakdown(meals: readonly EffectiveMeal[], metric: ReportMetric): DayGroup[] {
+export function metricBreakdown(
+  meals: readonly EffectiveMeal[],
+  metric: ReportMetric,
+  delivery: DeliveryFilter = 'all',
+): DayGroup[] {
   const byDate = new Map<ISODate, EffectiveMeal[]>();
   for (const m of meals) {
     if (!byDate.has(m.date)) byDate.set(m.date, []);
-    if (METRIC_FILTERS[metric](m)) byDate.get(m.date)!.push(m);
+    if (METRIC_FILTERS[metric](m) && matchesDelivery(m, delivery)) byDate.get(m.date)!.push(m);
   }
   const groups: DayGroup[] = [];
   for (const [date, list] of byDate) {
