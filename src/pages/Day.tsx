@@ -23,7 +23,7 @@ export function DayPage() {
         <Button variant="secondary" onClick={() => navigate(`/day/${addDays(date, -1)}`)} aria-label="Previous day">
           ←
         </Button>
-        <div className="text-center">
+        <div className="min-w-0 text-center">
           <h1 className="text-lg font-semibold">{formatLong(date)}</h1>
           <p className="text-xs text-slate-600 dark:text-slate-400">{timing}</p>
         </div>
@@ -41,7 +41,7 @@ export function DayPage() {
       ) : (
         <DayMeals date={date} map={map} pendingKeys={pendingKeys} today={today} />
       )}
-      <div className="flex justify-center gap-2 text-sm">
+      <div className="flex flex-wrap justify-center gap-2 text-sm">
         {date !== today && (
           <Link to={`/day/${today}`} className="rounded-lg px-3 py-2 font-semibold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-slate-800">
             Go to today

@@ -23,8 +23,8 @@ export function SubscriptionCard() {
   if (status.kind === 'none') {
     return (
       <Card className="bg-gradient-to-br from-amber-50/90 to-white/80 dark:from-amber-950/40 dark:to-slate-900/80">
-        <div className="flex items-center justify-between gap-3">
-          <div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0 flex-1 basis-48">
             <h2 className="text-xl">Subscription</h2>
             <p className="text-sm text-slate-600 dark:text-slate-400">Record your renewal date and amount to track each 4-week subscription.</p>
           </div>
@@ -37,8 +37,8 @@ export function SubscriptionCard() {
   if (status.kind === 'ended') {
     return (
       <Card className="bg-gradient-to-br from-rose-50/90 to-white/80 dark:from-rose-950/40 dark:to-slate-900/80">
-        <div className="flex items-center justify-between gap-3">
-          <div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0 flex-1 basis-48">
             <h2 className="text-xl">Renewal due</h2>
             <p className="text-sm text-slate-600 dark:text-slate-400">
               The last subscription ended on {formatShort(status.period.end)} ({formatAmount(status.period.record.amount)}).
@@ -53,8 +53,8 @@ export function SubscriptionCard() {
   if (status.kind === 'upcoming') {
     return (
       <Card>
-        <div className="flex items-center justify-between gap-3">
-          <div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0 flex-1 basis-48">
             <h2 className="text-xl">Subscription</h2>
             <p className="text-sm text-slate-600 dark:text-slate-400">
               Next subscription starts {formatShort(status.period.start)} · {formatAmount(status.period.record.amount)}
@@ -73,8 +73,8 @@ export function SubscriptionCard() {
 
   return (
     <Card className="bg-gradient-to-br from-emerald-50/90 via-white/80 to-sky-50/80 dark:from-emerald-950/40 dark:via-slate-900/80 dark:to-sky-950/40">
-      <div className="flex items-start justify-between gap-3">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <h2 className="text-xl">Subscription</h2>
           <p className="text-xs text-slate-600 dark:text-slate-400">
             {formatShort(p.start)} – {formatShort(p.end)} · <strong className="text-slate-900 dark:text-slate-100">{formatAmount(p.record.amount)}</strong>

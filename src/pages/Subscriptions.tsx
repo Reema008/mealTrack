@@ -67,7 +67,7 @@ function SubscriptionForm({
 
   return (
     <form className="space-y-3" onSubmit={submit}>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
         <div>
           <label htmlFor={`start-${submitLabel}`} className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Start date</label>
           <input id={`start-${submitLabel}`} type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} required />
@@ -85,7 +85,7 @@ function SubscriptionForm({
         </div>
       </div>
       {error && <p role="alert" className="text-sm text-rose-700 dark:text-rose-300">{error}</p>}
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         {onCancel && <Button variant="secondary" onClick={onCancel}>Cancel</Button>}
         <Button type="submit" disabled={busy}>{busy ? 'Saving…' : submitLabel}</Button>
       </div>
@@ -138,7 +138,7 @@ function PeriodCard({
         </div>
       </div>
 
-      <dl className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+      <dl className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-2 text-sm">
         <div className="rounded-2xl bg-emerald-50/80 p-2 dark:bg-emerald-950/40">
           <dt className="text-xs text-slate-600 dark:text-slate-400">Delivered</dt>
           <dd className="font-semibold">{a.delivered} / {s.scheduledTotal}</dd>
@@ -279,7 +279,7 @@ export function SubscriptionsPage() {
         <p className="py-6 text-center text-sm text-slate-600 dark:text-slate-400">No subscriptions recorded yet. 🌿</p>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-2">
             <div className="rounded-3xl bg-amber-100/80 p-3 shadow-soft dark:bg-amber-950/50">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">Total paid</p>
               <p className="mt-1 font-display text-xl">{formatAmount(totalSpent)}</p>

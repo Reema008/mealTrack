@@ -137,7 +137,7 @@ export function MealEditSheet({ meal, pending, onClose }: { meal: EffectiveMeal;
                 </Button>
               )}
             </div>
-            <div className="ml-auto flex gap-2">
+            <div className="ml-auto flex flex-wrap justify-end gap-2">
               <Button variant="secondary" onClick={onClose}>
                 Cancel
               </Button>

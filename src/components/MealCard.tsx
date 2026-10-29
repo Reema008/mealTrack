@@ -35,9 +35,9 @@ const PERIOD_STYLE: Record<MealPeriod, { emoji: string; tint: string }> = {
 
 function Row({ label, value, bad }: { label: string; value: string; bad?: boolean }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-2">
+    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 py-2">
       <dt className="text-sm text-slate-600 dark:text-slate-400">{label}</dt>
-      <dd className={`text-sm font-semibold ${bad ? 'text-rose-700 dark:text-rose-300' : 'text-slate-900 dark:text-slate-100'}`}>{value}</dd>
+      <dd className={`ml-auto text-right text-sm font-semibold ${bad ? 'text-rose-700 dark:text-rose-300' : 'text-slate-900 dark:text-slate-100'}`}>{value}</dd>
     </div>
   );
 }
@@ -53,9 +53,9 @@ export function MealCard({ meal, pending, onEdit }: { meal: EffectiveMeal; pendi
       }`}
       aria-label={`${PERIOD_LABEL[meal.period]}, ${formatLong(meal.date)}`}
     >
-      <header className="mb-2 flex items-center justify-between gap-2">
+      <header className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 font-display text-xl">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-lg shadow-sm dark:bg-slate-900/70" aria-hidden>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/80 text-lg shadow-sm dark:bg-slate-900/70" aria-hidden>
             {style.emoji}
           </span>
           {PERIOD_LABEL[meal.period]}

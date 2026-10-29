@@ -43,7 +43,7 @@ function SyncIndicator({ sync }: { sync: SyncState }) {
     dot = 'bg-amber-400';
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700" role="status" aria-live="polite">
+    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-white/80 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700" role="status" aria-live="polite">
       <span className={`h-2 w-2 rounded-full ${dot}`} aria-hidden />
       {text}
     </span>
@@ -85,7 +85,7 @@ function OfflineConflictDialog({ conflict, onDone }: { conflict: SyncConflict; o
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 sm:items-center">
-      <div role="alertdialog" aria-modal="true" aria-labelledby="conflict-title" className="w-full max-w-md rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] dark:bg-slate-900 sm:rounded-3xl">
+      <div role="alertdialog" aria-modal="true" aria-labelledby="conflict-title" className="max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] dark:bg-slate-900 sm:rounded-3xl">
         <h2 id="conflict-title" className="text-2xl">Someone else changed this meal</h2>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
           {PERIOD_LABEL[conflict.period]} on {formatLong(conflict.date)} was changed on another phone just before your change was saved.
@@ -94,7 +94,7 @@ function OfflineConflictDialog({ conflict, onDone }: { conflict: SyncConflict; o
           <div><dt className="inline font-medium">Now saved: </dt><dd className="inline">{theirs ? describe(theirs, nonveg) : 'Standard default'}</dd></div>
           <div><dt className="inline font-medium">Your edit: </dt><dd className="inline">{describe(conflict.mine, nonveg)}</dd></div>
         </dl>
-        <div className="mt-4 flex justify-end gap-2">
+        <div className="mt-4 flex flex-wrap justify-end gap-2">
           <Button variant="secondary" onClick={onDone} disabled={busy}>Keep theirs</Button>
           <Button onClick={useMine} disabled={busy}>{busy ? 'Saving…' : 'Use mine'}</Button>
         </div>
@@ -113,7 +113,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="mx-auto flex min-h-dvh max-w-2xl flex-col">
         <header className="sticky top-0 z-30 flex items-center justify-between gap-2 bg-slate-50/75 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur-md dark:bg-slate-950/75">
           <div className="flex min-w-0 items-center gap-2.5">
-            <img src="./icons/icon.svg" alt="" className="h-10 w-10 rounded-2xl shadow-soft" />
+            <img src="./icons/icon.svg" alt="" className="h-10 w-10 shrink-0 rounded-2xl shadow-soft" />
             <div className="min-w-0">
             <p className="font-display text-2xl leading-none text-slate-900 dark:text-slate-50">MealTrack</p>
             <p className="truncate text-xs text-slate-600 dark:text-slate-400">Lunch & dinner tracker</p>
@@ -136,7 +136,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   to={n.to}
                   end={n.to === '/'}
                   className={({ isActive }) =>
-                    `flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-semibold transition-colors ${
+                    `flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-center text-[11px] font-semibold leading-tight transition-colors ${
                       isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200' : 'text-slate-600 dark:text-slate-400'
                     }`
                   }

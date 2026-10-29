@@ -32,7 +32,7 @@ export function CalendarPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <Button variant="secondary" onClick={() => goMonth(-1)} aria-label="Previous month">←</Button>
-        <h1 className="text-lg font-semibold" aria-live="polite">{formatMonth(month)}</h1>
+        <h1 className="min-w-0 text-center text-lg font-semibold" aria-live="polite">{formatMonth(month)}</h1>
         <Button variant="secondary" onClick={() => goMonth(1)} aria-label="Next month">→</Button>
       </div>
 
@@ -61,7 +61,7 @@ export function CalendarPage() {
           </Card>
           {selected >= start && selected <= end && (
             <section aria-labelledby="sel-heading" className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 id="sel-heading" className="font-semibold">{formatLong(selected)}</h2>
                 <DayTypeChip type={getDayType(selected)} />
               </div>
@@ -79,7 +79,7 @@ export function CalendarPage() {
                   to={`/day/${d}`}
                   className={`block rounded-2xl bg-white p-3 ring-1 hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 ${d === today ? 'ring-2 ring-emerald-600' : 'ring-slate-200 dark:ring-slate-800'}`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-medium">{formatShort(d)}</span>
                     <DayTypeChip type={getDayType(d)} />
                   </div>

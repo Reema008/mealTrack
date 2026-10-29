@@ -92,7 +92,7 @@ function AlertModal({ alert, onClose }: { alert: Alert; onClose: () => void }) {
         aria-modal="true"
         aria-labelledby="alert-title"
         aria-describedby="alert-message"
-        className="relative w-full max-w-xs overflow-hidden rounded-[2rem] bg-slate-50 text-center shadow-soft ring-1 ring-white/70 dark:bg-slate-900 dark:ring-slate-800"
+        className="relative max-h-[calc(100dvh-2rem)] w-full max-w-xs overflow-y-auto rounded-[2rem] bg-slate-50 text-center shadow-soft ring-1 ring-white/70 dark:bg-slate-900 dark:ring-slate-800"
       >
         <div className={`bg-gradient-to-b ${t.header} to-transparent px-6 pb-1 pt-6`}>
           <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-2xl shadow-soft ring-4 dark:bg-slate-800 ${t.ring}`} aria-hidden>

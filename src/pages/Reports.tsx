@@ -80,7 +80,7 @@ export function ReportsPage() {
         <h1 className="text-3xl">Reports</h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">Tap any box to see the dates behind it.</p>
       </div>
-      <div className={`grid ${modes.length === 4 ? 'grid-cols-4' : 'grid-cols-3'} gap-1 rounded-full bg-white/70 p-1 shadow-soft ring-1 ring-slate-200/70 dark:bg-slate-800`} role="tablist" aria-label="Report period">
+      <div className="flex flex-wrap gap-1 rounded-3xl bg-white/70 p-1 shadow-soft ring-1 ring-slate-200/70 dark:bg-slate-800" role="tablist" aria-label="Report period">
         {modes.map((m) => (
           <button
             key={m}
@@ -91,7 +91,7 @@ export function ReportsPage() {
               setAnchor(today);
               setPeriodIndex(null);
             }}
-            className={`min-h-10 rounded-full text-sm font-semibold capitalize ${mode === m ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
+            className={`min-h-10 flex-1 whitespace-nowrap rounded-full px-3 text-sm font-semibold capitalize ${mode === m ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
           >
             {MODE_LABEL[m]}
           </button>
@@ -99,14 +99,14 @@ export function ReportsPage() {
       </div>
 
       {mode === 'custom' ? (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
           <TextField id="from" label="From" type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
           <TextField id="to" label="To" type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
         </div>
       ) : (
-        <div className="flex items-center justify-between">
-          <button onClick={() => shift(-1)} className="min-h-11 min-w-11 rounded-xl text-lg hover:bg-slate-200 dark:hover:bg-slate-800" aria-label={mode === 'subscription' ? 'Previous period' : `Previous ${mode}`}>←</button>
-          <div className="text-center" aria-live="polite">
+        <div className="flex items-center justify-between gap-2">
+          <button onClick={() => shift(-1)} className="min-h-11 min-w-11 shrink-0 rounded-xl text-lg hover:bg-slate-200 dark:hover:bg-slate-800" aria-label={mode === 'subscription' ? 'Previous period' : `Previous ${mode}`}>←</button>
+          <div className="min-w-0 text-center" aria-live="polite">
             <p className="font-display text-lg">{title}</p>
             {mode === 'subscription' && (
               <p className="text-xs text-slate-600 dark:text-slate-400">
@@ -115,7 +115,7 @@ export function ReportsPage() {
               </p>
             )}
           </div>
-          <button onClick={() => shift(1)} className="min-h-11 min-w-11 rounded-xl text-lg hover:bg-slate-200 dark:hover:bg-slate-800" aria-label={mode === 'subscription' ? 'Next period' : `Next ${mode}`}>→</button>
+          <button onClick={() => shift(1)} className="min-h-11 min-w-11 shrink-0 rounded-xl text-lg hover:bg-slate-200 dark:hover:bg-slate-800" aria-label={mode === 'subscription' ? 'Next period' : `Next ${mode}`}>→</button>
         </div>
       )}
 
@@ -127,7 +127,7 @@ export function ReportsPage() {
         <Spinner label="Calculating" />
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
             <StatCard label="Delivery success" emoji="✨" tint="sage" value={formatPercent(a.successRate)} hint={`${a.delivered} of ${a.meals} meals so far`} onClick={open('success')} />
             <StatCard label="Delivered" emoji="🥡" tint="cream" value={a.delivered} hint={a.deliveredExplicit ? `${a.deliveredExplicit} edited` : 'as scheduled'} onClick={open('delivered')} />
             <StatCard label="Not received" emoji="🚫" tint="blush" value={a.notReceived} hint="tap for the dates" onClick={open('notReceived')} />
@@ -140,7 +140,7 @@ export function ReportsPage() {
 
           <section aria-labelledby="by-category" className="space-y-3">
             <h2 id="by-category" className="text-xl">By category</h2>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
               <CategoryTile label="Veg" emoji="🥗" tint="sage" stats={s.categories.veg} onClick={open('veg')} />
               <CategoryTile label="Non-Veg" emoji="🍗" tint="peach" stats={s.categories.nonveg} onClick={open('nonveg')} />
               <CategoryTile label="Lunch" emoji="☀️" tint="butter" stats={s.categories.lunch} onClick={open('lunch')} />

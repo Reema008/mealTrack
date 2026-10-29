@@ -8,6 +8,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastProvider } from './components/Toast';
 import { SessionProvider } from './data/session';
 import { AuthExpiredError, NetworkError } from './lib/errors';
+import { initTheme } from './lib/theme';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -22,6 +23,7 @@ const queryClient = new QueryClient({
   },
 });
 
+initTheme();
 registerSW({ immediate: true });
 
 createRoot(document.getElementById('root')!).render(

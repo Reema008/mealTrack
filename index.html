@@ -19,6 +19,15 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
     />
     <title>MealTrack</title>
+    <script>
+      // Apply the saved light/dark choice before the page paints (no flash).
+      try {
+        var t = localStorage.getItem('mealtrack.theme');
+        var dark = t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.classList.add('dark');
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+      } catch (e) {}
+    </script>
   </head>
   <body class="text-slate-900 antialiased dark:text-slate-100">
     <div id="root"></div>

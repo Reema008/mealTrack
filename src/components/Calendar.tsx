@@ -145,7 +145,7 @@ export function WeekStrip({
               onClick={() => onSelect(d)}
               aria-label={describeDay(d, s, today)}
               aria-current={d === today ? 'date' : undefined}
-              className={`flex w-full flex-col items-center gap-0.5 rounded-xl py-2 text-xs ring-1 transition-colors ${
+              className={`flex w-full min-w-0 flex-col items-center gap-0.5 rounded-xl px-0.5 py-2 text-xs leading-tight ring-1 transition-colors ${
                 d === today
                   ? 'bg-emerald-600 text-white ring-emerald-600'
                   : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-800'

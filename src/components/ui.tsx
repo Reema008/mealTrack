@@ -20,7 +20,7 @@ export function Button({
   return (
     <button
       type="button"
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-1.5 text-center text-sm font-semibold leading-tight transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed ${VARIANTS[variant]} ${className}`}
       {...props}
     />
   );
@@ -81,7 +81,7 @@ export function StatusBadge({ kind }: { kind: BadgeKind | null }) {
   if (!kind) return null;
   const b = BADGE[kind];
   return (
-    <span title={b.title} className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${b.className}`}>
+    <span title={b.title} className={`inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${b.className}`}>
       {b.label}
     </span>
   );
@@ -123,7 +123,7 @@ export function Segmented<T extends string | boolean>({
   return (
     <fieldset>
       <legend className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">{label}</legend>
-      <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={label}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(5.5rem,1fr))] gap-2" role="radiogroup" aria-label={label}>
         {options.map((o) => {
           const selected = o.value === value;
           const tone =
@@ -137,7 +137,7 @@ export function Segmented<T extends string | boolean>({
               role="radio"
               aria-checked={selected}
               onClick={() => onChange(o.value)}
-              className={`min-h-12 rounded-xl px-3 text-sm font-semibold ring-1 ring-inset transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
+              className={`min-h-12 rounded-xl px-3 py-1.5 text-sm leading-tight font-semibold ring-1 ring-inset transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
                 selected
                   ? tone
                   : 'bg-white text-slate-700 ring-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600'
@@ -247,7 +247,7 @@ export function FilterChips<T extends string>({
             role="radio"
             aria-checked={selected}
             onClick={() => onChange(o.value)}
-            className={`min-h-9 rounded-full px-3.5 text-xs font-semibold ring-1 ring-inset transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
+            className={`min-h-9 rounded-full px-3.5 py-1 text-xs font-semibold ring-1 ring-inset transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
               selected
                 ? 'bg-emerald-600 text-white ring-emerald-600'
                 : 'bg-white/80 text-slate-700 ring-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600'

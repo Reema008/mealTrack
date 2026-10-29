@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -21,14 +21,22 @@ body {
   background-attachment: fixed;
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: theme('colors.cocoa.950');
-    background-image:
-      radial-gradient(38rem 26rem at 110% -5%, rgba(134, 58, 36, 0.25), transparent 60%),
-      radial-gradient(30rem 24rem at -15% 30%, rgba(56, 74, 51, 0.3), transparent 60%),
-      radial-gradient(34rem 26rem at 105% 85%, rgba(79, 66, 131, 0.25), transparent 60%);
-  }
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: theme('colors.cocoa.950');
+  background-image:
+    radial-gradient(38rem 26rem at 110% -5%, rgba(134, 58, 36, 0.25), transparent 60%),
+    radial-gradient(30rem 24rem at -15% 30%, rgba(56, 74, 51, 0.3), transparent 60%),
+    radial-gradient(34rem 26rem at 105% 85%, rgba(79, 66, 131, 0.25), transparent 60%);
+}
+
+/* Long words wrap instead of pushing content off screen (large phone text sizes). */
+body {
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 /* Elegant serif for headings. */

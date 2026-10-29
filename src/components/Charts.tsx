@@ -31,14 +31,14 @@ export function StatCard({
   const body = (
     <>
       <span className="flex items-start justify-between gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">{label}</span>
+        <span className="min-w-0 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">{label}</span>
         {emoji && (
           <span className="text-lg leading-none" aria-hidden>
             {emoji}
           </span>
         )}
       </span>
-      <span className="mt-2 block font-display text-3xl tabular-nums text-slate-900 dark:text-slate-50">{value}</span>
+      <span className="mt-2 block break-words font-display text-3xl tabular-nums text-slate-900 dark:text-slate-50">{value}</span>
       {hint && <span className="mt-1 block text-xs text-slate-600 dark:text-slate-400">{hint}</span>}
       {onClick && (
         <span className="mt-2 block text-xs font-semibold text-emerald-700 dark:text-emerald-300" aria-hidden>
@@ -47,7 +47,7 @@ export function StatCard({
       )}
     </>
   );
-  const cls = `block w-full rounded-3xl p-4 text-left shadow-soft ring-1 ring-white/60 dark:ring-slate-800 ${TINTS[tint]}`;
+  const cls = `block w-full min-w-0 rounded-3xl p-4 text-left shadow-soft ring-1 ring-white/60 dark:ring-slate-800 ${TINTS[tint]}`;
   return onClick ? (
     <button
       type="button"
@@ -152,9 +152,9 @@ export function CategoryTile({
       type="button"
       onClick={onClick}
       aria-label={`${label}: ${stats.delivered} delivered, ${stats.notReceived} not received, ${stats.upcoming} upcoming. View details`}
-      className={`block w-full rounded-3xl p-4 text-left shadow-soft ring-1 ring-white/60 transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:ring-slate-800 ${TINTS[tint]}`}
+      className={`block w-full min-w-0 rounded-3xl p-4 text-left shadow-soft ring-1 ring-white/60 transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:ring-slate-800 ${TINTS[tint]}`}
     >
-      <span className="flex items-center justify-between gap-2">
+      <span className="flex flex-wrap items-center justify-between gap-x-2">
         <span className="font-display text-lg">
           <span aria-hidden>{emoji} </span>
           {label}

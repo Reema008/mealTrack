@@ -41,7 +41,7 @@ export function HomePage() {
       <SubscriptionCard />
 
       <Card>
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-x-2">
           <h2 className="text-xl">This week</h2>
           <Link to="/calendar" className="rounded-lg px-2 py-1 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-slate-800">
             Calendar & history →

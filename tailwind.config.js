@@ -33,7 +33,8 @@ const butter = {
 
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
-  darkMode: 'media',
+  // Dark mode follows the `dark` class on <html> (Settings → Appearance).
+  darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {

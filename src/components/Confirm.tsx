@@ -86,7 +86,7 @@ function ConfirmDialog({ options, onClose }: { options: ConfirmOptions; onClose:
         aria-modal="true"
         aria-labelledby="confirm-title"
         aria-describedby={options.message ? 'confirm-message' : undefined}
-        className="relative w-full max-w-sm overflow-hidden rounded-[2rem] bg-slate-50 text-center shadow-soft ring-1 ring-white/70 dark:bg-slate-900 dark:ring-slate-800"
+        className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-sm overflow-y-auto rounded-[2rem] bg-slate-50 text-center shadow-soft ring-1 ring-white/70 dark:bg-slate-900 dark:ring-slate-800"
       >
         <div
           className={`px-6 pb-2 pt-7 ${
@@ -112,7 +112,7 @@ function ConfirmDialog({ options, onClose }: { options: ConfirmOptions; onClose:
             {options.message}
           </div>
         )}
-        <div className="flex justify-end gap-2 p-5 pt-6">
+        <div className="flex flex-wrap justify-end gap-2 p-5 pt-6">
           <Button variant="secondary" data-cancel onClick={() => onClose(false)}>
             {options.cancelLabel ?? 'Cancel'}
           </Button>
