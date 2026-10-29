@@ -4,7 +4,6 @@ import { applyMigration, createTestDb, migrationFiles } from './harness';
 const FAMILY_PIN_MIGRATION = migrationFiles().find((f) => f.endsWith('_family_pin.sql'))!;
 const NOT_DELIVERED_MIGRATION = migrationFiles().find((f) => f.endsWith('_not_delivered_clears_dish.sql'))!;
 const APPROVAL_MIGRATION = migrationFiles().find((f) => f.endsWith('_admin_approval.sql'))!;
-const PERSONAL_PIN_MIGRATION = migrationFiles().find((f) => f.endsWith('_personal_pins.sql'))!;
 
 describe('upgrading an existing database', () => {
   it('clears dish/curry on existing not-delivered non-veg rows (real-world upgrade failure)', async () => {
@@ -49,7 +48,6 @@ describe('upgrading an existing database', () => {
     await applyMigration(t.db, FAMILY_PIN_MIGRATION);
     await applyMigration(t.db, NOT_DELIVERED_MIGRATION);
     await applyMigration(t.db, APPROVAL_MIGRATION);
-    await applyMigration(t.db, PERSONAL_PIN_MIGRATION);
     await t.close();
   });
 });

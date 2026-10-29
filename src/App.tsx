@@ -1,13 +1,14 @@
-import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { HashRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './components/AppShell';
-import { Button, ErrorNote, Spinner } from './components/ui';
-import { HouseholdProvider, useMembership } from './data/household';
+import { ErrorNote, Spinner } from './components/ui';
+import { enterMealTrack } from './data/api';
+import { HouseholdProvider, membershipKey, useMembership } from './data/household';
 import { signOut, useSession } from './data/session';
 import { AuthExpiredError } from './lib/errors';
 import { isSupabaseConfigured } from './lib/supabase';
-import { AppLockGate } from './components/AppLock';
-import { clearRequested, JoinOrSetupPage, PendingApprovalPage, SessionErrorPage, SetupRequiredPage } from './pages/Auth';
+import { SessionErrorPage, SetupRequiredPage } from './pages/Auth';
 import { CalendarPage } from './pages/Calendar';
 import { DayPage } from './pages/Day';
 import { HomePage } from './pages/Home';
@@ -39,32 +40,49 @@ function ScrollToTop() {
   return null;
 }
 
+/** Every phone is let in automatically: no sign-in, PIN or approval. */
 function SignedIn() {
   const { session } = useSession();
   const membership = useMembership();
+  const qc = useQueryClient();
+  const [enterError, setEnterError] = useState<Error | null>(null);
+  const needsEntry = membership.isSuccess && (!membership.data || membership.data.status !== 'approved');
 
   useEffect(() => {
     if (membership.error instanceof AuthExpiredError) void signOut();
   }, [membership.error]);
-  useEffect(() => {
-    if (membership.data?.status === 'approved') clearRequested();
-  }, [membership.data?.status]);
 
-  if (membership.isLoading) return <Spinner label="Loading MealTrack" />;
-  if (membership.error) {
+  useEffect(() => {
+    if (!needsEntry) return;
+    let cancelled = false;
+    enterMealTrack()
+      .then(() => qc.invalidateQueries({ queryKey: membershipKey(session?.user.id) }))
+      .catch((e: Error) => !cancelled && setEnterError(e));
+    return () => {
+      cancelled = true;
+    };
+  }, [needsEntry, qc, session?.user.id]);
+
+  const error = membership.error ?? enterError;
+  if (error) {
     return (
       <div className="mx-auto max-w-sm p-6">
-        <ErrorNote error={membership.error} onRetry={() => void membership.refetch()} />
-        <Button variant="ghost" className="mt-3 w-full" onClick={() => void signOut()}>Start over on this phone</Button>
+        <ErrorNote
+          error={error}
+          onRetry={() => {
+            setEnterError(null);
+            void membership.refetch();
+          }}
+        />
       </div>
     );
   }
-  if (!membership.data) return <JoinOrSetupPage />;
-  if (membership.data.status === 'pending') return <PendingApprovalPage name={membership.data.display_name} />;
+  if (membership.isLoading || needsEntry || !membership.data || membership.data.status !== 'approved') {
+    return <Spinner label="Opening MealTrack" />;
+  }
 
   return (
     <HouseholdProvider membership={membership.data} userId={session!.user.id} email={session!.user.email ?? ''}>
-      <AppLockGate>
       <AppShell>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -75,7 +93,6 @@ function SignedIn() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AppShell>
-      </AppLockGate>
     </HouseholdProvider>
   );
 }

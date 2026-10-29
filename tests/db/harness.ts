@@ -107,18 +107,8 @@ export async function createTestDb(upTo?: string): Promise<TestDb> {
   };
 }
 
-/** Default personal PIN used for everyone in tests. */
+/** PIN used when tests set MealTrack up. */
 export const FAMILY_PIN = '482913';
-
-export interface SignInResult {
-  ok: boolean;
-  status?: string;
-  error?: string;
-  attempts_left?: number;
-  returning?: boolean;
-}
-
-const nameOf = (user: TestUser) => user.email.split('@')[0];
 
 /** First-time setup: `user` becomes the admin, signing in as `displayName` with `pin`. */
 export async function setupFamily(t: TestDb, user: TestUser, name = 'Family', pin = FAMILY_PIN, displayName = 'Owner'): Promise<string> {
@@ -128,28 +118,14 @@ export async function setupFamily(t: TestDb, user: TestUser, name = 'Family', pi
   });
 }
 
-/** sign_in(name, pin, create) as `user` (a phone). */
-export async function signIn(t: TestDb, user: TestUser, name: string, pin = FAMILY_PIN, create = false): Promise<SignInResult> {
-  return t.as(user, async (tx) => {
-    const r = await tx.query<{ r: SignInResult }>('select public.sign_in($1, $2, $3) as r', [name, pin, create]);
-    return r.rows[0].r;
-  });
+/** A phone opens MealTrack (open access: let in automatically). */
+export async function joinFamily(t: TestDb, user: TestUser) {
+  await t.as(user, (tx) => tx.query('select public.enter_mealtrack()'));
 }
 
-/** A new person asks to join (name defaults to the email's local part). */
-export async function joinFamily(t: TestDb, user: TestUser, pin = FAMILY_PIN, name = nameOf(user)) {
-  return signIn(t, user, name, pin, true);
-}
-
-export async function approveMember(t: TestDb, admin: TestUser, user: TestUser) {
-  await t.as(admin, (tx) => tx.query('select public.approve_member($1)', [user.id]));
-}
-
-/** New person signs in and `admin` approves the request. */
-export async function joinAndApprove(t: TestDb, admin: TestUser, user: TestUser, pin = FAMILY_PIN) {
-  const r = await joinFamily(t, user, pin);
-  if (!r.ok) throw new Error(`join failed: ${JSON.stringify(r)}`);
-  await approveMember(t, admin, user);
+/** Kept for older tests: with open access, opening the app is all it takes. */
+export async function joinAndApprove(t: TestDb, _admin: TestUser, user: TestUser) {
+  await joinFamily(t, user);
 }
 
 /** A second, unrelated household (only possible directly in the DB now). */

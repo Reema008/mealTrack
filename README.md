@@ -1,6 +1,6 @@
 # MealTrack
 
-A mobile-first PWA that tracks a family's lunch and dinner deliveries from a recurring food subscription. There are no emails or passwords: people **sign in with their name and a shared PIN**, an **admin approves** them, and phones can be locked with **fingerprint / Face ID**. Everyone sees the same records, which update live.
+A mobile-first PWA that tracks a family's lunch and dinner deliveries from a recurring food subscription. There is **no sign-in, PIN or approval**: anyone who opens the link goes straight in. Everyone sees the same records, which update live across phones.
 
 **Nobody has to log meals every day.** Each scheduled meal is assumed delivered by default. You only record an exception, for example a meal that didn't arrive, an egg dish instead of chicken, or missing extra curries.
 
@@ -21,7 +21,7 @@ A mobile-first PWA that tracks a family's lunch and dinner deliveries from a rec
 4. [Supabase setup (one time)](#supabase-setup-one-time)
 5. [Deploy to GitHub Pages](#deploy-to-github-pages)
 6. [Daily 10 PM reminders (Web Push)](#daily-10-pm-reminders-web-push)
-7. [First-time setup, sign-in and approval](#first-time-setup-sign-in-and-approval)
+7. [First-time setup](#first-time-setup)
 8. [Install on Android and iPhone](#install-on-android-and-iphone)
 9. [End-to-end verification checklist](#end-to-end-verification-checklist)
 10. [Manual steps that can't be automated](#manual-steps-that-cant-be-automated)
@@ -67,15 +67,11 @@ Everything comes from `computeStats` in [src/domain/stats.ts](src/domain/stats.t
 - Offline edits go into a local outbox (one entry per meal) and show a **Pending sync** badge. They replay automatically when the device is back online. The header shows Live, Syncing, Offline or "N not synced".
 - A meal is reported as saved only after the server confirms it.
 
-### Security
-- RLS is enabled on every table.
-- A household ID sent by the client is never trusted. Writes resolve the household from `auth.uid()`'s membership, and RLS rechecks it.
-- Each phone gets its own **anonymous Supabase session** automatically. A session on its own gives access to nothing: the phone only sees data after joining the family with the **family PIN** (`join_with_pin`).
-- The PIN is 6–10 digits and stored only as a bcrypt hash that clients can't read. All PIN checks share a limit of **10 wrong attempts per 15 minutes**, so guessing a 6-digit PIN would take years.
-- The family can be set up only once (`setup_household`). After that, strangers who open the link only see "Enter family PIN".
-- **Fingerprint / Face ID** (WebAuthn, platform authenticator with user verification) is a lock on that phone only. It stops someone holding an unlocked phone from opening the app. The family PIN is the fallback, checked by the server with the same limit.
-- Any family phone can remove another phone or change the PIN (the current PIN is required). Phones that have already joined stay joined after a PIN change.
-- Signed-out (`anon`) requests have no table access.
+### Security and access
+- **Open access.** There is no sign-in, PIN or approval. Each phone automatically gets its own invisible anonymous Supabase session and is let in by `enter_mealtrack()`. **Anyone who has or finds the app link can view and edit the meal records.**
+- Each phone still has its own session, so realtime sync, per-phone reminders and the conflict checks keep working.
+- RLS is enabled on every table. Requests with no session at all (`anon`) get no table access.
+- Meal rows are validated by database rules (no Sunday rows, dish/curry only on delivered non-veg meals) and by the conflict-aware `save_meal_override` RPC.
 - Only the public anon key and the public VAPID key are shipped to the browser. The service-role key and the VAPID private key live only in Edge Function secrets.
 
 ---
@@ -92,7 +88,6 @@ src/sw.ts            service worker: app-shell precache, push display, notificat
 supabase/migrations/ schema, RLS, RPCs, notifications, cron
 supabase/functions/  send-daily-reminders Edge Function (+ _shared/reminder.ts timing logic)
 supabase/setup-all.sql  all migrations except cron, for pasting into the SQL Editor (new project)
-supabase/upgrade-family-pin.sql  only the PIN + not-delivered changes (if you ran an older setup-all.sql)
 tests/unit/          schedule/defaults, stats, reminder timing, outbox, realtime
 tests/db/            real migrations on PGlite (in-process Postgres): RLS, RPCs, constraints, concurrency
 ```
@@ -145,7 +140,7 @@ Go to **Authentication → Sign In / Providers** (called **Providers** in some d
 
 If this is off, the app shows a screen explaining how to turn it on.
 
-> Optional: Supabase limits anonymous sign-ins to 30 per hour per IP address by default. You can also turn on CAPTCHA under **Authentication → Attack Protection** to stop bots from creating empty sessions. Those sessions can't see any data without the PIN.
+> Supabase limits anonymous sign-ins to 30 per hour per IP address by default, which is plenty for a family.
 
 ### 3. Realtime
 The migrations add `meal_overrides` to the `supabase_realtime` publication. Under **Database → Publications → supabase_realtime**, `meal_overrides` should appear as enabled.
@@ -231,16 +226,11 @@ If you used the SQL Editor (Option A) for the schema, also run [supabase/migrati
 
 ---
 
-## First-time setup, sign-in and approval
+## First-time setup
 
-1. **The first person is the admin.** Open the app. Because nothing is set up yet, it shows the setup screen. Enter **your name** and create a **PIN** of 6–10 digits. The timezone defaults to Asia/Kolkata; the admin can change it under **Settings**.
-2. The app then offers **Lock MealTrack with fingerprint / Face ID**. Tap **Turn on** and confirm with your fingerprint or face. You can change this later under **Settings → App lock on this phone**: Fingerprint / Face ID, PIN, or Off.
-3. **Everyone else signs in.** They open the same link, install the app, tap **Sign in**, and enter **their name and the PIN**. They then see **Waiting for approval** and can't view or edit anything yet.
-4. **The admin approves.** A banner appears for the admin: "1 person is waiting for your approval". Go to **Settings → People** and tap **Approve** (or **Decline**). The other phone opens MealTrack within a few seconds.
-5. Under **Settings → People** the admin can also **Make admin**, **Remove admin**, or **Remove** someone. Removing someone stops their access and their reminders. There must always be at least one admin.
-6. **Changing the PIN** is admin-only: **Settings → PIN** (the current PIN is required). People already approved stay signed in.
-7. **Forgot the PIN?** In the Supabase SQL Editor run `select public.admin_set_family_pin('NEW-PIN');`. This also clears any 15-minute lockout.
-8. **Sign out** (bottom of Settings) removes you from MealTrack on that phone. To come back you sign in again with your name and the PIN, and an admin approves you again. The only admin can't sign out while others still use the app; make someone else an admin first.
+1. Open the app. The first phone to open it creates MealTrack automatically. Every other phone goes straight in and sees the same records.
+2. The timezone defaults to Asia/Kolkata. Change it under **Settings → Timezone** if needed.
+3. To get the 10 PM reminder, go to **Settings → Daily 10 PM reminder → Turn on** on each phone.
 
 ---
 
@@ -249,13 +239,13 @@ If you used the SQL Editor (Option A) for the schema, also run [supabase/migrati
 **Android (Chrome):**
 1. Open the app URL.
 2. Use **⋮ → Install app** (or **Add to Home screen**).
-3. Open MealTrack from the home screen, then turn on reminders under Household.
+3. Open MealTrack from the home screen, then turn on reminders under Settings.
 
 **iPhone (Safari, iOS 16.4 or later is needed for notifications):**
 1. Open the app URL in **Safari**.
 2. Tap **Share → Add to Home Screen → Add**.
 3. Open MealTrack **from the Home Screen icon**. Push only works in the installed app, not in a Safari tab.
-4. Go to Household → **Turn on** reminders and allow notifications.
+4. Go to **Settings → Turn on** reminders and allow notifications.
 
 Desktop Chrome and Edge can install the app too (install icon in the address bar).
 
@@ -268,7 +258,7 @@ Desktop Chrome and Edge can install the app too (install icon in the address bar
    - A Thursday shows two delivered veg meals.
    - A Sunday shows *No Delivery Scheduled*.
 2. **Independent edits.** Edit Tuesday lunch to **Egg** and save. Lunch changes to Egg with a **Saved** badge, and dinner stays Chicken and **Assumed**.
-3. **Live sync.** Join the family on two phones. Make an edit on one, and the other updates within a few seconds without a refresh.
+3. **Live sync.** Open MealTrack on two phones. Make an edit on one, and the other updates within a few seconds without a refresh.
 4. **Conflict.** Open the same meal's edit sheet on both devices. Save on device A, then save something different on device B. B is asked to *Keep theirs* or *Use mine*.
 5. **Restore defaults.** Use **Restore standard defaults**. The badge returns to **Assumed**, and in Supabase the `meal_overrides` row is gone.
 6. **Offline.**
@@ -279,12 +269,8 @@ Desktop Chrome and Edge can install the app too (install icon in the address bar
    - Mark Tuesday lunch **Not received**. The card hides Main dish and Extra curries.
    - Tap **No delivery this whole day**. Both meals turn Not Received.
    - Tap **Mark whole day as delivered**. Both return to Assumed.
-9. **Access.**
-   - On a new phone (or a private browser window), a wrong PIN shows the attempts left and no data.
-   - After 10 wrong PINs, PIN entry pauses for 15 minutes.
-   - `npm test` covers this automatically (`tests/db/pin.test.ts`, `tests/db/rls.test.ts`).
-10. **App lock.** With Fingerprint / Face ID on, close the app and reopen it. It asks for your fingerprint or face, and **Use family PIN instead** also works.
-11. **Reminders.** Follow "Test before relying on it" above.
+9. **Open access.** Open the link on a new phone or in a private window. It goes straight in with the same records. `npm test` covers this (`tests/db/open-access.test.ts`).
+10. **Reminders.** Follow "Test before relying on it" above.
 
 ---
 
@@ -300,7 +286,5 @@ These need your Supabase, GitHub or phone accounts:
 | `npx supabase secrets set …` and `npx supabase functions deploy …` | terminal (needs `supabase login`) |
 | Create the two Vault secrets (and run the cron migration if you used the SQL Editor) | Supabase SQL Editor |
 | Create the GitHub repo, push, set Pages source to GitHub Actions, add the 3 variables | GitHub |
-| Set up the family and PIN on the first phone, then join other phones with the PIN | the app |
-| Install the PWA, turn on fingerprint / Face ID, and allow notifications on each phone | each phone |
+| Install the PWA and allow notifications on each phone | each phone |
 | Send a test notification and confirm it arrives | each phone |
-| Optional: CAPTCHA for anonymous sign-ins | Supabase → Authentication → Attack Protection |

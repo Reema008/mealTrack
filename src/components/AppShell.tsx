@@ -1,12 +1,10 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { formatLong } from '../domain/dates';
 import { normalizeValues, overrideValues } from '../domain/meals';
 import { getDayType, PERIOD_LABEL } from '../domain/schedule';
 import type { MealValues } from '../domain/types';
-import { fetchMembers, saveMealOverride } from '../data/api';
-import { useHousehold } from '../data/household';
+import { saveMealOverride } from '../data/api';
 import { useHouseholdSync, type SyncConflict } from '../data/meals';
 import { useToast } from './Toast';
 import { Button } from './ui';
@@ -104,19 +102,9 @@ function OfflineConflictDialog({ conflict, onDone }: { conflict: SyncConflict; o
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { household, membership, isAdmin } = useHousehold();
   const toast = useToast();
   const sync = useHouseholdSync((n) => toast(`${n} offline change${n === 1 ? '' : 's'} synced.`));
   const conflict = sync.conflicts[0];
-  const { pathname } = useLocation();
-  // Admins: keep an eye on sign-in requests waiting for approval.
-  const members = useQuery({
-    queryKey: ['members', household.id],
-    queryFn: () => fetchMembers(household.id),
-    enabled: isAdmin,
-    refetchInterval: 30_000,
-  });
-  const waiting = (members.data ?? []).filter((m) => m.status === 'pending').length;
 
   return (
     <SyncContext.Provider value={sync}>
@@ -126,26 +114,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             <img src="./icons/icon.svg" alt="" className="h-10 w-10 rounded-2xl shadow-soft" />
             <div className="min-w-0">
             <p className="font-display text-2xl leading-none text-slate-900 dark:text-slate-50">MealTrack</p>
-            <p className="truncate text-xs text-slate-600 dark:text-slate-400">
-              {membership.display_name}
-              {isAdmin && ' · Admin'}
-            </p>
+            <p className="truncate text-xs text-slate-600 dark:text-slate-400">Lunch & dinner tracker</p>
             </div>
           </div>
           <SyncIndicator sync={sync} />
         </header>
-        {waiting > 0 && pathname !== '/settings' && (
-          <Link
-            to="/settings"
-            role="status"
-            className="mx-4 mb-2 flex items-center justify-between gap-2 rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900 ring-1 ring-amber-300 hover:bg-amber-100 dark:bg-amber-950 dark:text-amber-100 dark:ring-amber-700"
-          >
-            <span>
-              {waiting} {waiting === 1 ? 'person is' : 'people are'} waiting for your approval
-            </span>
-            <span aria-hidden>Review →</span>
-          </Link>
-        )}
         {sync.failedItems.length > 0 && (
           <div role="alert" className="mx-4 mb-2 rounded-xl bg-rose-50 p-3 text-sm text-rose-800 ring-1 ring-rose-200 dark:bg-rose-950 dark:text-rose-200 dark:ring-rose-800">
             {sync.failedItems.length} change{sync.failedItems.length === 1 ? '' : 's'} could not sync: {sync.failedItems[0].lastError}

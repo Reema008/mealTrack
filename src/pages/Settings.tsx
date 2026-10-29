@@ -1,336 +1,55 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState, type FormEvent } from 'react';
-import { useConfirm } from '../components/Confirm';
+import { useEffect, useState } from 'react';
 import { useToast } from '../components/Toast';
-import { Button, Card, ErrorNote, PasswordField, Spinner, TextField } from '../components/ui';
+import { Button, Card } from '../components/ui';
 import { isValidTimeZone } from '../domain/dates';
-import {
-  approveMember,
-  changeMyPin,
-  fetchMembers,
-  fetchRecentNotifications,
-  fetchReminderPreference,
-  iHavePin,
-  pinErrorMessage,
-  removeMember,
-  resetMemberPin,
-  setMemberRole,
-  setReminderPreference,
-  updateDisplayName,
-  updateHousehold,
-} from '../data/api';
+import { fetchRecentNotifications, fetchReminderPreference, setReminderPreference, updateHousehold } from '../data/api';
 import { membershipKey, useHousehold } from '../data/household';
-import { signOut } from '../data/session';
-import { biometricAvailable, getLockSettings, registerBiometric, saveLockSettings, type LockMode, type LockSettings } from '../lib/applock';
-import { currentSubscription, disablePushOnThisDevice, enablePushOnThisDevice, pushSupport, sendTestNotification } from '../lib/push';
+import { currentSubscription, enablePushOnThisDevice, pushSupport, sendTestNotification } from '../lib/push';
 
 const TIMEZONES = ['Asia/Kolkata', 'Asia/Dubai', 'Asia/Singapore', 'Europe/London', 'America/New_York', 'America/Los_Angeles', 'Australia/Sydney'];
 
-function ProfileSection() {
-  const { household, isAdmin, userId, membership } = useHousehold();
+function TimezoneSection() {
+  const { household, userId } = useHousehold();
   const qc = useQueryClient();
   const toast = useToast();
   const [tz, setTz] = useState(household.timezone);
-  const [displayName, setDisplayName] = useState(membership.display_name);
 
   const save = useMutation({
     mutationFn: async () => {
       if (!isValidTimeZone(tz)) throw new Error('Unknown timezone');
-      if (isAdmin && tz !== household.timezone) await updateHousehold(household.id, { timezone: tz });
-      if (displayName.trim() !== membership.display_name) await updateDisplayName(household.id, userId, displayName.trim());
+      await updateHousehold(household.id, { timezone: tz });
     },
     onSuccess: () => {
-      toast('Settings saved.');
+      toast('Timezone saved.');
       void qc.invalidateQueries({ queryKey: membershipKey(userId) });
-      void qc.invalidateQueries({ queryKey: ['members'] });
     },
     onError: (e) => toast((e as Error).message, 'error'),
   });
 
   return (
     <Card>
-      <h2 className="mb-3 font-semibold">You</h2>
+      <h2 className="mb-1 text-xl">Timezone</h2>
+      <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">Decides what “today” is, the 2 PM / 10 PM meal times, and the 10 PM reminder.</p>
       <form
-        className="space-y-3"
+        className="flex flex-wrap items-end gap-2"
         onSubmit={(e) => {
           e.preventDefault();
           save.mutate();
         }}
       >
-        <TextField id="my-name" label="Your name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={60} required />
-        {isAdmin && (
-          <div>
-            <label htmlFor="tz" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Timezone (used for “today” and the 10 PM reminder)</label>
-            <select
-              id="tz"
-              value={tz}
-              onChange={(e) => setTz(e.target.value)}
-              className="block min-h-11 w-full rounded-xl border-0 bg-white px-3 ring-1 ring-inset ring-slate-300 dark:bg-slate-800 dark:ring-slate-600"
-            >
-              {[...new Set([household.timezone, ...TIMEZONES])].map((z) => (
-                <option key={z} value={z}>{z}</option>
-              ))}
-            </select>
-          </div>
-        )}
-        <Button type="submit" disabled={save.isPending}>{save.isPending ? 'Saving…' : 'Save'}</Button>
+        <select
+          aria-label="Timezone"
+          value={tz}
+          onChange={(e) => setTz(e.target.value)}
+          className="block min-h-11 min-w-0 flex-1 rounded-2xl border-0 bg-white px-3 ring-1 ring-inset ring-slate-300 dark:bg-slate-800 dark:ring-slate-600"
+        >
+          {[...new Set([household.timezone, ...TIMEZONES])].map((z) => (
+            <option key={z} value={z}>{z}</option>
+          ))}
+        </select>
+        <Button type="submit" disabled={save.isPending || tz === household.timezone}>{save.isPending ? 'Saving…' : 'Save'}</Button>
       </form>
-    </Card>
-  );
-}
-
-const digits = (v: string) => v.replace(/\D/g, '');
-const PIN_PROPS = { inputMode: 'numeric' as const, pattern: '[0-9]*', autoComplete: 'off', maxLength: 10, required: true };
-
-function PeopleSection() {
-  const { household, userId, isAdmin } = useHousehold();
-  const qc = useQueryClient();
-  const toast = useToast();
-  const confirm = useConfirm();
-  const members = useQuery({ queryKey: ['members', household.id], queryFn: () => fetchMembers(household.id), refetchInterval: isAdmin ? 15_000 : false });
-  const [resetFor, setResetFor] = useState<string | null>(null);
-  const [resetPin, setResetPin] = useState('');
-
-  const act = useMutation({
-    mutationFn: async (a: { kind: 'approve' | 'remove' | 'role'; userId: string; role?: 'admin' | 'member' }) => {
-      if (a.kind === 'approve') await approveMember(a.userId);
-      else if (a.kind === 'remove') await removeMember(a.userId);
-      else await setMemberRole(a.userId, a.role!);
-      return a;
-    },
-    onSuccess: (a) => {
-      toast(a.kind === 'approve' ? 'Approved. They can now use MealTrack.' : a.kind === 'remove' ? 'Done.' : 'Role updated.');
-      void qc.invalidateQueries({ queryKey: ['members', household.id] });
-    },
-    onError: (e) => toast((e as Error).message, 'error'),
-  });
-
-  const pending = (members.data ?? []).filter((m) => m.status === 'pending');
-  const approved = (members.data ?? []).filter((m) => m.status === 'approved');
-
-  return (
-    <Card>
-      <h2 className="mb-1 font-semibold">People</h2>
-      <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">
-        To add someone: they open MealTrack and sign in with their name and a PIN they create. {isAdmin ? 'You approve them here once; after that they sign in straight away.' : 'An admin approves them once.'}
-      </p>
-      {members.isLoading ? (
-        <Spinner />
-      ) : members.error ? (
-        <ErrorNote error={members.error} onRetry={() => void members.refetch()} />
-      ) : (
-        <>
-          {isAdmin && pending.length > 0 && (
-            <div className="mb-4 rounded-xl bg-amber-50 p-3 ring-1 ring-amber-200 dark:bg-amber-950 dark:ring-amber-800">
-              <h3 className="mb-2 text-sm font-semibold text-amber-900 dark:text-amber-100">Waiting for approval</h3>
-              <ul className="space-y-2">
-                {pending.map((m) => (
-                  <li key={m.user_id} className="flex flex-wrap items-center justify-between gap-2">
-                    <span>
-                      <span className="font-medium">{m.display_name}</span>
-                      <span className="block text-xs text-slate-600 dark:text-slate-400">Signed in {new Date(m.joined_at).toLocaleString()}</span>
-                    </span>
-                    <span className="flex gap-2">
-                      <Button variant="secondary" className="min-h-10 px-3" disabled={act.isPending} onClick={() => act.mutate({ kind: 'remove', userId: m.user_id })}>
-                        Decline
-                      </Button>
-                      <Button className="min-h-10 px-3" disabled={act.isPending} onClick={() => act.mutate({ kind: 'approve', userId: m.user_id })}>
-                        Approve
-                      </Button>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-            {approved.map((m) => (
-              <li key={m.user_id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                <span>
-                  <span className="font-medium">{m.display_name}</span>
-                  {m.user_id === userId && <span className="text-slate-500"> (you)</span>}
-                  {m.role === 'admin' && <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">Admin</span>}
-                </span>
-                {isAdmin && m.user_id !== userId && (
-                  <span className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      className="min-h-9 px-2 text-xs"
-                      disabled={act.isPending}
-                      onClick={() => act.mutate({ kind: 'role', userId: m.user_id, role: m.role === 'admin' ? 'member' : 'admin' })}
-                    >
-                      {m.role === 'admin' ? 'Remove admin' : 'Make admin'}
-                    </Button>
-                    <Button variant="ghost" className="min-h-9 px-2 text-xs" onClick={() => { setResetFor(m.user_id); setResetPin(''); }}>
-                      Reset PIN
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="min-h-9 px-2 text-xs text-rose-700"
-                      disabled={act.isPending}
-                      onClick={async () => {
-                        const ok = await confirm({
-                          emoji: '👋',
-                          tone: 'danger',
-                          title: `Remove ${m.display_name}?`,
-                          message: 'They will lose access to MealTrack and stop getting reminders. To come back they would sign in as a new person and need approval again.',
-                          confirmLabel: 'Remove',
-                        });
-                        if (ok) act.mutate({ kind: 'remove', userId: m.user_id });
-                      }}
-                    >
-                      Remove
-                    </Button>
-                  </span>
-                )}
-                {isAdmin && resetFor === m.user_id && (
-                  <form
-                    className="mt-2 flex w-full flex-wrap items-end gap-2"
-                    onSubmit={async (e) => {
-                      e.preventDefault();
-                      if (!/^[0-9]{6,10}$/.test(resetPin)) return toast('The new PIN must be 6 to 10 digits.', 'error');
-                      try {
-                        await resetMemberPin(m.user_id, resetPin);
-                        toast(`New PIN set for ${m.display_name}. Tell them their new PIN.`);
-                        setResetFor(null);
-                        setResetPin('');
-                      } catch (err) {
-                        toast((err as Error).message, 'error');
-                      }
-                    }}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <PasswordField id={`reset-${m.user_id}`} label={`New PIN for ${m.display_name}`} value={resetPin} onChange={(e) => setResetPin(digits(e.target.value))} {...PIN_PROPS} />
-                    </div>
-                    <Button type="submit">Save</Button>
-                    <Button variant="ghost" onClick={() => setResetFor(null)}>Cancel</Button>
-                  </form>
-                )}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-    </Card>
-  );
-}
-
-
-function MyPinSection() {
-  const toast = useToast();
-  const hasPin = useQuery({ queryKey: ['i-have-pin'], queryFn: iHavePin });
-  const [current, setCurrent] = useState('');
-  const [next, setNext] = useState('');
-  const [next2, setNext2] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const needsCurrent = hasPin.data !== false;
-
-  async function submit(e: FormEvent) {
-    e.preventDefault();
-    setError(null);
-    if (!/^[0-9]{6,10}$/.test(next)) return setError('The new PIN must be 6 to 10 digits.');
-    if (next !== next2) return setError('The new PINs do not match.');
-    setBusy(true);
-    try {
-      const r = await changeMyPin(current, next);
-      if (!r.ok) return setError(pinErrorMessage(r));
-      setCurrent('');
-      setNext('');
-      setNext2('');
-      void hasPin.refetch();
-      toast('Your PIN is saved. Use it next time you sign in.');
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <Card>
-      <h2 className="mb-1 text-xl">{needsCurrent ? 'Your PIN' : 'Set your PIN'}</h2>
-      <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">
-        {needsCurrent
-          ? 'You sign in with your name and this PIN. Keep it to yourself.'
-          : 'You don’t have a PIN yet. Create one so you can sign in on another phone.'}
-      </p>
-      <form className="space-y-3" onSubmit={submit}>
-        {needsCurrent && <PasswordField id="pin-current" label="Current PIN" value={current} onChange={(e) => setCurrent(digits(e.target.value))} {...PIN_PROPS} />}
-        <PasswordField id="pin-new" label="New PIN (6–10 digits)" value={next} onChange={(e) => setNext(digits(e.target.value))} {...PIN_PROPS} />
-        <PasswordField id="pin-new2" label="New PIN again" value={next2} onChange={(e) => setNext2(digits(e.target.value))} {...PIN_PROPS} />
-        {error && <p role="alert" className="text-sm text-rose-700 dark:text-rose-300">{error}</p>}
-        <Button type="submit" disabled={busy}>{busy ? 'Saving…' : needsCurrent ? 'Change PIN' : 'Save PIN'}</Button>
-      </form>
-    </Card>
-  );
-}
-
-function AppLockSection() {
-  const { membership } = useHousehold();
-  const toast = useToast();
-  const [settings, setSettings] = useState(getLockSettings);
-  const [bioOk, setBioOk] = useState<boolean | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    void biometricAvailable().then(setBioOk);
-  }, []);
-
-  function apply(next: LockSettings, message: string) {
-    saveLockSettings(next);
-    setSettings(next);
-    window.dispatchEvent(new Event('mealtrack:applock'));
-    toast(message);
-  }
-
-  async function choose(mode: LockMode) {
-    if (mode === settings.mode) return;
-    if (mode === 'biometric') {
-      setBusy(true);
-      try {
-        const credentialId = await registerBiometric(membership.display_name);
-        apply({ mode, credentialId, asked: true }, 'Fingerprint / Face ID lock is on.');
-      } catch (e) {
-        toast((e as Error).message || 'Could not set up fingerprint / Face ID.', 'error');
-      } finally {
-        setBusy(false);
-      }
-      return;
-    }
-    apply({ mode, asked: true }, mode === 'pin' ? 'MealTrack will ask for your PIN when opened.' : 'App lock is off.');
-  }
-
-  const options: Array<{ mode: LockMode; label: string; hint: string; disabled?: boolean }> = [
-    { mode: 'biometric', label: 'Fingerprint / Face ID', hint: bioOk === false ? 'Not available on this device' : 'Recommended', disabled: bioOk === false },
-    { mode: 'pin', label: 'PIN', hint: 'Needs internet to unlock' },
-    { mode: 'off', label: 'Off', hint: 'Opens without a lock' },
-  ];
-
-  return (
-    <Card>
-      <h2 className="mb-1 font-semibold">App lock on this phone</h2>
-      <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">Asked when MealTrack opens, and after 2 minutes in the background.</p>
-      <div className="grid gap-2" role="radiogroup" aria-label="App lock">
-        {options.map((o) => (
-          <button
-            key={o.mode}
-            type="button"
-            role="radio"
-            aria-checked={settings.mode === o.mode}
-            disabled={busy || o.disabled}
-            onClick={() => void choose(o.mode)}
-            className={`flex min-h-12 items-center justify-between rounded-xl px-4 text-left text-sm ring-1 ring-inset disabled:opacity-50 ${
-              settings.mode === o.mode
-                ? 'bg-emerald-50 font-semibold text-emerald-900 ring-emerald-500 dark:bg-emerald-950 dark:text-emerald-100'
-                : 'bg-white ring-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:ring-slate-600'
-            }`}
-          >
-            <span>{o.label}</span>
-            <span className="text-xs font-normal text-slate-500 dark:text-slate-400">{settings.mode === o.mode ? '✓ On' : o.hint}</span>
-          </button>
-        ))}
-      </div>
     </Card>
   );
 }
@@ -368,7 +87,7 @@ function RemindersSection() {
 
   return (
     <Card>
-      <h2 className="mb-1 font-semibold">Daily 10 PM reminder</h2>
+      <h2 className="mb-1 text-xl">Daily 10 PM reminder</h2>
       <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">
         Monday–Saturday at 10:00 PM ({household.timezone}), a push notification asks you to check today’s meals. Reminders never mark meals as confirmed.
       </p>
@@ -416,40 +135,11 @@ function RemindersSection() {
 }
 
 export function SettingsPage() {
-  const toast = useToast();
-  const confirm = useConfirm();
-  const [busy, setBusy] = useState(false);
-
-  async function signOutHere() {
-    const ok = await confirm({
-      emoji: '🚪',
-      tone: 'danger',
-      title: 'Sign out on this phone?',
-      message: 'Your meal records stay safe. Sign back in any time with your name and PIN, no approval needed.',
-      confirmLabel: 'Sign out',
-    });
-    if (!ok) return;
-    setBusy(true);
-    try {
-      await disablePushOnThisDevice().catch(() => {});
-      await signOut();
-    } catch (e) {
-      toast((e as Error).message, 'error');
-      setBusy(false);
-    }
-  }
-
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Settings</h1>
-      <ProfileSection />
+      <h1 className="text-3xl">Settings</h1>
+      <TimezoneSection />
       <RemindersSection />
-      <AppLockSection />
-      <PeopleSection />
-      <MyPinSection />
-      <Card>
-        <Button variant="danger" disabled={busy} onClick={() => void signOutHere()}>{busy ? 'Signing out…' : 'Sign out'}</Button>
-      </Card>
     </div>
   );
 }

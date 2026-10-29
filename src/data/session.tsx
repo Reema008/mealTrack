@@ -1,6 +1,5 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { clearLockSettings } from '../lib/applock';
 import { toAppError } from '../lib/errors';
 import { supabase } from '../lib/supabase';
 
@@ -63,7 +62,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const { data } = supabase.auth.onAuthStateChange((event, next) => {
       setSession(next);
       if (event === 'SIGNED_OUT') {
-        if (!intentionalSignOut.current) setNotice('This phone was signed out. Sign in again with your name and PIN.');
+        if (!intentionalSignOut.current) setNotice('This phone was reconnected to MealTrack.');
         intentionalSignOut.current = false;
         // Start a fresh anonymous session for this phone.
         window.setTimeout(() => void ensureSession(), 0);
@@ -91,6 +90,5 @@ export function useSession(): SessionState {
 /** Forget this phone's session (it must re-enter the family PIN). */
 export async function signOut() {
   window.dispatchEvent(new Event('mealtrack:signout'));
-  clearLockSettings();
   await supabase.auth.signOut();
 }
