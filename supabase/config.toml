@@ -1,0 +1,17 @@
+project_id = "mealtrack"
+
+[api]
+schemas = ["public"]
+
+[auth]
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://localhost:5173", "http://localhost:4173"]
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+
+# Called by pg_cron with an x-cron-secret header (not a user JWT), and by
+# signed-in users for test notifications (the function verifies their JWT).
+[functions.send-daily-reminders]
+verify_jwt = false
