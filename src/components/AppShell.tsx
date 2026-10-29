@@ -25,8 +25,10 @@ const NAV = [
 ];
 
 function SyncIndicator({ sync }: { sync: SyncState }) {
-  let text = 'Live';
-  let dot = 'bg-emerald-500';
+  // Nothing to show when everything is connected and saved.
+  if (sync.online && !sync.syncing && !sync.pendingCount && sync.realtime !== 'offline') return null;
+  let text = '';
+  let dot = 'bg-amber-400';
   if (!sync.online) {
     text = sync.pendingCount ? `Offline · ${sync.pendingCount} not synced` : 'Offline';
     dot = 'bg-slate-400';
@@ -37,7 +39,7 @@ function SyncIndicator({ sync }: { sync: SyncState }) {
     text = `${sync.pendingCount} not synced`;
     dot = 'bg-amber-500';
   } else if (sync.realtime !== 'live') {
-    text = sync.realtime === 'connecting' ? 'Connecting…' : 'Reconnecting…';
+    text = 'Reconnecting…';
     dot = 'bg-amber-400';
   }
   return (

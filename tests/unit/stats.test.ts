@@ -57,8 +57,9 @@ describe('statistics', () => {
     expect(s.actual.egg).toBe(1);
     expect(s.actual.chicken).toBe(4); // 6 non-veg − 1 egg − 1 not received
     expect(s.actual.notReceived).toBe(1);
-    expect(s.actual.extraCurryReceived).toBe(4); // 6 − not-delivered meal − missing curry
-    expect(s.actual.extraCurryMissing).toBe(2);
+    expect(s.actual.extraCurryReceived).toBe(4); // 5 delivered non-veg meals − 1 missing curry
+    expect(s.actual.extraCurryMissing).toBe(1); // the not-delivered meal is left out
+    expect(s.actual.nonVegMeals).toBe(5);
     expect(s.actual.deliveredExplicit).toBe(2);
     expect(s.actual.deliveredAssumed).toBe(9);
     expect(s.actual.assumedMeals).toBe(9);

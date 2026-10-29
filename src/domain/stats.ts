@@ -12,8 +12,8 @@ import type { EffectiveMeal, ISODate, OverrideMap } from './types';
  *  - "Pending" covers today's meals before their cutoff with nothing saved.
  *  - "Planned" covers future meals. Neither pending nor planned meals count as delivered.
  *  - Egg/chicken totals count DELIVERED main dishes only (food actually received).
- *  - Extra curries are counted per non-veg meal; a meal that was not
- *    delivered had no extra curries, so they count as missing.
+ *  - Extra curries are counted only for DELIVERED non-veg meals: received or
+ *    missing. Meals that were not delivered are left out.
  *  - Success % = actual delivered / actual meals × 100.
  */
 /** Counts for one category of meals (veg, non-veg, lunch or dinner). */
@@ -185,7 +185,8 @@ function addActual(s: MealStats, m: EffectiveMeal) {
   } else {
     a.notReceived++;
   }
-  if (m.dayType === 'nonveg') {
+  // Extra curries: only for non-veg meals that were delivered.
+  if (m.dayType === 'nonveg' && m.deliveryStatus === 'delivered') {
     a.nonVegMeals++;
     if (m.extraCurryReceived) a.extraCurryReceived++;
     else a.extraCurryMissing++;
@@ -240,7 +241,7 @@ export const METRIC_FILTERS: Record<ReportMetric, (m: EffectiveMeal) => boolean>
   planned: (m) => m.timing === 'future',
   chicken: (m) => delivered(m) && m.mainDish === 'chicken',
   egg: (m) => delivered(m) && m.mainDish === 'egg',
-  extraCurry: (m) => isActual(m) && m.dayType === 'nonveg',
+  extraCurry: (m) => delivered(m) && m.dayType === 'nonveg',
   veg: (m) => m.dayType === 'veg',
   nonveg: (m) => m.dayType === 'nonveg',
   lunch: (m) => m.period === 'lunch',
@@ -256,7 +257,7 @@ export function matchesDelivery(m: EffectiveMeal, filter: DeliveryFilter): boole
   return m.deliveryStatus === filter;
 }
 
-/** Extra-curries filter: every non-veg meal, curries received, or missing (incl. meals not delivered). */
+/** Extra-curries filter (delivered non-veg meals): all, curries received, or curries missing. */
 export type CurryFilter = 'all' | 'received' | 'missing';
 
 export function matchesCurry(m: EffectiveMeal, filter: CurryFilter): boolean {

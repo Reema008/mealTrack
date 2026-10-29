@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { CategoryTile, DailyChart, SplitBar, StatCard } from '../components/Charts';
-import { Card, ErrorNote, FilterChips, Spinner, TextField } from '../components/ui';
+import { Card, ErrorNote, Spinner, TextField } from '../components/ui';
 import { addDays, addMonths, endOfMonth, endOfWeek, formatMonth, formatShort, isISODate, startOfMonth, startOfWeek } from '../domain/dates';
-import { computeStats, formatPercent, listMeals, type DayTypeFilter, type ReportMetric } from '../domain/stats';
+import { computeStats, formatPercent, listMeals, type ReportMetric } from '../domain/stats';
 import { subscriptionPeriods } from '../domain/subscription';
 import { useSubscriptions } from '../data/subscriptions';
 import { useSearchParams } from 'react-router-dom';
@@ -22,7 +22,6 @@ export function ReportsPage() {
   const latestStarted = Math.max(0, periods.filter((p) => p.start <= today).length - 1);
   const currentPeriod = requested && periods.some((p) => p.start === requested) ? periods.findIndex((p) => p.start === requested) : latestStarted;
   const [detail, setDetail] = useState<ReportMetric | null>(null);
-  const [dayFilter, setDayFilter] = useState<DayTypeFilter>('all');
   const [chosenMode, setMode] = useState<Mode | null>(null);
   const mode: Mode = chosenMode ?? (hasPeriods ? 'subscription' : 'week');
   const [chosenIndex, setPeriodIndex] = useState<number | null>(null);
@@ -62,10 +61,9 @@ export function ReportsPage() {
   }
 
   const { map, pendingKeys, isLoading, error, refetch } = useOverrides(start, end);
-  const s = computeStats(start, end, map, today, nowMinutes, dayFilter);
-  const meals = listMeals(start, end, map, today, nowMinutes, dayFilter);
-  const filterLabel = dayFilter === 'veg' ? ' · Veg only' : dayFilter === 'nonveg' ? ' · Non-Veg only' : '';
-  const rangeLabel = (mode === 'custom' ? `${formatShort(start)} – ${formatShort(end)}` : title) + filterLabel;
+  const s = computeStats(start, end, map, today, nowMinutes);
+  const meals = listMeals(start, end, map, today, nowMinutes);
+  const rangeLabel = mode === 'custom' ? `${formatShort(start)} – ${formatShort(end)}` : title;
   const open = (m: ReportMetric) => () => setDetail(m);
   const a = s.actual;
 
@@ -121,17 +119,6 @@ export function ReportsPage() {
         </div>
       )}
 
-      <FilterChips
-        label="Show meals"
-        value={dayFilter}
-        onChange={setDayFilter}
-        options={[
-          { value: 'all', label: 'All' },
-          { value: 'veg', label: '🥗 Veg' },
-          { value: 'nonveg', label: '🍗 Non-Veg' },
-        ]}
-      />
-
       {rangeError ? (
         <p role="alert" className="text-sm text-rose-700 dark:text-rose-300">{rangeError}</p>
       ) : error ? (
@@ -148,14 +135,14 @@ export function ReportsPage() {
             <StatCard label="Scheduled days" emoji="📅" tint="cream" value={s.scheduledDays} hint="Sundays excluded" onClick={open('scheduledDays')} />
             {s.pending > 0 && <StatCard label="Pending today" emoji="⏳" tint="butter" value={s.pending} hint="lunch 2 PM · dinner 10 PM" onClick={open('pending')} />}
             <StatCard label="Planned" emoji="🔮" tint="lavender" value={s.planned.meals} hint="future, not counted yet" onClick={open('planned')} />
-            {dayFilter !== 'veg' && <StatCard label="Extra curries" emoji="🍛" tint="peach" value={a.extraCurryReceived} hint={`${a.extraCurryMissing} missing of ${a.nonVegMeals}`} onClick={open('extraCurry')} />}
+            <StatCard label="Extra curries" emoji="🍛" tint="peach" value={a.extraCurryReceived} hint={`of ${a.nonVegMeals} delivered non-veg · ${a.extraCurryMissing} missing`} onClick={open('extraCurry')} />
           </div>
 
           <section aria-labelledby="by-category" className="space-y-3">
             <h2 id="by-category" className="text-xl">By category</h2>
             <div className="grid grid-cols-2 gap-3">
-              {dayFilter !== 'nonveg' && <CategoryTile label="Veg" emoji="🥗" tint="sage" stats={s.categories.veg} onClick={open('veg')} />}
-              {dayFilter !== 'veg' && <CategoryTile label="Non-Veg" emoji="🍗" tint="peach" stats={s.categories.nonveg} onClick={open('nonveg')} />}
+              <CategoryTile label="Veg" emoji="🥗" tint="sage" stats={s.categories.veg} onClick={open('veg')} />
+              <CategoryTile label="Non-Veg" emoji="🍗" tint="peach" stats={s.categories.nonveg} onClick={open('nonveg')} />
               <CategoryTile label="Lunch" emoji="☀️" tint="butter" stats={s.categories.lunch} onClick={open('lunch')} />
               <CategoryTile label="Dinner" emoji="🌙" tint="lavender" stats={s.categories.dinner} onClick={open('dinner')} />
             </div>
@@ -180,7 +167,8 @@ export function ReportsPage() {
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>Monday–Saturday have lunch and dinner; Sundays are never counted.</li>
               <li>Meals nobody changed count as <strong>delivered as scheduled</strong> (with extra curries on Tue/Wed/Fri). {a.assumedMeals} of {a.meals} meals here are as scheduled.</li>
-              <li>Use <strong>All / Veg / Non-Veg</strong> above to count only veg days (Mon, Thu, Sat) or only non-veg days (Tue, Wed, Fri).</li>
+              <li>Tap a box to see its meals; use <strong>All / Veg / Non-Veg</strong> there to show only veg days (Mon, Thu, Sat) or non-veg days (Tue, Wed, Fri).</li>
+              <li>Extra curries count only non-veg meals that were delivered.</li>
               <li>Today’s meals stay <strong>pending</strong> until 2 PM (lunch) and 10 PM (dinner) unless someone marks them.</li>
               <li>Future meals are <strong>planned</strong>. They are left out of delivered totals and the success rate.</li>
               <li>Extra curries are counted for each non-veg meal; a meal that was not delivered had no extra curries.</li>

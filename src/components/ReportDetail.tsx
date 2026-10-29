@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatShort } from '../domain/dates';
 import { PERIOD_LABEL } from '../domain/schedule';
-import { metricBreakdown, type CurryFilter, type DeliveryFilter, type ReportMetric } from '../domain/stats';
+import { metricBreakdown, type CurryFilter, type DayTypeFilter, type DeliveryFilter, type ReportMetric } from '../domain/stats';
 import type { EffectiveMeal } from '../domain/types';
 import { badgeFor, deliveryLabel } from './MealCard';
 import { Button, DayTypeChip, FilterChips, StatusBadge } from './ui';
@@ -17,7 +17,7 @@ export const METRIC_INFO: Record<ReportMetric, { title: string; help: string }> 
   planned: { title: 'Planned (future)', help: 'Upcoming meals. Not counted as delivered yet.' },
   chicken: { title: 'Chicken meals', help: 'Delivered non-veg meals with chicken.' },
   egg: { title: 'Egg meals', help: 'Delivered non-veg meals with egg.' },
-  extraCurry: { title: 'Extra curries', help: 'Every non-veg meal so far, showing whether the extra curries came.' },
+  extraCurry: { title: 'Extra curries', help: 'Delivered non-veg meals, showing whether the extra curries came.' },
   veg: { title: 'Veg meals', help: 'All lunches and dinners on veg days (Mon, Thu, Sat) in this period.' },
   nonveg: { title: 'Non-veg meals', help: 'All lunches and dinners on non-veg days (Tue, Wed, Fri) in this period.' },
   lunch: { title: 'Lunches', help: 'Every scheduled lunch in this period, veg and non-veg.' },
@@ -30,7 +30,6 @@ function mealLine(m: EffectiveMeal, metric: ReportMetric): string {
     parts.push(m.mainDish === 'egg' ? 'Egg' : 'Chicken');
     if (metric === 'extraCurry' || !m.extraCurryReceived) parts.push(m.extraCurryReceived ? 'curries ✓' : 'curries missing');
   }
-  if (metric === 'extraCurry' && m.deliveryStatus === 'not_received') parts.push('no curries');
   return parts.join(' · ');
 }
 
@@ -58,7 +57,11 @@ export function ReportDetailSheet({
   const [delivery, setDelivery] = useState<DeliveryFilter>('all');
   const [curry, setCurry] = useState<CurryFilter>('all');
   const curryFilterable = metric === 'extraCurry';
-  const groups = metricBreakdown(meals, metric, filterable ? delivery : 'all', curryFilterable ? curry : 'all');
+  // Veg / Non-Veg filter for every box except the By category tiles (and extra curries, which are non-veg only).
+  const dayTypeFilterable = !['veg', 'nonveg', 'lunch', 'dinner', 'extraCurry'].includes(metric);
+  const [dayType, setDayType] = useState<DayTypeFilter>('all');
+  const shown = dayTypeFilterable && dayType !== 'all' ? meals.filter((m) => m.dayType === dayType) : meals;
+  const groups = metricBreakdown(shown, metric, filterable ? delivery : 'all', curryFilterable ? curry : 'all');
   const total = groups.reduce((n, g) => n + g.meals.length, 0);
   const missedDays = groups.filter((g) => g.wholeDayMissed).length;
 
@@ -95,6 +98,20 @@ export function ReportDetailSheet({
             </Button>
           </div>
           <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">{info.help}</p>
+          {dayTypeFilterable && (
+            <div className="mt-3">
+              <FilterChips
+                label="Meal type"
+                value={dayType}
+                onChange={setDayType}
+                options={[
+                  { value: 'all', label: 'All' },
+                  { value: 'veg', label: '🥗 Veg' },
+                  { value: 'nonveg', label: '🍗 Non-Veg' },
+                ]}
+              />
+            </div>
+          )}
           {curryFilterable && (
             <div className="mt-3">
               <FilterChips
