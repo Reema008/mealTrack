@@ -256,6 +256,14 @@ export function matchesDelivery(m: EffectiveMeal, filter: DeliveryFilter): boole
   return m.deliveryStatus === filter;
 }
 
+/** Extra-curries filter: every non-veg meal, curries received, or missing (incl. meals not delivered). */
+export type CurryFilter = 'all' | 'received' | 'missing';
+
+export function matchesCurry(m: EffectiveMeal, filter: CurryFilter): boolean {
+  if (filter === 'all') return true;
+  return filter === 'received' ? m.extraCurryReceived === true : m.extraCurryReceived !== true;
+}
+
 export interface DayGroup {
   date: ISODate;
   meals: EffectiveMeal[];
@@ -268,11 +276,12 @@ export function metricBreakdown(
   meals: readonly EffectiveMeal[],
   metric: ReportMetric,
   delivery: DeliveryFilter = 'all',
+  curry: CurryFilter = 'all',
 ): DayGroup[] {
   const byDate = new Map<ISODate, EffectiveMeal[]>();
   for (const m of meals) {
     if (!byDate.has(m.date)) byDate.set(m.date, []);
-    if (METRIC_FILTERS[metric](m) && matchesDelivery(m, delivery)) byDate.get(m.date)!.push(m);
+    if (METRIC_FILTERS[metric](m) && matchesDelivery(m, delivery) && matchesCurry(m, curry)) byDate.get(m.date)!.push(m);
   }
   const groups: DayGroup[] = [];
   for (const [date, list] of byDate) {

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatShort } from '../domain/dates';
 import { PERIOD_LABEL } from '../domain/schedule';
-import { metricBreakdown, type DeliveryFilter, type ReportMetric } from '../domain/stats';
+import { metricBreakdown, type CurryFilter, type DeliveryFilter, type ReportMetric } from '../domain/stats';
 import type { EffectiveMeal } from '../domain/types';
 import { badgeFor, deliveryLabel } from './MealCard';
 import { Button, DayTypeChip, FilterChips, StatusBadge } from './ui';
@@ -56,7 +56,9 @@ export function ReportDetailSheet({
   // Boxes that list a mix of delivered and not-delivered meals get a filter.
   const filterable = ['veg', 'nonveg', 'lunch', 'dinner', 'scheduled', 'scheduledDays', 'success'].includes(metric);
   const [delivery, setDelivery] = useState<DeliveryFilter>('all');
-  const groups = metricBreakdown(meals, metric, filterable ? delivery : 'all');
+  const [curry, setCurry] = useState<CurryFilter>('all');
+  const curryFilterable = metric === 'extraCurry';
+  const groups = metricBreakdown(meals, metric, filterable ? delivery : 'all', curryFilterable ? curry : 'all');
   const total = groups.reduce((n, g) => n + g.meals.length, 0);
   const missedDays = groups.filter((g) => g.wholeDayMissed).length;
 
@@ -93,6 +95,20 @@ export function ReportDetailSheet({
             </Button>
           </div>
           <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">{info.help}</p>
+          {curryFilterable && (
+            <div className="mt-3">
+              <FilterChips
+                label="Show"
+                value={curry}
+                onChange={setCurry}
+                options={[
+                  { value: 'all', label: 'All' },
+                  { value: 'received', label: 'Received' },
+                  { value: 'missing', label: 'Missing' },
+                ]}
+              />
+            </div>
+          )}
           {filterable && (
             <div className="mt-3">
               <FilterChips

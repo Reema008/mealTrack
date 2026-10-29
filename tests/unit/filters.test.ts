@@ -45,6 +45,21 @@ describe('report filters', () => {
     expect(count('not_received')).toBe(2);
   });
 
+  it('extra curries can be shown as all, received, or missing (missing includes meals not delivered)', () => {
+    const curryMap = toOverrideMap([
+      override({ meal_date: '2026-10-27', meal_period: 'lunch', extra_curry_received: false }), // delivered, curries missing
+      override({ meal_date: '2026-10-27', meal_period: 'dinner', ...notDelivered }), // not delivered: no curries
+    ]);
+    const meals = listMeals(MON, SUN, curryMap, '2026-12-01');
+    const count = (f: 'all' | 'received' | 'missing') => metricBreakdown(meals, 'extraCurry', 'all', f).reduce((n, g) => n + g.meals.length, 0);
+    expect(count('all')).toBe(6);
+    expect(count('received')).toBe(4);
+    expect(count('missing')).toBe(2);
+    const s = computeStats(MON, SUN, curryMap, '2026-12-01');
+    expect(count('received')).toBe(s.actual.extraCurryReceived);
+    expect(count('missing')).toBe(s.actual.extraCurryMissing);
+  });
+
   it('planned meals have no outcome, so they only appear under All', () => {
     const meals = listMeals(MON, SUN, new Map(), '2026-10-28'); // Thu–Sat planned
     const count = (f: 'all' | 'delivered' | 'not_received') => metricBreakdown(meals, 'veg', f).reduce((n, g) => n + g.meals.length, 0);
