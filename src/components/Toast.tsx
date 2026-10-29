@@ -15,7 +15,7 @@ const TONE: Record<Tone, { emoji: string; title: string; header: string; ring: s
     title: 'Done',
     header: 'from-emerald-100/90 dark:from-emerald-950/20',
     ring: 'ring-emerald-200/80 dark:ring-emerald-900',
-    button: 'bg-emerald-600 hover:bg-emerald-700',
+    button: 'btn-taro',
   },
   info: {
     emoji: '💬',

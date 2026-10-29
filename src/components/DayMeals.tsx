@@ -35,7 +35,7 @@ export function DayMeals({
 
   if (meals.length === 0) {
     return (
-      <div className="rounded-3xl bg-gradient-to-br from-sky-100/90 via-white/80 to-amber-100/80 p-8 text-center shadow-soft ring-1 ring-white/60 dark:from-sky-950/20 dark:via-black/20 dark:to-amber-950/20 dark:ring-white/[0.05]">
+      <div className="taro-card rounded-[1.6rem] p-8 text-center">
         <p className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-3xl shadow-soft dark:bg-slate-900" aria-hidden>
           🌤️
         </p>

@@ -122,7 +122,7 @@ function PeriodCard({
   }[label];
 
   return (
-    <li className="rounded-3xl bg-white/85 p-4 shadow-soft ring-1 ring-slate-200/60 dark:bg-black/25 dark:ring-white/[0.05]">
+    <li className="taro-card rounded-[1.6rem] p-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="font-display text-lg leading-tight">
@@ -139,19 +139,19 @@ function PeriodCard({
       </div>
 
       <dl className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-2 text-sm">
-        <div className="rounded-2xl bg-emerald-50/80 p-2 dark:bg-emerald-950/20">
+        <div className="taro-inset rounded-2xl p-2">
           <dt className="text-xs text-slate-600 dark:text-slate-300">Delivered</dt>
           <dd className="font-semibold">{a.delivered} / {s.scheduledTotal}</dd>
         </div>
-        <div className="rounded-2xl bg-rose-50/80 p-2 dark:bg-rose-950/20">
+        <div className="taro-inset rounded-2xl p-2">
           <dt className="text-xs text-slate-600 dark:text-slate-300">Not received</dt>
           <dd className="font-semibold">{a.notReceived}</dd>
         </div>
-        <div className="rounded-2xl bg-sky-50/80 p-2 dark:bg-sky-950/20">
+        <div className="taro-inset rounded-2xl p-2">
           <dt className="text-xs text-slate-600 dark:text-slate-300">Success</dt>
           <dd className="font-semibold">{formatPercent(a.successRate)}</dd>
         </div>
-        <div className="rounded-2xl bg-amber-50/80 p-2 dark:bg-amber-950/20">
+        <div className="taro-inset rounded-2xl p-2">
           <dt className="text-xs text-slate-600 dark:text-slate-300">Per delivered meal</dt>
           <dd className="font-semibold">{costPerMeal === null ? '—' : formatAmount(Math.round(costPerMeal * 100) / 100)}</dd>
         </div>
@@ -280,15 +280,15 @@ export function SubscriptionsPage() {
       ) : (
         <>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-2">
-            <div className="rounded-3xl bg-amber-100/80 p-3 shadow-soft dark:bg-amber-950/20">
+            <div className="taro-card rounded-[1.35rem] p-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">Total paid</p>
               <p className="mt-1 font-display text-xl">{formatAmount(totalSpent)}</p>
             </div>
-            <div className="rounded-3xl bg-sky-100/80 p-3 shadow-soft dark:bg-sky-950/20">
+            <div className="taro-card-alt rounded-[1.35rem] p-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">Subscriptions</p>
               <p className="mt-1 font-display text-xl">{periods.length}</p>
             </div>
-            <div className="rounded-3xl bg-emerald-100/80 p-3 shadow-soft dark:bg-emerald-950/20">
+            <div className="taro-card rounded-[1.35rem] p-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">Avg / meal</p>
               <p className="mt-1 font-display text-xl">
                 {deliveredWithAmount > 0 ? formatAmount(Math.round((totalSpent / deliveredWithAmount) * 100) / 100) : '—'}

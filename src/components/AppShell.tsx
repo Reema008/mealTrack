@@ -133,7 +133,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
         <main className="flex-1 px-4 pb-28 pt-2">{children}</main>
         <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-          <ul className="mx-auto grid max-w-md grid-cols-4 gap-1 rounded-full bg-white/90 p-1.5 shadow-soft ring-1 ring-slate-200/70 backdrop-blur-md dark:bg-slate-950/90 dark:ring-white/[0.05]">
+          <ul className="mx-auto grid max-w-md grid-cols-4 gap-1 rounded-full bg-white/85 p-1.5 shadow-soft backdrop-blur-md dark:bg-slate-900/85">
             {NAV.map((n) => (
               <li key={n.to}>
                 <NavLink
@@ -141,7 +141,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   end={n.to === '/'}
                   className={({ isActive }) =>
                     `flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-center text-[11px] font-semibold leading-tight transition-colors ${
-                      isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200' : 'text-slate-600 dark:text-slate-300'
+                      isActive ? 'taro-tab text-emerald-800 dark:text-white' : 'text-slate-600 dark:text-slate-300'
                     }`
                   }
                 >

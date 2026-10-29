@@ -28,7 +28,7 @@ export function summarizeDay(
 }
 
 const TYPE_DOT: Record<string, string> = {
-  veg: 'bg-emerald-500',
+  veg: 'bg-matcha-500',
   nonveg: 'bg-orange-500',
   none: 'bg-slate-300 dark:bg-slate-600',
 };
@@ -90,11 +90,11 @@ export function MonthCalendar({
               onClick={() => onSelect(d)}
               className={`relative flex aspect-square min-h-11 flex-col items-center justify-center rounded-xl text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 ${
                 isSel
-                  ? 'bg-emerald-600 font-semibold text-white'
+                  ? 'btn-taro font-bold'
                   : inMonth
-                    ? 'bg-white text-slate-900 ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-black/25 dark:text-slate-50 dark:ring-white/[0.05]'
+                    ? 'taro-inset text-slate-900 hover:bg-white dark:text-slate-50 dark:hover:bg-white/10'
                     : 'text-slate-400 dark:text-slate-400'
-              } ${isToday && !isSel ? 'ring-2 ring-emerald-600 dark:ring-emerald-500' : ''} ${d > today && !isSel && inMonth ? 'bg-slate-50 dark:bg-black/10' : ''}`}
+              } ${isToday && !isSel ? 'ring-2 ring-emerald-600 dark:ring-emerald-500' : ''} ${d > today && !isSel && inMonth ? 'opacity-80' : ''}`}
             >
               <span>{Number(formatDate(d, { day: 'numeric' }))}</span>
               <span className="mt-0.5 flex h-1.5 items-center gap-0.5" aria-hidden>
@@ -108,7 +108,7 @@ export function MonthCalendar({
         })}
       </div>
       <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
-        <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" />Veg</li>
+        <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-matcha-500" />Veg</li>
         <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-orange-500" />Non-Veg</li>
         <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-slate-300" />No delivery</li>
         <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-rose-600" />Not received</li>
@@ -147,8 +147,8 @@ export function WeekStrip({
               aria-current={d === today ? 'date' : undefined}
               className={`flex w-full min-w-0 flex-col items-center gap-0.5 rounded-xl px-0.5 py-2 text-xs leading-tight ring-1 transition-colors ${
                 d === today
-                  ? 'bg-emerald-600 text-white ring-emerald-600'
-                  : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50 dark:bg-black/25 dark:text-slate-50 dark:ring-white/[0.05]'
+                  ? 'btn-taro ring-transparent'
+                  : 'taro-inset text-slate-700 ring-transparent hover:bg-white dark:text-slate-50 dark:hover:bg-white/10'
               }`}
             >
               <span className="font-medium">{weekdayShort(d)}</span>

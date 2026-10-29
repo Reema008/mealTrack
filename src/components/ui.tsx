@@ -5,7 +5,7 @@ import { DAY_TYPE_LABEL } from '../domain/schedule';
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-emerald-600 text-white shadow-soft hover:bg-emerald-700 disabled:bg-emerald-600/50 disabled:shadow-none',
+  primary: 'btn-taro',
   secondary:
     'bg-white text-slate-800 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-50 dark:ring-slate-600 dark:hover:bg-slate-700',
   ghost: 'text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-slate-800',
@@ -28,15 +28,15 @@ export function Button({
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-3xl bg-white/85 p-5 shadow-soft ring-1 ring-slate-200/70 backdrop-blur-sm dark:bg-black/25 dark:ring-white/[0.05] ${className}`}>
+    <section className={`taro-card rounded-[1.6rem] p-5 ${className}`}>
       {children}
     </section>
   );
 }
 
 const DAY_TYPE_STYLE: Record<DayType, string> = {
-  veg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200',
-  nonveg: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-200',
+  veg: 'bg-matcha-100 text-matcha-800 dark:bg-matcha-900/60 dark:text-matcha-200',
+  nonveg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100',
   none: 'bg-slate-200 text-slate-700 dark:bg-slate-900 dark:text-slate-200',
 };
 
@@ -67,7 +67,7 @@ const BADGE: Record<BadgeKind, { label: string; className: string; title: string
   },
   awaiting: {
     label: 'Pending',
-    className: 'bg-amber-50 text-amber-900 ring-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:ring-amber-700',
+    className: 'bg-white text-emerald-700 ring-emerald-200 dark:bg-emerald-900 dark:text-emerald-50 dark:ring-emerald-700',
     title: 'Not yet assumed delivered. Lunch counts as delivered from 2 PM, dinner from 10 PM, unless someone marks it.',
   },
   unsynced: {
@@ -81,7 +81,7 @@ export function StatusBadge({ kind }: { kind: BadgeKind | null }) {
   if (!kind) return null;
   const b = BADGE[kind];
   return (
-    <span title={b.title} className={`inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${b.className}`}>
+    <span title={b.title} className={`inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ring-inset ${kind === 'awaiting' ? 'taro-pulse' : ''} ${b.className}`}>
       {b.label}
     </span>
   );

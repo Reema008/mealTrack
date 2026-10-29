@@ -32,7 +32,7 @@ function SubscriptionSection() {
       <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">{subs.isLoading ? 'Loading…' : summary}</p>
       <Link
         to="/subscriptions"
-        className="inline-flex min-h-11 items-center justify-center rounded-full bg-emerald-600 px-5 text-sm font-semibold text-white shadow-soft hover:bg-emerald-700"
+        className="btn-taro inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold"
       >
         Renewals & history →
       </Link>
@@ -130,7 +130,7 @@ function RemindersSection() {
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-sm text-slate-700 dark:text-slate-50">
-              Reminders on this phone: <strong className={enabled && deviceSubscribed ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-900 dark:text-slate-50'}>{pref.isLoading ? '…' : enabled && deviceSubscribed ? 'On' : 'Off'}</strong>
+              Reminders on this phone: <strong className={enabled && deviceSubscribed ? 'text-matcha-700 dark:text-matcha-300' : 'text-slate-900 dark:text-slate-50'}>{pref.isLoading ? '…' : enabled && deviceSubscribed ? 'On' : 'Off'}</strong>
             </span>
             {enabled && deviceSubscribed ? (
               <Button variant="secondary" disabled={busy} onClick={() => run(() => setReminderPreference(userId, household.id, false), 'Reminders turned off.')}>Turn off</Button>

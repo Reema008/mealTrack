@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 export type ThemePreference = 'system' | 'light' | 'dark';
 
 const STORAGE_KEY = 'mealtrack.theme';
-const THEME_COLOR = { light: '#fbf7f2', dark: '#1c1714' } as const;
+const THEME_COLOR = { light: '#fbf9fc', dark: '#19161f' } as const;
 const darkQuery = () => window.matchMedia('(prefers-color-scheme: dark)');
 
 export function getThemePreference(): ThemePreference {

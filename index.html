@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!-- The app has its own light and dark themes: stop phones from force-darkening it. -->
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#fbf7f2" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#1c1714" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fbf9fc" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#19161f" media="(prefers-color-scheme: dark)" />
     <meta name="description" content="Track lunch and dinner deliveries for your family's food subscription." />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -18,7 +18,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap"
     />
     <title>MealTrack</title>
     <script>
@@ -32,6 +32,16 @@
     </script>
   </head>
   <body class="text-slate-900 antialiased dark:text-slate-100">
+    <!-- Little sparkles and hearts drifting behind the app (decoration only). -->
+    <div class="taro-sparkles" aria-hidden="true">
+      <span style="top:9%;left:86%;font-size:16px;animation-delay:0s;animation-duration:7s">✦</span>
+      <span style="top:24%;left:4%;font-size:13px;animation-delay:-2s;animation-duration:8s">♡</span>
+      <span style="top:38%;left:92%;font-size:11px;animation-delay:-5s;animation-duration:9s">✦</span>
+      <span style="top:55%;left:6%;font-size:17px;animation-delay:-1s;animation-duration:8s">✿</span>
+      <span style="top:68%;left:48%;font-size:10px;animation-delay:-3s;animation-duration:7s">✦</span>
+      <span style="top:78%;left:90%;font-size:15px;animation-delay:-4s;animation-duration:9s">♡</span>
+      <span style="top:90%;left:14%;font-size:12px;animation-delay:-6s;animation-duration:8s">✦</span>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

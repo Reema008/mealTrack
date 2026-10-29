@@ -140,7 +140,7 @@ function NewAccountForm({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <form className="space-y-3 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200 dark:bg-black/25 dark:ring-slate-700" onSubmit={submit}>
+    <form className="taro-inset space-y-3 rounded-2xl p-4" onSubmit={submit}>
       <h3 className="font-display text-lg">New account</h3>
       <TextField id="acc-name" label="Name" placeholder="e.g. Priya" value={name} onChange={(e) => setName(e.target.value)} required maxLength={60} />
       <TextField
@@ -254,7 +254,7 @@ function AccountRow({ account }: { account: Account }) {
   }
 
   return (
-    <li className="rounded-2xl bg-white/90 p-3 ring-1 ring-slate-200/70 dark:bg-black/25 dark:ring-white/[0.05]">
+    <li className="taro-inset rounded-2xl p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="break-all font-display text-xl leading-tight text-slate-900 dark:text-slate-50">

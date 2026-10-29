@@ -3,13 +3,14 @@ import type { MealStats } from '../domain/stats';
 
 type Tint = 'sage' | 'peach' | 'butter' | 'blush' | 'lavender' | 'cream';
 
+// All tiles share the flowing taro gradient; alternate ones flow the other way.
 const TINTS: Record<Tint, string> = {
-  sage: 'bg-emerald-100/80 dark:bg-emerald-950/20',
-  peach: 'bg-orange-100/80 dark:bg-orange-950/20',
-  butter: 'bg-amber-100/80 dark:bg-amber-950/20',
-  blush: 'bg-rose-100/80 dark:bg-rose-950/20',
-  lavender: 'bg-sky-100/80 dark:bg-sky-950/20',
-  cream: 'bg-white/85 dark:bg-black/25',
+  sage: 'taro-card',
+  peach: 'taro-card-alt',
+  butter: 'taro-card',
+  blush: 'taro-card-alt',
+  lavender: 'taro-card',
+  cream: 'taro-card-alt',
 };
 
 /** A pastel report tile. When `onClick` is given it is a button that opens details. */
@@ -47,13 +48,13 @@ export function StatCard({
       )}
     </>
   );
-  const cls = `block w-full min-w-0 rounded-3xl p-4 text-left shadow-soft ring-1 ring-white/60 dark:ring-white/[0.05] ${TINTS[tint]}`;
+  const cls = `block w-full min-w-0 rounded-[1.35rem] p-4 text-left ${TINTS[tint]}`;
   return onClick ? (
     <button
       type="button"
       onClick={onClick}
       aria-label={`${label}: ${value}. View details`}
-      className={`${cls} transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 active:translate-y-0`}
+      className={`${cls} transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 active:scale-[0.97]`}
     >
       {body}
     </button>
@@ -106,7 +107,7 @@ export function DailyChart({ daily }: { daily: MealStats['daily'] }) {
           return (
             <g key={d.date}>
               <title>{`${d.date}: ${d.delivered} delivered, ${d.notReceived} not received, ${d.pending} pending, ${d.planned} planned`}</title>
-              {seg(d.delivered, 'fill-emerald-400', 'd')}
+              {seg(d.delivered, 'fill-matcha-400', 'd')}
               {seg(d.notReceived, 'fill-rose-400', 'n')}
               {seg(d.pending, 'fill-amber-300', 'p')}
               {seg(d.planned, 'fill-sky-300 dark:fill-sky-700', 'f')}
@@ -122,7 +123,7 @@ export function DailyChart({ daily }: { daily: MealStats['daily'] }) {
         </div>
       )}
       <ul className="mt-2 flex flex-wrap gap-x-4 text-xs text-slate-600 dark:text-slate-300">
-        <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />Delivered</li>
+        <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-matcha-400" />Delivered</li>
         <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-rose-400" />Not received</li>
         <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-amber-300" />Pending</li>
         <li className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-sky-300" />Planned</li>
@@ -152,7 +153,7 @@ export function CategoryTile({
       type="button"
       onClick={onClick}
       aria-label={`${label}: ${stats.delivered} delivered, ${stats.notReceived} not received, ${stats.upcoming} upcoming. View details`}
-      className={`block w-full min-w-0 rounded-3xl p-4 text-left shadow-soft ring-1 ring-white/60 transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:ring-white/[0.05] ${TINTS[tint]}`}
+      className={`block w-full min-w-0 rounded-[1.35rem] p-4 text-left transition-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${TINTS[tint]}`}
     >
       <span className="flex flex-wrap items-center justify-between gap-x-2">
         <span className="font-display text-lg">
@@ -161,8 +162,8 @@ export function CategoryTile({
         </span>
         <span className="font-display text-2xl tabular-nums">{pct}</span>
       </span>
-      <span className="mt-2 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-white/70 dark:bg-slate-900" aria-hidden>
-        {stats.delivered > 0 && <span className="rounded-full bg-emerald-400" style={{ width: `${(stats.delivered / total) * 100}%` }} />}
+      <span className="taro-grow mt-2 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-white/70 dark:bg-white/10" aria-hidden>
+        {stats.delivered > 0 && <span className="rounded-full bg-matcha-400" style={{ width: `${(stats.delivered / total) * 100}%` }} />}
         {stats.notReceived > 0 && <span className="rounded-full bg-rose-400" style={{ width: `${(stats.notReceived / total) * 100}%` }} />}
         {stats.upcoming > 0 && <span className="rounded-full bg-sky-300" style={{ width: `${(stats.upcoming / total) * 100}%` }} />}
       </span>

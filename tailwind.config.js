@@ -1,30 +1,35 @@
 /** @type {import('tailwindcss').Config} */
 
-// Soft, Pinterest-style palette. The standard Tailwind colour names used
-// throughout the app are remapped to warm pastels so every screen shares the
-// same look:
-//   emerald → sage (primary, "delivered")      slate  → warm cocoa / cream (text, surfaces)
-//   orange  → peach (non-veg)                   rose   → dusty blush ("not received")
-//   sky     → lavender (planned)                amber  → butter (pending, notices)
-const sage = {
-  50: '#f3f6f1', 100: '#e4ece0', 200: '#cbdac4', 300: '#a9c1a0', 400: '#86a57c',
-  500: '#6a8a60', 600: '#56734d', 700: '#455c3e', 800: '#384a33', 900: '#2e3d2b', 950: '#182117',
+// "Taro Latte": milky taro purple-grey, Pinterest-style and cutesy. The
+// standard Tailwind colour names used throughout the app are remapped so every
+// screen shares the same look:
+//   emerald → taro purple (buttons, links, selected)   slate → taro grey (text, surfaces)
+//   matcha  → soft green (veg days, delivered)          rose  → raspberry ("not received")
+//   orange  → peach (non-veg)                           sky   → blueberry (planned)
+//   amber   → butter (pending, notices)
+const taro = {
+  50: '#f6f2fb', 100: '#ece4f6', 200: '#dccdef', 300: '#c4b0e2', 400: '#ab94d3',
+  500: '#9d88bd', 600: '#8670ab', 700: '#6e5a92', 800: '#594977', 900: '#463a5e', 950: '#2d2540',
 };
-const cocoa = {
-  50: '#fbf7f2', 100: '#f4ede4', 200: '#e8ddd0', 300: '#d5c6b5', 400: '#b3a08c',
-  500: '#8e7a68', 600: '#6f5d4e', 700: '#574940', 800: '#3e342d', 900: '#2b2420', 950: '#1c1714',
+const taroGrey = {
+  50: '#fbf9fc', 100: '#f4f0f8', 200: '#e8e1ef', 300: '#d6cce2', 400: '#ab9fc0',
+  500: '#85789a', 600: '#6a5e80', 700: '#54496a', 800: '#3d3450', 900: '#2b2538', 950: '#19161f',
 };
-const blush = {
-  50: '#fcf3f3', 100: '#f8e3e4', 200: '#f0c9cc', 300: '#e4a6ab', 400: '#d47f86',
-  500: '#c25e67', 600: '#a84852', 700: '#8c3a43', 800: '#73323a', 900: '#602d34', 950: '#351519',
+const matcha = {
+  50: '#f2f9ec', 100: '#e1f1d5', 200: '#cde6bb', 300: '#afd49a', 400: '#8fc07a',
+  500: '#72a85c', 600: '#5a8a48', 700: '#476d3a', 800: '#3a5731', 900: '#30482a', 950: '#182616',
+};
+const raspberry = {
+  50: '#fdf2f5', 100: '#fbe3ea', 200: '#f6c6d4', 300: '#ee9db4', 400: '#e26d8e',
+  500: '#d2496f', 600: '#b8365a', 700: '#982b4a', 800: '#7d263f', 900: '#682337', 950: '#3b0f1d',
 };
 const peach = {
   50: '#fef5ef', 100: '#fce7da', 200: '#f8cdb4', 300: '#f2ac86', 400: '#ea8857',
   500: '#df6d3a', 600: '#c9562a', 700: '#a74424', 800: '#863a24', 900: '#6d3221', 950: '#3b170e',
 };
-const lavender = {
-  50: '#f6f5fc', 100: '#eceaf8', 200: '#d9d5f1', 300: '#bdb6e6', 400: '#9d92d8',
-  500: '#8475c9', 600: '#705db8', 700: '#5f4d9f', 800: '#4f4283', 900: '#42386a', 950: '#282140',
+const blueberry = {
+  50: '#f0f3ff', 100: '#dfe6ff', 200: '#cad5ff', 300: '#a9b8f5', 400: '#8a9de9',
+  500: '#6f84e0', 600: '#5a6ccc', 700: '#4a59ad', 800: '#3d4a8c', 900: '#343f70', 950: '#212a4e',
 };
 const butter = {
   50: '#fefaec', 100: '#fcf1c9', 200: '#f8e28f', 300: '#f3cd55', 400: '#eeb82e',
@@ -33,28 +38,28 @@ const butter = {
 
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
-  // Dark mode follows the `dark` class on <html> (Settings → Appearance). A plain
+  // Dark mode follows the `dark` class on <html> (the top-bar switch). A plain
   // descendant selector (not :is/:where) so older phone browsers apply it too.
   darkMode: ['variant', '.dark &'],
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
-        display: ['Fraunces', 'Georgia', 'serif'],
+        sans: ['Nunito', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['Comfortaa', 'Nunito', 'system-ui', 'sans-serif'],
       },
       colors: {
-        emerald: sage,
-        slate: cocoa,
-        rose: blush,
+        emerald: taro,
+        slate: taroGrey,
+        rose: raspberry,
         orange: peach,
-        sky: lavender,
+        sky: blueberry,
         amber: butter,
         yellow: butter,
-        sage,
-        cocoa,
-        blush,
+        taro,
+        matcha,
+        raspberry,
         peach,
-        lavender,
+        blueberry,
         butter,
       },
       boxShadow: {

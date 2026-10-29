@@ -80,7 +80,7 @@ export function ReportsPage() {
         <h1 className="text-3xl">Reports</h1>
         <p className="text-sm text-slate-600 dark:text-slate-300">Tap any box to see the dates behind it.</p>
       </div>
-      <div className="flex flex-wrap gap-1 rounded-3xl bg-white/70 p-1 shadow-soft ring-1 ring-slate-200/70 dark:bg-slate-900 dark:ring-slate-700" role="tablist" aria-label="Report period">
+      <div className="taro-card flex flex-wrap gap-1 rounded-3xl p-1" role="tablist" aria-label="Report period">
         {modes.map((m) => (
           <button
             key={m}
@@ -152,8 +152,8 @@ export function ReportsPage() {
             <SplitBar
               title="Meal outcomes"
               parts={[
-                { label: 'Delivered (edited)', value: a.deliveredExplicit, className: 'bg-emerald-500' },
-                { label: 'Delivered (as scheduled)', value: a.deliveredAssumed, className: 'bg-emerald-300' },
+                { label: 'Delivered (edited)', value: a.deliveredExplicit, className: 'bg-matcha-500' },
+                { label: 'Delivered (as scheduled)', value: a.deliveredAssumed, className: 'bg-matcha-300' },
                 { label: 'Not received', value: a.notReceived, className: 'bg-rose-400' },
                 { label: 'Pending', value: s.pending, className: 'bg-amber-300' },
                 { label: 'Planned', value: s.planned.meals, className: 'bg-sky-300' },
@@ -162,7 +162,7 @@ export function ReportsPage() {
             <DailyChart daily={s.daily} />
           </Card>
 
-          <details className="rounded-3xl bg-white/85 p-5 shadow-soft text-sm text-slate-700 ring-1 ring-slate-200 dark:bg-black/25 dark:text-slate-200 dark:ring-white/[0.05]">
+          <details className="taro-card-alt rounded-[1.6rem] p-5 text-sm text-slate-700 dark:text-slate-200">
             <summary className="cursor-pointer font-semibold">How these numbers are calculated</summary>
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>Monday–Saturday have lunch and dinner; Sundays are never counted.</li>
