@@ -22,7 +22,7 @@ interface SupabaseLikeError {
   hint?: string | null;
 }
 
-const NETWORK_RE = /failed to fetch|networkerror|network request failed|load failed|fetch failed|timeout/i;
+const NETWORK_RE = /failed to fetch|networkerror|network request failed|load failed|fetch failed|timeout|timed out|abort/i;
 
 export function isNetworkFailure(err: unknown): boolean {
   if (err instanceof NetworkError) return true;

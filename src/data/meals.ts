@@ -25,10 +25,15 @@ export function useOutboxItems(householdId: string): OutboxItem[] {
  */
 export function useOverrides(start: ISODate, end: ISODate) {
   const { household } = useHousehold();
+  const qc = useQueryClient();
   const query = useQuery({
     queryKey: [...overridesKey(household.id), start, end],
     queryFn: () => fetchOverrides(household.id, start, end),
     staleTime: 15_000,
+    // Show instantly from an already-loaded week/month that covers this range,
+    // then refresh in the background (no spinner when moving between days).
+    initialData: () => fromCoveringRange(qc, household.id, start, end)?.rows,
+    initialDataUpdatedAt: () => fromCoveringRange(qc, household.id, start, end)?.updatedAt,
   });
   const pending = useOutboxItems(household.id);
 
@@ -50,6 +55,17 @@ export function useOverrides(start: ISODate, end: ISODate) {
   }, [query.data, pending, start, end, household.id]);
 
   return { ...query, map, pendingKeys };
+}
+
+/** Rows for [start, end] taken from a cached query whose range contains it. */
+function fromCoveringRange(qc: QueryClient, householdId: string, start: ISODate, end: ISODate) {
+  for (const q of qc.getQueryCache().findAll({ queryKey: overridesKey(householdId) })) {
+    const [, , qStart, qEnd] = q.queryKey as [string, string, ISODate, ISODate];
+    const rows = q.state.data as MealOverride[] | undefined;
+    if (!rows || qStart > start || qEnd < end) continue;
+    return { rows: rows.filter((r) => r.meal_date >= start && r.meal_date <= end), updatedAt: q.state.dataUpdatedAt };
+  }
+  return undefined;
 }
 
 function localOverride(householdId: string, item: OutboxItem, server?: MealOverride): MealOverride {

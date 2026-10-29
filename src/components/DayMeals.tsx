@@ -6,6 +6,7 @@ import { useHousehold } from '../data/household';
 import { useSaveMeal } from '../data/meals';
 import { MealCard } from './MealCard';
 import { MealEditSheet } from './MealEditSheet';
+import { useSync } from './AppShell';
 import { useConfirm } from './Confirm';
 import { useToast } from './Toast';
 import { Button } from './ui';
@@ -25,10 +26,10 @@ export function DayMeals({
   today: ISODate;
 }) {
   const [editing, setEditing] = useState<MealPeriod | null>(null);
-  const [busy, setBusy] = useState(false);
   const save = useSaveMeal();
   const toast = useToast();
   const confirm = useConfirm();
+  const sync = useSync();
   const { nowMinutes } = useHousehold();
   const meals = mealsForDate(date, map, today, nowMinutes);
 
@@ -77,29 +78,22 @@ export function DayMeals({
           },
     );
     if (!ok) return;
-    setBusy(true);
-    let queued = 0;
-    const conflicts: string[] = [];
-    const errors: string[] = [];
-    for (const m of meals) {
-      const pending = pendingKeys.has(overrideKey(m.date, m.period));
-      try {
-        const r = await save({
-          date: m.date,
-          period: m.period,
-          values: toNotDelivered ? NOT_DELIVERED : defaultValues(m.dayType),
-          expectedVersion: pending ? null : m.override?.version ?? null,
+    // Both cards change on screen at once; the two saves run together in the background.
+    const results = await Promise.allSettled(
+      meals.map((m) => {
+        const values = toNotDelivered ? NOT_DELIVERED : defaultValues(m.dayType);
+        const pending = pendingKeys.has(overrideKey(m.date, m.period));
+        return save({ date: m.date, period: m.period, values, expectedVersion: pending ? null : m.override?.version ?? null }).then((r) => {
+          if (r.kind === 'conflict') sync.reportConflict({ date: m.date, period: m.period, mine: values, outcome: r.outcome });
+          return r;
         });
-        if (r.kind === 'queued') queued++;
-        if (r.kind === 'conflict') conflicts.push(m.period);
-      } catch (e) {
-        errors.push((e as Error).message);
-      }
+      }),
+    );
+    const failed = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
+    if (failed) toast(`Could not save the whole day: ${(failed.reason as Error).message}`, 'error');
+    else if (results.some((r) => r.status === 'fulfilled' && r.value.kind === 'queued')) {
+      toast('Saved on this phone. It will sync when you are back online.', 'info');
     }
-    setBusy(false);
-    if (errors.length) toast(`Could not save the whole day: ${errors[0]}`, 'error');
-    else if (conflicts.length) toast(`Someone else just changed ${conflicts.join(' and ')}. Please check and try again.`, 'error');
-    else if (queued) toast('Saved on this phone. It will sync when you are back online.', 'info');
   }
 
   return (
@@ -112,16 +106,9 @@ export function DayMeals({
       <Button
         variant={wholeDayMissing ? 'secondary' : 'danger'}
         className="mt-3 w-full"
-        disabled={busy}
         onClick={() => void markWholeDay(!wholeDayMissing)}
       >
-        {busy
-          ? 'Saving…'
-          : wholeDayMissing
-            ? 'Mark whole day as delivered'
-            : future
-              ? 'No delivery this day (skip both meals)'
-              : 'No delivery this whole day'}
+        {wholeDayMissing ? 'Mark whole day as delivered' : future ? 'No delivery this day (skip both meals)' : 'No delivery this whole day'}
       </Button>
       {editingMeal && (
         <MealEditSheet
