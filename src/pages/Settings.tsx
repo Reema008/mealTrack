@@ -2,14 +2,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { FamilyAccountsSection, MyAccountSection } from '../components/AccountSettings';
 import { useToast } from '../components/Toast';
-import { Button, Card, Segmented } from '../components/ui';
+import { Button, Card } from '../components/ui';
 import { Link } from 'react-router-dom';
 import { formatShort, isValidTimeZone } from '../domain/dates';
 import { formatAmount, subscriptionStatus } from '../domain/subscription';
 import { useSubscriptions } from '../data/subscriptions';
 import { fetchReminderPreference, setReminderPreference, updateHousehold } from '../data/api';
 import { membershipKey, useHousehold } from '../data/household';
-import { useThemePreference, type ThemePreference } from '../lib/theme';
 import { currentSubscription, enablePushOnThisDevice, pushSupport, sendTestNotification } from '../lib/push';
 
 const TIMEZONES = ['Asia/Kolkata', 'Asia/Dubai', 'Asia/Singapore', 'Europe/London', 'America/New_York', 'America/Los_Angeles', 'Australia/Sydney'];
@@ -37,26 +36,6 @@ function SubscriptionSection() {
       >
         Renewals & history →
       </Link>
-    </Card>
-  );
-}
-
-function AppearanceSection() {
-  const [theme, setTheme] = useThemePreference();
-  return (
-    <Card>
-      <h2 className="mb-1 text-xl">Appearance</h2>
-      <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">Saved on this phone only. System follows your phone’s dark mode.</p>
-      <Segmented<ThemePreference>
-        label="Theme"
-        value={theme}
-        onChange={setTheme}
-        options={[
-          { value: 'light', label: '☀️ Light' },
-          { value: 'dark', label: '🌙 Dark' },
-          { value: 'system', label: '📱 System' },
-        ]}
-      />
     </Card>
   );
 }
@@ -179,7 +158,6 @@ export function SettingsPage() {
       <MyAccountSection />
       {isAdmin && <FamilyAccountsSection />}
       <SubscriptionSection />
-      <AppearanceSection />
       <TimezoneSection />
       <RemindersSection />
     </div>

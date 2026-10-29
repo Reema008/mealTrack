@@ -7,6 +7,7 @@ import type { MealValues } from '../domain/types';
 import { saveMealOverride } from '../data/api';
 import { useHouseholdSync, type SyncConflict } from '../data/meals';
 import { useToast } from './Toast';
+import { ThemeToggle } from './ThemeToggle';
 import { Button } from './ui';
 
 type SyncState = ReturnType<typeof useHouseholdSync>;
@@ -111,15 +112,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <SyncContext.Provider value={sync}>
       <div className="mx-auto flex min-h-dvh max-w-2xl flex-col">
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-2 bg-slate-50/75 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur-md dark:bg-slate-950/75">
+        <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-2 bg-slate-50/75 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur-md dark:bg-slate-950/75">
           <div className="flex min-w-0 items-center gap-2.5">
             <img src="./icons/icon.svg" alt="" className="h-10 w-10 shrink-0 rounded-2xl shadow-soft" />
             <div className="min-w-0">
-            <p className="font-display text-2xl leading-none text-slate-900 dark:text-slate-50">MealTrack</p>
+            <p className="truncate font-display text-2xl leading-none text-slate-900 dark:text-slate-50">MealTrack</p>
             <p className="truncate text-xs text-slate-600 dark:text-slate-400">Lunch & dinner tracker</p>
             </div>
           </div>
-          <SyncIndicator sync={sync} />
+          <div className="flex shrink-0 items-center gap-2">
+            <SyncIndicator sync={sync} />
+            <ThemeToggle />
+          </div>
         </header>
         {sync.failedItems.length > 0 && (
           <div role="alert" className="mx-4 mb-2 rounded-xl bg-rose-50 p-3 text-sm text-rose-800 ring-1 ring-rose-200 dark:bg-rose-950 dark:text-rose-200 dark:ring-rose-800">

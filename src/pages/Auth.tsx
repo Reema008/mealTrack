@@ -1,11 +1,15 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent, type ReactNode } from 'react';
+import { ThemeToggle } from '../components/ThemeToggle';
 import { Button, Card, PasswordField, TextField } from '../components/ui';
 import { changePassword, signIn, signOut } from '../data/session';
 
 function Screen({ subtitle, children }: { subtitle: string; children: ReactNode }) {
   return (
     <div className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4 py-10">
+      <div className="fixed right-4 top-[calc(0.75rem+env(safe-area-inset-top))]">
+        <ThemeToggle />
+      </div>
       <div className="mb-6 text-center">
         <img src="./icons/icon.svg" alt="" className="mx-auto h-20 w-20 rounded-[1.75rem] shadow-soft" />
         <h1 className="mt-4 text-4xl text-slate-900 dark:text-slate-50">MealTrack</h1>

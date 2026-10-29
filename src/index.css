@@ -41,6 +41,27 @@ body {
   hyphens: auto;
 }
 
+#root {
+  color: theme('colors.cocoa.900');
+}
+.dark #root {
+  color: theme('colors.cocoa.100');
+}
+h1,
+h2,
+h3,
+figcaption,
+summary {
+  color: theme('colors.cocoa.900');
+}
+.dark h1,
+.dark h2,
+.dark h3,
+.dark figcaption,
+.dark summary {
+  color: theme('colors.cocoa.50');
+}
+
 /* Elegant serif for headings. */
 h1,
 h2,

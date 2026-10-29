@@ -79,10 +79,11 @@ export function MyAccountSection() {
   return (
     <Card>
       <h2 className="mb-1 text-xl">My account</h2>
-      <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">
-        Signed in as <strong className="text-slate-900 dark:text-slate-100">{membership.display_name}</strong>
-        {membership.username && <> · username <strong className="text-slate-900 dark:text-slate-100">{membership.username}</strong></>}
-        {membership.role === 'admin' && ' · admin'}
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">Signed in as</p>
+      <p className="break-all font-display text-3xl leading-tight text-slate-900 dark:text-slate-50">{membership.username ?? membership.display_name}</p>
+      <p className="mb-3 mt-0.5 text-sm text-slate-600 dark:text-slate-400">
+        {membership.username && <>{membership.display_name} · </>}
+        {membership.role === 'admin' ? 'Admin' : 'Member'}
       </p>
       {changing === 'password' ? (
         <ChangePasswordForm
@@ -256,12 +257,13 @@ function AccountRow({ account }: { account: Account }) {
     <li className="rounded-2xl bg-white/90 p-3 ring-1 ring-slate-200/70 dark:bg-slate-800/70 dark:ring-slate-700">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="font-semibold">
-            {account.display_name}
-            {isMe && <span className="font-normal text-slate-600 dark:text-slate-400"> (you)</span>}
+          <p className="break-all font-display text-xl leading-tight text-slate-900 dark:text-slate-50">
+            {account.username ?? account.display_name}
+            {isMe && <span className="font-sans text-sm font-normal text-slate-600 dark:text-slate-400"> (you)</span>}
           </p>
-          <p className="text-xs text-slate-600 dark:text-slate-400">
-            {account.username ? `@${account.username}` : 'no username'} · {account.role === 'admin' ? 'Admin' : 'Member'}
+          <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
+            {account.username && <>{account.display_name} · </>}
+            {account.role === 'admin' ? 'Admin' : 'Member'}
             {account.must_change_password && ' · temporary password'}
           </p>
         </div>
