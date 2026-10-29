@@ -6,13 +6,14 @@ import { Button, Card, ErrorNote, PasswordField, Spinner, TextField } from '../c
 import { isValidTimeZone } from '../domain/dates';
 import {
   approveMember,
-  changeFamilyPin,
+  changeMyPin,
   fetchMembers,
   fetchRecentNotifications,
   fetchReminderPreference,
-  leaveHousehold,
+  iHavePin,
   pinErrorMessage,
   removeMember,
+  resetMemberPin,
   setMemberRole,
   setReminderPreference,
   updateDisplayName,
@@ -78,12 +79,17 @@ function ProfileSection() {
   );
 }
 
+const digits = (v: string) => v.replace(/\D/g, '');
+const PIN_PROPS = { inputMode: 'numeric' as const, pattern: '[0-9]*', autoComplete: 'off', maxLength: 10, required: true };
+
 function PeopleSection() {
   const { household, userId, isAdmin } = useHousehold();
   const qc = useQueryClient();
   const toast = useToast();
   const confirm = useConfirm();
   const members = useQuery({ queryKey: ['members', household.id], queryFn: () => fetchMembers(household.id), refetchInterval: isAdmin ? 15_000 : false });
+  const [resetFor, setResetFor] = useState<string | null>(null);
+  const [resetPin, setResetPin] = useState('');
 
   const act = useMutation({
     mutationFn: async (a: { kind: 'approve' | 'remove' | 'role'; userId: string; role?: 'admin' | 'member' }) => {
@@ -106,7 +112,7 @@ function PeopleSection() {
     <Card>
       <h2 className="mb-1 font-semibold">People</h2>
       <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">
-        To add someone: they open MealTrack, tap Sign in, and enter their name and the PIN. {isAdmin ? 'You then approve them here.' : 'An admin then approves them.'}
+        To add someone: they open MealTrack and sign in with their name and a PIN they create. {isAdmin ? 'You approve them here once; after that they sign in straight away.' : 'An admin approves them once.'}
       </p>
       {members.isLoading ? (
         <Spinner />
@@ -155,6 +161,9 @@ function PeopleSection() {
                     >
                       {m.role === 'admin' ? 'Remove admin' : 'Make admin'}
                     </Button>
+                    <Button variant="ghost" className="min-h-9 px-2 text-xs" onClick={() => { setResetFor(m.user_id); setResetPin(''); }}>
+                      Reset PIN
+                    </Button>
                     <Button
                       variant="ghost"
                       className="min-h-9 px-2 text-xs text-rose-700"
@@ -164,7 +173,7 @@ function PeopleSection() {
                           emoji: '👋',
                           tone: 'danger',
                           title: `Remove ${m.display_name}?`,
-                          message: 'They will lose access to MealTrack and stop getting reminders. To come back they sign in again and need approval.',
+                          message: 'They will lose access to MealTrack and stop getting reminders. To come back they would sign in as a new person and need approval again.',
                           confirmLabel: 'Remove',
                         });
                         if (ok) act.mutate({ kind: 'remove', userId: m.user_id });
@@ -173,6 +182,29 @@ function PeopleSection() {
                       Remove
                     </Button>
                   </span>
+                )}
+                {isAdmin && resetFor === m.user_id && (
+                  <form
+                    className="mt-2 flex w-full flex-wrap items-end gap-2"
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      if (!/^[0-9]{6,10}$/.test(resetPin)) return toast('The new PIN must be 6 to 10 digits.', 'error');
+                      try {
+                        await resetMemberPin(m.user_id, resetPin);
+                        toast(`New PIN set for ${m.display_name}. Tell them their new PIN.`);
+                        setResetFor(null);
+                        setResetPin('');
+                      } catch (err) {
+                        toast((err as Error).message, 'error');
+                      }
+                    }}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <PasswordField id={`reset-${m.user_id}`} label={`New PIN for ${m.display_name}`} value={resetPin} onChange={(e) => setResetPin(digits(e.target.value))} {...PIN_PROPS} />
+                    </div>
+                    <Button type="submit">Save</Button>
+                    <Button variant="ghost" onClick={() => setResetFor(null)}>Cancel</Button>
+                  </form>
                 )}
               </li>
             ))}
@@ -183,16 +215,16 @@ function PeopleSection() {
   );
 }
 
-const digits = (v: string) => v.replace(/\D/g, '');
-const PIN_PROPS = { inputMode: 'numeric' as const, pattern: '[0-9]*', autoComplete: 'off', maxLength: 10, required: true };
 
-function FamilyPinSection() {
+function MyPinSection() {
   const toast = useToast();
+  const hasPin = useQuery({ queryKey: ['i-have-pin'], queryFn: iHavePin });
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [next2, setNext2] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const needsCurrent = hasPin.data !== false;
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -201,12 +233,13 @@ function FamilyPinSection() {
     if (next !== next2) return setError('The new PINs do not match.');
     setBusy(true);
     try {
-      const r = await changeFamilyPin(current, next);
+      const r = await changeMyPin(current, next);
       if (!r.ok) return setError(pinErrorMessage(r));
       setCurrent('');
       setNext('');
       setNext2('');
-      toast('PIN changed. Share the new PIN with anyone who still needs to sign in.');
+      void hasPin.refetch();
+      toast('Your PIN is saved. Use it next time you sign in.');
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -216,14 +249,18 @@ function FamilyPinSection() {
 
   return (
     <Card>
-      <h2 className="mb-1 font-semibold">PIN</h2>
-      <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">People who are already approved stay signed in after a change.</p>
+      <h2 className="mb-1 text-xl">{needsCurrent ? 'Your PIN' : 'Set your PIN'}</h2>
+      <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">
+        {needsCurrent
+          ? 'You sign in with your name and this PIN. Keep it to yourself.'
+          : 'You don’t have a PIN yet. Create one so you can sign in on another phone.'}
+      </p>
       <form className="space-y-3" onSubmit={submit}>
-        <PasswordField id="pin-current" label="Current PIN" value={current} onChange={(e) => setCurrent(digits(e.target.value))} {...PIN_PROPS} />
+        {needsCurrent && <PasswordField id="pin-current" label="Current PIN" value={current} onChange={(e) => setCurrent(digits(e.target.value))} {...PIN_PROPS} />}
         <PasswordField id="pin-new" label="New PIN (6–10 digits)" value={next} onChange={(e) => setNext(digits(e.target.value))} {...PIN_PROPS} />
         <PasswordField id="pin-new2" label="New PIN again" value={next2} onChange={(e) => setNext2(digits(e.target.value))} {...PIN_PROPS} />
         {error && <p role="alert" className="text-sm text-rose-700 dark:text-rose-300">{error}</p>}
-        <Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Change PIN'}</Button>
+        <Button type="submit" disabled={busy}>{busy ? 'Saving…' : needsCurrent ? 'Change PIN' : 'Save PIN'}</Button>
       </form>
     </Card>
   );
@@ -261,7 +298,7 @@ function AppLockSection() {
       }
       return;
     }
-    apply({ mode, asked: true }, mode === 'pin' ? 'MealTrack will ask for the PIN when opened.' : 'App lock is off.');
+    apply({ mode, asked: true }, mode === 'pin' ? 'MealTrack will ask for your PIN when opened.' : 'App lock is off.');
   }
 
   const options: Array<{ mode: LockMode; label: string; hint: string; disabled?: boolean }> = [
@@ -379,7 +416,6 @@ function RemindersSection() {
 }
 
 export function SettingsPage() {
-  const { isAdmin } = useHousehold();
   const toast = useToast();
   const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
@@ -389,13 +425,12 @@ export function SettingsPage() {
       emoji: '🚪',
       tone: 'danger',
       title: 'Sign out on this phone?',
-      message: 'Your meal records stay safe. To use MealTrack again, sign in with your name and the PIN, and an admin approves you again.',
+      message: 'Your meal records stay safe. Sign back in any time with your name and PIN, no approval needed.',
       confirmLabel: 'Sign out',
     });
     if (!ok) return;
     setBusy(true);
     try {
-      await leaveHousehold();
       await disablePushOnThisDevice().catch(() => {});
       await signOut();
     } catch (e) {
@@ -411,7 +446,7 @@ export function SettingsPage() {
       <RemindersSection />
       <AppLockSection />
       <PeopleSection />
-      {isAdmin && <FamilyPinSection />}
+      <MyPinSection />
       <Card>
         <Button variant="danger" disabled={busy} onClick={() => void signOutHere()}>{busy ? 'Signing out…' : 'Sign out'}</Button>
       </Card>

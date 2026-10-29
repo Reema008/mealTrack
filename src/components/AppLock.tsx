@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { pinErrorMessage, verifyFamilyPin } from '../data/api';
+import { pinErrorMessage, verifyMyPin } from '../data/api';
 import { useHousehold } from '../data/household';
 import { biometricAvailable, getLockSettings, registerBiometric, RELOCK_AFTER_MS, saveLockSettings, verifyBiometric, type LockSettings } from '../lib/applock';
 import { Button, Card, PasswordField } from './ui';
@@ -26,16 +26,16 @@ function LockScreen({ settings, onUnlock }: { settings: LockSettings; onUnlock: 
     const ok = await verifyBiometric(settings.credentialId);
     setBusy(false);
     if (ok) onUnlock();
-    else setError('Fingerprint / Face ID was not recognised. Try again or use the PIN.');
+    else setError('Fingerprint / Face ID was not recognised. Try again or use your PIN.');
   }
 
   async function submitPin(e: FormEvent) {
     e.preventDefault();
-    if (!navigator.onLine) return setError('You are offline. Connect to the internet to unlock with the PIN, or use fingerprint / Face ID.');
+    if (!navigator.onLine) return setError('You are offline. Connect to the internet to unlock with your PIN, or use fingerprint / Face ID.');
     setBusy(true);
     setError(null);
     try {
-      const r = await verifyFamilyPin(pin);
+      const r = await verifyMyPin(pin);
       if (r.ok) onUnlock();
       else {
         setError(pinErrorMessage(r));
@@ -60,13 +60,13 @@ function LockScreen({ settings, onUnlock }: { settings: LockSettings; onUnlock: 
               <FingerprintIcon />
               {busy ? 'Waiting…' : 'Unlock with fingerprint / Face ID'}
             </Button>
-            <Button variant="ghost" className="w-full" onClick={() => setUsePin(true)}>Use PIN instead</Button>
+            <Button variant="ghost" className="w-full" onClick={() => setUsePin(true)}>Use my PIN instead</Button>
           </div>
         ) : (
           <form className="space-y-3" onSubmit={submitPin}>
             <PasswordField
               id="unlock-pin"
-              label="PIN"
+              label="Your PIN"
               inputMode="numeric"
               pattern="[0-9]*"
               autoComplete="off"

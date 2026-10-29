@@ -7,7 +7,7 @@ import { signOut, useSession } from './data/session';
 import { AuthExpiredError } from './lib/errors';
 import { isSupabaseConfigured } from './lib/supabase';
 import { AppLockGate } from './components/AppLock';
-import { JoinOrSetupPage, PendingApprovalPage, SessionErrorPage, SetupRequiredPage } from './pages/Auth';
+import { clearRequested, JoinOrSetupPage, PendingApprovalPage, SessionErrorPage, SetupRequiredPage } from './pages/Auth';
 import { CalendarPage } from './pages/Calendar';
 import { DayPage } from './pages/Day';
 import { HomePage } from './pages/Home';
@@ -46,6 +46,9 @@ function SignedIn() {
   useEffect(() => {
     if (membership.error instanceof AuthExpiredError) void signOut();
   }, [membership.error]);
+  useEffect(() => {
+    if (membership.data?.status === 'approved') clearRequested();
+  }, [membership.data?.status]);
 
   if (membership.isLoading) return <Spinner label="Loading MealTrack" />;
   if (membership.error) {

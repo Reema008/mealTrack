@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Button, Card, ErrorNote, PasswordField, Spinner, TextField } from '../components/ui';
-import { fetchMealTrackStatus, joinWithPin, leaveHousehold, pinErrorMessage, setupHousehold } from '../data/api';
+import { fetchMealTrackStatus, leaveHousehold, pinErrorMessage, setupHousehold, signIn } from '../data/api';
 import { membershipKey } from '../data/household';
 import { signOut, useSession } from '../data/session';
 
@@ -10,8 +10,8 @@ const PIN_RE = /^[0-9]{6,10}$/;
 function Brand({ subtitle }: { subtitle: string }) {
   return (
     <div className="mb-6 text-center">
-      <img src="./icons/icon.svg" alt="" className="mx-auto h-16 w-16" />
-      <h1 className="mt-3 text-2xl font-bold tracking-tight text-emerald-700 dark:text-emerald-400">MealTrack</h1>
+      <img src="./icons/icon.svg" alt="" className="mx-auto h-20 w-20 rounded-[1.75rem] shadow-soft" />
+      <h1 className="mt-4 text-4xl text-slate-900 dark:text-slate-50">MealTrack</h1>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{subtitle}</p>
     </div>
   );
@@ -52,6 +52,8 @@ const markRequested = (on: boolean) => {
     /* ignore */
   }
 };
+/** Forget the "request sent" marker once someone is approved. */
+export const clearRequested = () => markRequested(false);
 const wasRequested = () => {
   try {
     return localStorage.getItem(REQUESTED_KEY) === '1';
@@ -89,10 +91,10 @@ function SetupPage({ onDone }: { onDone: () => Promise<void> }) {
       <Card>
         <form className="space-y-4" onSubmit={submit}>
           <TextField id="me" label="Your name" placeholder="e.g. Priya" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required />
-          <PinInput id="pin" label="Create a PIN (6–10 digits)" value={pin} onChange={setPin} />
-          <PinInput id="pin2" label="Enter the PIN again" value={pin2} onChange={setPin2} />
+          <PinInput id="pin" label="Create your PIN (6–10 digits)" value={pin} onChange={setPin} />
+          <PinInput id="pin2" label="Enter your PIN again" value={pin2} onChange={setPin2} />
           <p className="text-xs text-slate-600 dark:text-slate-400">
-            Share this PIN with your family. When someone signs in with it, you approve them before they can see or edit anything.
+            This PIN is just for you: keep it to yourself. Your family will each create their own when they sign in, and you approve them once.
           </p>
           {error && <p role="alert" className="text-sm text-rose-700 dark:text-rose-300">{error}</p>}
           <Button type="submit" className="w-full" disabled={busy}>{busy ? 'Setting up…' : 'Set up MealTrack'}</Button>
@@ -102,7 +104,11 @@ function SetupPage({ onDone }: { onDone: () => Promise<void> }) {
   );
 }
 
-/** Everyone else: sign in with name + PIN, which sends a request to the admin. */
+/**
+ * Everyone else signs in with their name + their own PIN.
+ * Returning people go straight in; a new name confirms the PIN once and
+ * sends a request to the admin.
+ */
 function JoinPage({ onDone }: { onDone: () => Promise<void> }) {
   const { notice: sessionNotice } = useSession();
   const [declined] = useState(() => {
@@ -113,22 +119,29 @@ function JoinPage({ onDone }: { onDone: () => Promise<void> }) {
   const notice = declined ? 'Your request was not approved. Check with the admin, then try again.' : sessionNotice;
   const [name, setName] = useState('');
   const [pin, setPin] = useState('');
+  const [pin2, setPin2] = useState('');
+  const [isNew, setIsNew] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!PIN_RE.test(pin)) return setError('The PIN is 6 to 10 digits.');
+    if (!PIN_RE.test(pin)) return setError('Your PIN is 6 to 10 digits.');
+    if (isNew && pin !== pin2) return setError('The two PINs do not match.');
     setBusy(true);
     try {
-      const r = await joinWithPin(pin, name.trim());
+      const r = await signIn(name.trim(), pin, isNew);
       if (!r.ok) {
+        if (r.error === 'new_user') {
+          setIsNew(true);
+          return;
+        }
         setError(pinErrorMessage(r));
         setPin('');
         return;
       }
-      markRequested(true);
+      if (r.status === 'pending' && !r.returning) markRequested(true);
       await onDone();
     } catch (err) {
       setError((err as Error).message);
@@ -138,18 +151,45 @@ function JoinPage({ onDone }: { onDone: () => Promise<void> }) {
   }
 
   return (
-    <Screen subtitle="Sign in with your name and the PIN.">
-      {notice && <p role="status" className="mb-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200 dark:bg-amber-950 dark:text-amber-100 dark:ring-amber-800">{notice}</p>}
+    <Screen subtitle={isNew ? 'Nice to meet you!' : 'Welcome back. Sign in with your name and PIN.'}>
+      {notice && <p role="status" className="mb-4 rounded-2xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200 dark:bg-amber-950 dark:text-amber-100 dark:ring-amber-800">{notice}</p>}
       <Card>
         <form className="space-y-4" onSubmit={submit}>
-          <h2 className="text-lg font-semibold">Sign in</h2>
-          <TextField id="me" label="Your name" placeholder="e.g. Arjun" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required />
-          <PinInput id="pin" label="PIN" value={pin} onChange={setPin} />
+          <h2 className="text-2xl">{isNew ? 'Create your account' : 'Sign in'}</h2>
+          <TextField
+            id="me"
+            label="Your name"
+            placeholder="e.g. Arjun"
+            autoComplete="name"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              setIsNew(false);
+            }}
+            maxLength={60}
+            required
+          />
+          <PinInput id="pin" label={isNew ? 'Create your PIN (6–10 digits)' : 'Your PIN'} value={pin} onChange={setPin} />
+          {isNew && (
+            <>
+              <PinInput id="pin2" label="Enter your PIN again" value={pin2} onChange={setPin2} autoFocus />
+              <p className="rounded-2xl bg-sky-50 p-3 text-xs text-sky-900 dark:bg-sky-950 dark:text-sky-100">
+                We don’t know <strong>{name.trim()}</strong> yet. Confirm your PIN to send a request. The admin approves you <strong>once</strong>; after that you sign in straight away with your name and PIN.
+              </p>
+            </>
+          )}
           {error && <p role="alert" className="text-sm text-rose-700 dark:text-rose-300">{error}</p>}
-          <Button type="submit" className="w-full" disabled={busy}>{busy ? 'Checking…' : 'Sign in'}</Button>
+          <Button type="submit" className="w-full" disabled={busy}>
+            {busy ? 'Checking…' : isNew ? 'Send request' : 'Sign in'}
+          </Button>
+          {isNew && (
+            <Button variant="ghost" className="w-full" onClick={() => setIsNew(false)}>
+              I already have an account
+            </Button>
+          )}
         </form>
       </Card>
-      <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">The admin approves new sign-ins. Don’t know the PIN? Ask the admin.</p>
+      <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">Forgot your PIN? Ask the admin to reset it in Settings → People.</p>
     </Screen>
   );
 }
@@ -175,9 +215,9 @@ export function PendingApprovalPage({ name }: { name: string }) {
     <Screen subtitle={`Hi ${name}!`}>
       <Card className="text-center">
         <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" aria-hidden />
-        <h2 className="mt-3 text-lg font-semibold">Waiting for approval</h2>
+        <h2 className="mt-3 text-2xl">Waiting for approval</h2>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400" role="status">
-          Your sign-in request was sent. Ask the admin to approve you in <strong>Settings → People</strong>. This screen opens MealTrack automatically once you’re approved.
+          Your sign-in request was sent. Ask the admin to approve you in <strong>Settings → People</strong>. This screen opens MealTrack automatically once you’re approved. You only need approval this once.
         </p>
         {error && <p role="alert" className="mt-2 text-sm text-rose-700 dark:text-rose-300">{error}</p>}
         <Button variant="ghost" className="mt-4 w-full" disabled={busy} onClick={() => void cancel()}>
@@ -188,7 +228,7 @@ export function PendingApprovalPage({ name }: { name: string }) {
   );
 }
 
-/** Shown to someone who has not signed in with the PIN yet. */
+/** Shown to someone who has not signed in on this phone yet. */
 export function JoinOrSetupPage() {
   const { session } = useSession();
   const qc = useQueryClient();
@@ -203,18 +243,6 @@ export function JoinOrSetupPage() {
       </Screen>
     );
   if (status.data === 'not_set_up') return <SetupPage onDone={async () => { await status.refetch(); await onDone(); }} />;
-  if (status.data === 'needs_pin')
-    return (
-      <Screen subtitle="One more setup step">
-        <Card>
-          <p className="text-sm">
-            MealTrack is set up but has no PIN yet. In the Supabase dashboard, open <strong>SQL Editor</strong> and run:
-          </p>
-          <pre className="mt-2 overflow-x-auto rounded-lg bg-slate-100 p-2 text-xs dark:bg-slate-800">select public.admin_set_family_pin('123456');</pre>
-          <p className="mt-2 text-sm">(use your own 6–10 digit PIN), then reload this page.</p>
-        </Card>
-      </Screen>
-    );
   return <JoinPage onDone={onDone} />;
 }
 

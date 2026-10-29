@@ -49,7 +49,7 @@ const OVERRIDE_COLUMNS =
   'id, household_id, meal_date, meal_period, delivery_status, main_dish, extra_curry_received, created_by, updated_by, created_at, updated_at, version';
 
 /**
- * This person's access: null (not signed in with the PIN yet), pending
+ * This person's access: null (not signed in on this phone yet), pending
  * (waiting for an admin), or an approved membership with the app settings.
  */
 export async function fetchMembership(userId: string): Promise<Membership | PendingMembership | null> {
@@ -100,7 +100,7 @@ export async function saveMealOverride(req: SaveRequest): Promise<SaveOutcome> {
   return data as SaveOutcome;
 }
 
-export type MealTrackStatus = 'not_set_up' | 'needs_pin' | 'ready';
+export type MealTrackStatus = 'not_set_up' | 'ready';
 
 export async function fetchMealTrackStatus(): Promise<MealTrackStatus> {
   const { data, error } = await supabase.rpc('mealtrack_status');
@@ -108,6 +108,7 @@ export async function fetchMealTrackStatus(): Promise<MealTrackStatus> {
   return data as MealTrackStatus;
 }
 
+/** First-time setup: the first person (name + their own PIN) becomes the admin. */
 export async function setupHousehold(name: string, displayName: string, pin: string, timezone: string): Promise<void> {
   const { error } = await supabase.rpc('setup_household', {
     p_name: name,
@@ -118,40 +119,60 @@ export async function setupHousehold(name: string, displayName: string, pin: str
   if (error) throw toAppError(error);
 }
 
-/** Result of any family-PIN check. */
+/** Result of a sign-in or PIN check. */
 export interface PinResult {
   ok: boolean;
-  /** For sign-in: whether the request is still waiting for an admin. */
+  /** For sign-in: whether this person is approved or still waiting for an admin. */
   status?: MemberStatus;
-  error?: 'wrong_pin' | 'locked';
+  /** For sign-in: an existing person signed in (no new request). */
+  returning?: boolean;
+  error?: 'wrong_pin' | 'locked' | 'new_user' | 'no_pin';
   attempts_left?: number;
 }
 
 export function pinErrorMessage(r: PinResult): string {
-  if (r.error === 'locked') return 'Too many wrong PINs. PIN entry is paused for 15 minutes.';
+  if (r.error === 'locked') return 'Too many wrong PINs for this name. Try again in 15 minutes, or ask the admin to reset your PIN.';
+  if (r.error === 'no_pin') return 'This account has no PIN yet. Ask the admin to reset your PIN in Settings → People.';
   const left = r.attempts_left ?? 0;
   return `Wrong PIN. ${left} attempt${left === 1 ? '' : 's'} left before a 15-minute pause.`;
 }
 
-export async function joinWithPin(pin: string, displayName: string): Promise<PinResult> {
-  const { data, error } = await supabase.rpc('join_with_pin', { p_pin: pin, p_display_name: displayName });
+/**
+ * Sign in with name + personal PIN. A known name with the right PIN gets
+ * straight in. An unknown name returns error "new_user" unless `create`
+ * is true, in which case a request is sent to the admin.
+ */
+export async function signIn(name: string, pin: string, create: boolean): Promise<PinResult> {
+  const { data, error } = await supabase.rpc('sign_in', { p_name: name, p_pin: pin, p_create: create });
   if (error) throw toAppError(error);
   return data as PinResult;
 }
 
-export async function verifyFamilyPin(pin: string): Promise<PinResult> {
-  const { data, error } = await supabase.rpc('verify_family_pin', { p_pin: pin });
+export async function verifyMyPin(pin: string): Promise<PinResult> {
+  const { data, error } = await supabase.rpc('verify_my_pin', { p_pin: pin });
   if (error) throw toAppError(error);
   return data as PinResult;
 }
 
-export async function changeFamilyPin(current: string, next: string): Promise<PinResult> {
-  const { data, error } = await supabase.rpc('change_family_pin', { p_current: current, p_new: next });
+export async function changeMyPin(current: string, next: string): Promise<PinResult> {
+  const { data, error } = await supabase.rpc('change_my_pin', { p_current: current, p_new: next });
   if (error) throw toAppError(error);
   return data as PinResult;
 }
 
-/** Remove this phone from the family (membership, reminders, push registration). */
+export async function iHavePin(): Promise<boolean> {
+  const { data, error } = await supabase.rpc('i_have_pin');
+  if (error) throw toAppError(error);
+  return Boolean(data);
+}
+
+/** Admin only: set a new PIN for someone who forgot theirs. */
+export async function resetMemberPin(userId: string, pin: string): Promise<void> {
+  const { error } = await supabase.rpc('reset_member_pin', { p_user_id: userId, p_new: pin });
+  if (error) throw toAppError(error);
+}
+
+/** Cancel a pending request (removes this person's request, reminders and push registration). */
 export async function leaveHousehold(): Promise<void> {
   const { error } = await supabase.rpc('leave_household');
   if (error) throw toAppError(error);

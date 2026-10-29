@@ -1,10 +1,10 @@
 /**
  * Device app lock: fingerprint / Face ID via WebAuthn (platform authenticator
- * with user verification), with the family PIN as fallback.
+ * with user verification), with the person's own PIN as fallback.
  *
  * This is a LOCAL lock that keeps someone holding an unlocked phone out of
  * the app. Server-side access is controlled separately by family membership
- * (joined with the PIN) and Row Level Security.
+ * (signed in with name + PIN) and Row Level Security.
  */
 
 export type LockMode = 'off' | 'biometric' | 'pin';

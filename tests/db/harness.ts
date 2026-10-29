@@ -107,31 +107,45 @@ export async function createTestDb(upTo?: string): Promise<TestDb> {
   };
 }
 
+/** Default personal PIN used for everyone in tests. */
 export const FAMILY_PIN = '482913';
 
-/** First-time setup: `user` creates the family household with a PIN. */
-export async function setupFamily(t: TestDb, user: TestUser, name = 'Family', pin = FAMILY_PIN): Promise<string> {
+export interface SignInResult {
+  ok: boolean;
+  status?: string;
+  error?: string;
+  attempts_left?: number;
+  returning?: boolean;
+}
+
+const nameOf = (user: TestUser) => user.email.split('@')[0];
+
+/** First-time setup: `user` becomes the admin, signing in as `displayName` with `pin`. */
+export async function setupFamily(t: TestDb, user: TestUser, name = 'Family', pin = FAMILY_PIN, displayName = 'Owner'): Promise<string> {
   return t.as(user, async (tx) => {
-    const r = await tx.query<{ r: { id: string } }>(`select public.setup_household($1, $2, $3) as r`, [name, 'Owner', pin]);
+    const r = await tx.query<{ r: { id: string } }>(`select public.setup_household($1, $2, $3) as r`, [name, displayName, pin]);
     return r.rows[0].r.id;
   });
 }
 
-export async function joinFamily(t: TestDb, user: TestUser, pin = FAMILY_PIN, name = 'Phone') {
+/** sign_in(name, pin, create) as `user` (a phone). */
+export async function signIn(t: TestDb, user: TestUser, name: string, pin = FAMILY_PIN, create = false): Promise<SignInResult> {
   return t.as(user, async (tx) => {
-    const r = await tx.query<{ r: { ok: boolean; status?: string; error?: string; attempts_left?: number } }>(
-      'select public.join_with_pin($1, $2) as r',
-      [pin, name],
-    );
+    const r = await tx.query<{ r: SignInResult }>('select public.sign_in($1, $2, $3) as r', [name, pin, create]);
     return r.rows[0].r;
   });
+}
+
+/** A new person asks to join (name defaults to the email's local part). */
+export async function joinFamily(t: TestDb, user: TestUser, pin = FAMILY_PIN, name = nameOf(user)) {
+  return signIn(t, user, name, pin, true);
 }
 
 export async function approveMember(t: TestDb, admin: TestUser, user: TestUser) {
   await t.as(admin, (tx) => tx.query('select public.approve_member($1)', [user.id]));
 }
 
-/** Sign in with the PIN and have `admin` approve the request. */
+/** New person signs in and `admin` approves the request. */
 export async function joinAndApprove(t: TestDb, admin: TestUser, user: TestUser, pin = FAMILY_PIN) {
   const r = await joinFamily(t, user, pin);
   if (!r.ok) throw new Error(`join failed: ${JSON.stringify(r)}`);
