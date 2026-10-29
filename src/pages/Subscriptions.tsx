@@ -12,6 +12,7 @@ import {
   subscriptionStatus,
   suggestedRenewalDate,
   type SubscriptionPeriod,
+  type SubscriptionRecord,
 } from '../domain/subscription';
 import type { OverrideMap } from '../domain/types';
 import { addSubscription, deleteSubscription, updateSubscription } from '../data/api';
@@ -105,7 +106,8 @@ function PeriodCard({
   map: OverrideMap;
   today: string;
   nowMinutes: number;
-  onChanged: () => void;
+  /** Apply a change to the cached list (instant), then refresh from the server. */
+  onChanged: (update: (list: SubscriptionRecord[]) => SubscriptionRecord[]) => void;
 }) {
   const toast = useToast();
   const confirm = useConfirm();
@@ -168,10 +170,10 @@ function PeriodCard({
             submitLabel="Save changes"
             onCancel={() => setEditing(false)}
             onSubmit={async (date, amount) => {
-              await updateSubscription(period.record.id, date, amount);
-              toast('Subscription updated.');
+              const saved = await updateSubscription(period.record.id, date, amount);
               setEditing(false);
-              onChanged();
+              onChanged((list) => list.map((r) => (r.id === saved.id ? saved : r)));
+              toast('Subscription updated.');
             }}
           />
         </div>
@@ -195,8 +197,8 @@ function PeriodCard({
               if (!ok) return;
               try {
                 await deleteSubscription(period.record.id);
+                onChanged((list) => list.filter((r) => r.id !== period.record.id));
                 toast('Subscription deleted.');
-                onChanged();
               } catch (e) {
                 toast((e as Error).message, 'error');
               }
@@ -221,7 +223,13 @@ export function SubscriptionsPage() {
   const first = periods[0]?.start ?? today;
   const last = periods[periods.length - 1]?.end ?? today;
   const overrides = useOverrides(first, last);
-  const refresh = () => void qc.invalidateQueries({ queryKey: subscriptionsKey(household.id) });
+  const applyChange = (update: (list: SubscriptionRecord[]) => SubscriptionRecord[]) => {
+    const key = subscriptionsKey(household.id);
+    qc.setQueryData<SubscriptionRecord[]>(key, (old) =>
+      update(old ?? []).sort((a, b) => (a.start_date < b.start_date ? -1 : a.start_date > b.start_date ? 1 : 0)),
+    );
+    void qc.invalidateQueries({ queryKey: key });
+  };
 
   const totalSpent = records.reduce((sum, r) => sum + (r.amount ?? 0), 0);
   const deliveredWithAmount = periods
@@ -255,9 +263,9 @@ export function SubscriptionsPage() {
             initialAmount={lastAmount}
             submitLabel="Save renewal"
             onSubmit={async (date, amount) => {
-              await addSubscription(household.id, date, amount);
+              const saved = await addSubscription(household.id, date, amount);
+              applyChange((list) => [...list.filter((r) => r.id !== saved.id), saved]);
               toast('Renewal saved.');
-              refresh();
             }}
           />
         )}
@@ -291,7 +299,7 @@ export function SubscriptionsPage() {
           <h2 className="pt-2 text-xl">History</h2>
           <ol className="space-y-3">
             {[...periods].reverse().map((p) => (
-              <PeriodCard key={p.record.id} period={p} label={labelFor(p)} map={overrides.map} today={today} nowMinutes={nowMinutes} onChanged={refresh} />
+              <PeriodCard key={p.record.id} period={p} label={labelFor(p)} map={overrides.map} today={today} nowMinutes={nowMinutes} onChanged={applyChange} />
             ))}
           </ol>
         </>

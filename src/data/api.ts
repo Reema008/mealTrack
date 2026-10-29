@@ -148,17 +148,38 @@ function subscriptionError(err: { code?: string; message?: string }): Error {
   return toAppError(err);
 }
 
-export async function addSubscription(householdId: string, startDate: ISODate, amount: number | null): Promise<void> {
-  const { error } = await supabase.from('subscriptions').insert({ household_id: householdId, start_date: startDate, amount });
+const SUBSCRIPTION_COLUMNS = 'id, start_date, amount';
+const toRecord = (r: { id: unknown; start_date: unknown; amount: unknown }): SubscriptionRecord => ({
+  id: r.id as string,
+  start_date: r.start_date as string,
+  amount: r.amount === null || r.amount === undefined ? null : Number(r.amount),
+});
+
+export async function addSubscription(householdId: string, startDate: ISODate, amount: number | null): Promise<SubscriptionRecord> {
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .insert({ household_id: householdId, start_date: startDate, amount })
+    .select(SUBSCRIPTION_COLUMNS)
+    .single();
   if (error) throw subscriptionError(error);
+  return toRecord(data);
 }
 
-export async function updateSubscription(id: string, startDate: ISODate, amount: number | null): Promise<void> {
-  const { error } = await supabase.from('subscriptions').update({ start_date: startDate, amount }).eq('id', id);
+export async function updateSubscription(id: string, startDate: ISODate, amount: number | null): Promise<SubscriptionRecord> {
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .update({ start_date: startDate, amount })
+    .eq('id', id)
+    .select(SUBSCRIPTION_COLUMNS)
+    .maybeSingle();
   if (error) throw subscriptionError(error);
+  if (!data) throw new Error('That subscription no longer exists. It may have been deleted on another phone.');
+  return toRecord(data);
 }
 
+/** Delete a subscription; fails loudly if nothing was actually removed. */
 export async function deleteSubscription(id: string): Promise<void> {
-  const { error } = await supabase.from('subscriptions').delete().eq('id', id);
+  const { data, error } = await supabase.from('subscriptions').delete().eq('id', id).select('id');
   if (error) throw toAppError(error);
+  if (!data || data.length === 0) throw new Error('That subscription was not found. It may already have been deleted.');
 }
