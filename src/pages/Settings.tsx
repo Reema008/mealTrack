@@ -73,7 +73,7 @@ function TimezoneSection() {
           aria-label="Timezone"
           value={tz}
           onChange={(e) => setTz(e.target.value)}
-          className="block min-h-11 min-w-0 flex-1 rounded-2xl border-0 bg-white px-3 ring-1 ring-inset ring-slate-300 dark:bg-slate-800 dark:ring-slate-600"
+          className="block min-h-11 min-w-0 flex-1 rounded-2xl border-0 bg-white px-3 text-slate-900 ring-1 ring-inset ring-slate-300 dark:bg-slate-800 dark:text-slate-50 dark:ring-slate-600"
         >
           {[...new Set([household.timezone, ...TIMEZONES])].map((z) => (
             <option key={z} value={z}>{z}</option>
@@ -129,8 +129,8 @@ function RemindersSection() {
       {support === 'supported' && (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className="text-sm">
-              Reminders on this phone: <strong>{pref.isLoading ? '…' : enabled && deviceSubscribed ? 'On' : 'Off'}</strong>
+            <span className="text-sm text-slate-700 dark:text-slate-200">
+              Reminders on this phone: <strong className={enabled && deviceSubscribed ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-900 dark:text-slate-50'}>{pref.isLoading ? '…' : enabled && deviceSubscribed ? 'On' : 'Off'}</strong>
             </span>
             {enabled && deviceSubscribed ? (
               <Button variant="secondary" disabled={busy} onClick={() => run(() => setReminderPreference(userId, household.id, false), 'Reminders turned off.')}>Turn off</Button>

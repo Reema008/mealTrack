@@ -92,9 +92,9 @@ export function MonthCalendar({
                 isSel
                   ? 'bg-emerald-600 font-semibold text-white'
                   : inMonth
-                    ? 'bg-white text-slate-900 ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-800'
+                    ? 'bg-white text-slate-900 ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-white/[0.05] dark:text-slate-100 dark:ring-white/[0.06]'
                     : 'text-slate-400 dark:text-slate-600'
-              } ${isToday && !isSel ? 'ring-2 ring-emerald-600 dark:ring-emerald-500' : ''} ${d > today && !isSel && inMonth ? 'bg-slate-50 dark:bg-slate-900/60' : ''}`}
+              } ${isToday && !isSel ? 'ring-2 ring-emerald-600 dark:ring-emerald-500' : ''} ${d > today && !isSel && inMonth ? 'bg-slate-50 dark:bg-white/[0.02]' : ''}`}
             >
               <span>{Number(formatDate(d, { day: 'numeric' }))}</span>
               <span className="mt-0.5 flex h-1.5 items-center gap-0.5" aria-hidden>
@@ -148,7 +148,7 @@ export function WeekStrip({
               className={`flex w-full min-w-0 flex-col items-center gap-0.5 rounded-xl px-0.5 py-2 text-xs leading-tight ring-1 transition-colors ${
                 d === today
                   ? 'bg-emerald-600 text-white ring-emerald-600'
-                  : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-800'
+                  : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50 dark:bg-white/[0.05] dark:text-slate-200 dark:ring-white/[0.06]'
               }`}
             >
               <span className="font-medium">{weekdayShort(d)}</span>

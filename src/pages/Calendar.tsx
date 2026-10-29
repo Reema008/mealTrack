@@ -77,7 +77,7 @@ export function CalendarPage() {
               <li key={d}>
                 <Link
                   to={`/day/${d}`}
-                  className={`block rounded-2xl bg-white p-3 ring-1 hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 ${d === today ? 'ring-2 ring-emerald-600' : 'ring-slate-200 dark:ring-slate-800'}`}
+                  className={`block rounded-2xl bg-white p-3 ring-1 hover:bg-slate-50 dark:bg-white/[0.05] dark:hover:bg-white/10 ${d === today ? 'ring-2 ring-emerald-600' : 'ring-slate-200 dark:ring-white/[0.06]'}`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-medium">{formatShort(d)}</span>

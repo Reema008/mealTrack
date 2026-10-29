@@ -58,7 +58,7 @@ export default {
         butter,
       },
       boxShadow: {
-        soft: '0 10px 30px -12px rgba(87, 73, 64, 0.18), 0 2px 6px -2px rgba(87, 73, 64, 0.06)',
+        soft: 'var(--shadow-soft)',
       },
     },
   },

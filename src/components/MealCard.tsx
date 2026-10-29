@@ -29,8 +29,8 @@ export function deliveryLabel(meal: EffectiveMeal): string {
 }
 
 const PERIOD_STYLE: Record<MealPeriod, { emoji: string; tint: string }> = {
-  lunch: { emoji: '☀️', tint: 'bg-amber-50/90 dark:bg-amber-950/40' },
-  dinner: { emoji: '🌙', tint: 'bg-sky-50/90 dark:bg-sky-950/40' },
+  lunch: { emoji: '☀️', tint: 'bg-amber-50/90 dark:bg-amber-950/25' },
+  dinner: { emoji: '🌙', tint: 'bg-sky-50/90 dark:bg-sky-950/25' },
 };
 
 function Row({ label, value, bad }: { label: string; value: string; bad?: boolean }) {
@@ -49,13 +49,13 @@ export function MealCard({ meal, pending, onEdit }: { meal: EffectiveMeal; pendi
   return (
     <article
       className={`rounded-3xl p-5 shadow-soft ring-1 ${style.tint} ${
-        notReceived ? 'ring-rose-300 dark:ring-rose-800' : 'ring-white/60 dark:ring-slate-800'
+        notReceived ? 'ring-rose-300 dark:ring-rose-800' : 'ring-white/60 dark:ring-white/[0.06]'
       }`}
       aria-label={`${PERIOD_LABEL[meal.period]}, ${formatLong(meal.date)}`}
     >
       <header className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 font-display text-xl">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/80 text-lg shadow-sm dark:bg-slate-900/70" aria-hidden>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/80 text-lg shadow-sm dark:bg-white/10" aria-hidden>
             {style.emoji}
           </span>
           {PERIOD_LABEL[meal.period]}

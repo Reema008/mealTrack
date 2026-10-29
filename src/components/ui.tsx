@@ -28,7 +28,7 @@ export function Button({
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-3xl bg-white/85 p-5 shadow-soft ring-1 ring-slate-200/70 backdrop-blur-sm dark:bg-slate-900/85 dark:ring-slate-800 ${className}`}>
+    <section className={`rounded-3xl bg-white/85 p-5 shadow-soft ring-1 ring-slate-200/70 backdrop-blur-sm dark:bg-white/[0.04] dark:ring-white/[0.06] ${className}`}>
       {children}
     </section>
   );

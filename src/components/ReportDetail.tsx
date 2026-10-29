@@ -153,7 +153,7 @@ export function ReportDetailSheet({
           ) : (
             <ol className="space-y-3">
               {groups.map((g) => (
-                <li key={g.date} className="rounded-2xl bg-white/90 p-3 shadow-soft ring-1 ring-slate-200/60 dark:bg-slate-800/80 dark:ring-slate-700">
+                <li key={g.date} className="rounded-2xl bg-white/90 p-3 shadow-soft ring-1 ring-slate-200/60 dark:bg-white/[0.05] dark:ring-white/[0.06]">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <Link to={`/day/${g.date}`} className="font-display text-lg hover:underline" onClick={onClose}>
                       {formatShort(g.date)}

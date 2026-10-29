@@ -21,7 +21,7 @@ import { useOverrides } from '../data/meals';
 import { subscriptionsKey, useSubscriptions } from '../data/subscriptions';
 
 const inputClass =
-  'block min-h-11 w-full rounded-2xl border-0 bg-white px-3 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-emerald-600 dark:bg-slate-800 dark:ring-slate-600';
+  'block min-h-11 w-full rounded-2xl border-0 bg-white px-3 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-emerald-600 dark:bg-slate-800 dark:text-slate-50 dark:ring-slate-600';
 
 /** Parse a rupee amount typed by the user; '' means "not entered". */
 function parseAmount(text: string): number | null | 'invalid' {
@@ -122,7 +122,7 @@ function PeriodCard({
   }[label];
 
   return (
-    <li className="rounded-3xl bg-white/85 p-4 shadow-soft ring-1 ring-slate-200/60 dark:bg-slate-900/80 dark:ring-slate-800">
+    <li className="rounded-3xl bg-white/85 p-4 shadow-soft ring-1 ring-slate-200/60 dark:bg-white/[0.04] dark:ring-white/[0.06]">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="font-display text-lg leading-tight">

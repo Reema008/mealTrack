@@ -4,12 +4,12 @@ import type { MealStats } from '../domain/stats';
 type Tint = 'sage' | 'peach' | 'butter' | 'blush' | 'lavender' | 'cream';
 
 const TINTS: Record<Tint, string> = {
-  sage: 'bg-emerald-100/80 dark:bg-emerald-950/60',
-  peach: 'bg-orange-100/80 dark:bg-orange-950/50',
-  butter: 'bg-amber-100/80 dark:bg-amber-950/50',
-  blush: 'bg-rose-100/80 dark:bg-rose-950/50',
-  lavender: 'bg-sky-100/80 dark:bg-sky-950/50',
-  cream: 'bg-white/85 dark:bg-slate-900/80',
+  sage: 'bg-emerald-100/80 dark:bg-emerald-950/35',
+  peach: 'bg-orange-100/80 dark:bg-orange-950/30',
+  butter: 'bg-amber-100/80 dark:bg-amber-950/30',
+  blush: 'bg-rose-100/80 dark:bg-rose-950/30',
+  lavender: 'bg-sky-100/80 dark:bg-sky-950/30',
+  cream: 'bg-white/85 dark:bg-white/[0.04]',
 };
 
 /** A pastel report tile. When `onClick` is given it is a button that opens details. */
@@ -47,7 +47,7 @@ export function StatCard({
       )}
     </>
   );
-  const cls = `block w-full min-w-0 rounded-3xl p-4 text-left shadow-soft ring-1 ring-white/60 dark:ring-slate-800 ${TINTS[tint]}`;
+  const cls = `block w-full min-w-0 rounded-3xl p-4 text-left shadow-soft ring-1 ring-white/60 dark:ring-white/[0.06] ${TINTS[tint]}`;
   return onClick ? (
     <button
       type="button"
@@ -152,7 +152,7 @@ export function CategoryTile({
       type="button"
       onClick={onClick}
       aria-label={`${label}: ${stats.delivered} delivered, ${stats.notReceived} not received, ${stats.upcoming} upcoming. View details`}
-      className={`block w-full min-w-0 rounded-3xl p-4 text-left shadow-soft ring-1 ring-white/60 transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:ring-slate-800 ${TINTS[tint]}`}
+      className={`block w-full min-w-0 rounded-3xl p-4 text-left shadow-soft ring-1 ring-white/60 transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:ring-white/[0.06] ${TINTS[tint]}`}
     >
       <span className="flex flex-wrap items-center justify-between gap-x-2">
         <span className="font-display text-lg">

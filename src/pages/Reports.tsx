@@ -162,7 +162,7 @@ export function ReportsPage() {
             <DailyChart daily={s.daily} />
           </Card>
 
-          <details className="rounded-3xl bg-white/85 p-5 shadow-soft text-sm text-slate-700 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800">
+          <details className="rounded-3xl bg-white/85 p-5 shadow-soft text-sm text-slate-700 ring-1 ring-slate-200 dark:bg-white/[0.04] dark:text-slate-300 dark:ring-white/[0.06]">
             <summary className="cursor-pointer font-semibold">How these numbers are calculated</summary>
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>Monday–Saturday have lunch and dinner; Sundays are never counted.</li>

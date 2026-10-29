@@ -86,7 +86,7 @@ function ConfirmDialog({ options, onClose }: { options: ConfirmOptions; onClose:
         aria-modal="true"
         aria-labelledby="confirm-title"
         aria-describedby={options.message ? 'confirm-message' : undefined}
-        className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-sm overflow-y-auto rounded-[2rem] bg-slate-50 text-center shadow-soft ring-1 ring-white/70 dark:bg-slate-900 dark:ring-slate-800"
+        className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-sm overflow-y-auto rounded-[2rem] bg-slate-50 text-center shadow-soft ring-1 ring-white/70 dark:bg-slate-900 dark:ring-white/[0.06]"
       >
         <div
           className={`px-6 pb-2 pt-7 ${

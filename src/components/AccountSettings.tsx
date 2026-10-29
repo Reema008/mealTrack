@@ -254,7 +254,7 @@ function AccountRow({ account }: { account: Account }) {
   }
 
   return (
-    <li className="rounded-2xl bg-white/90 p-3 ring-1 ring-slate-200/70 dark:bg-slate-800/70 dark:ring-slate-700">
+    <li className="rounded-2xl bg-white/90 p-3 ring-1 ring-slate-200/70 dark:bg-white/[0.05] dark:ring-white/[0.06]">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="break-all font-display text-xl leading-tight text-slate-900 dark:text-slate-50">

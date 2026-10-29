@@ -35,7 +35,7 @@ export function DayMeals({
 
   if (meals.length === 0) {
     return (
-      <div className="rounded-3xl bg-gradient-to-br from-sky-100/90 via-white/80 to-amber-100/80 p-8 text-center shadow-soft ring-1 ring-white/60 dark:from-sky-950/50 dark:via-slate-900/80 dark:to-amber-950/40 dark:ring-slate-800">
+      <div className="rounded-3xl bg-gradient-to-br from-sky-100/90 via-white/80 to-amber-100/80 p-8 text-center shadow-soft ring-1 ring-white/60 dark:from-sky-950/50 dark:via-slate-900/80 dark:to-amber-950/40 dark:ring-white/[0.06]">
         <p className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-3xl shadow-soft dark:bg-slate-800" aria-hidden>
           🌤️
         </p>
