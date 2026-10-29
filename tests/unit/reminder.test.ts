@@ -62,8 +62,8 @@ describe('daily 10 PM reminder timing', () => {
   });
 
   it('builds a short one-line reminder and a deep link to the date', () => {
-    expect(REMINDER_TITLE).toBe('MealTrack');
-    expect(REMINDER_BODY).toBe("Did today's lunch and dinner arrive? Tap to check.");
+    expect(REMINDER_TITLE).toBe('Hi there 👋');
+    expect(REMINDER_BODY).toBe('Quick meal check before bed?');
     expect(REMINDER_BODY).not.toContain('\n');
     expect(reminderLink('https://me.github.io/mealtrack/', '2026-10-26')).toBe('https://me.github.io/mealtrack/#/day/2026-10-26');
     expect(reminderPayload('https://x.dev', '2026-10-26')).toMatchObject({ url: 'https://x.dev/#/day/2026-10-26', tag: 'mealtrack-reminder-2026-10-26' });

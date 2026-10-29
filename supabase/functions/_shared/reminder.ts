@@ -1,8 +1,8 @@
 // Pure reminder timing logic. Shared by the Edge Function (Deno) and the
 // Vitest suite (Node), so it must not import anything.
 
-export const REMINDER_TITLE = 'MealTrack';
-export const REMINDER_BODY = "Did today's lunch and dinner arrive? Tap to check.";
+export const REMINDER_TITLE = 'Hi there 👋';
+export const REMINDER_BODY = 'Quick meal check before bed?';
 
 /** Local hour (24h) at which the reminder becomes due. */
 export const REMINDER_HOUR = 22;
