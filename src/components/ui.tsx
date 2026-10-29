@@ -35,8 +35,8 @@ export function Card({ children, className = '' }: { children: ReactNode; classN
 }
 
 const DAY_TYPE_STYLE: Record<DayType, string> = {
-  veg: 'bg-matcha-100 text-matcha-800 dark:bg-matcha-900/60 dark:text-matcha-200',
-  nonveg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100',
+  veg: 'bg-white/80 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-white/10 dark:text-emerald-100 dark:ring-emerald-800',
+  nonveg: 'bg-emerald-100 text-emerald-800 dark:bg-slate-800 dark:text-slate-200',
   none: 'bg-slate-200 text-slate-700 dark:bg-slate-900 dark:text-slate-200',
 };
 

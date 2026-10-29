@@ -28,7 +28,7 @@ export function summarizeDay(
 }
 
 const TYPE_DOT: Record<string, string> = {
-  veg: 'bg-matcha-500',
+  veg: 'bg-emerald-400',
   nonveg: 'bg-orange-500',
   none: 'bg-slate-300 dark:bg-slate-600',
 };
@@ -108,7 +108,7 @@ export function MonthCalendar({
         })}
       </div>
       <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
-        <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-matcha-500" />Veg</li>
+        <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-400" />Veg</li>
         <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-orange-500" />Non-Veg</li>
         <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-slate-300" />No delivery</li>
         <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-rose-600" />Not received</li>

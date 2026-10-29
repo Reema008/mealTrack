@@ -152,11 +152,11 @@ export function ReportsPage() {
             <SplitBar
               title="Meal outcomes"
               parts={[
-                { label: 'Delivered (edited)', value: a.deliveredExplicit, className: 'bg-matcha-500' },
-                { label: 'Delivered (as scheduled)', value: a.deliveredAssumed, className: 'bg-matcha-300' },
+                { label: 'Delivered (edited)', value: a.deliveredExplicit, className: 'bg-emerald-600' },
+                { label: 'Delivered (as scheduled)', value: a.deliveredAssumed, className: 'bg-emerald-300' },
                 { label: 'Not received', value: a.notReceived, className: 'bg-rose-400' },
-                { label: 'Pending', value: s.pending, className: 'bg-amber-300' },
-                { label: 'Planned', value: s.planned.meals, className: 'bg-sky-300' },
+                { label: 'Pending', value: s.pending, className: 'bg-orange-300' },
+                { label: 'Planned', value: s.planned.meals, className: 'bg-slate-300' },
               ]}
             />
             <DailyChart daily={s.daily} />

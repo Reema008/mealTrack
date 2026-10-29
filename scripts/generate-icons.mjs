@@ -68,12 +68,12 @@ function roundedSquare(x, y, r) {
 }
 
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-const BEIGE_LIGHT = hex('#f5ecdf');
-const BEIGE = hex('#e6d6be');
-const WOOD_TOP = hex('#9a6a43');
-const WOOD_BOTTOM = hex('#7a5032');
-const WOOD_RIM = hex('#b07d53');
-const STEAM = hex('#a88a6c');
+const BEIGE_LIGHT = hex('#f3edfa');
+const BEIGE = hex('#dccdef');
+const WOOD_TOP = hex('#a58fcb');
+const WOOD_BOTTOM = hex('#7f69a6');
+const WOOD_RIM = hex('#c3b1e3');
+const STEAM = hex('#a893c9');
 const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 
 // Three wavy steam lines, sampled as short segments (matches icon.svg).
@@ -94,7 +94,7 @@ function art(x, y, scale) {
   const u = (x - 0.5) / scale + 0.5;
   const v = (y - 0.5) / scale + 0.5;
 
-  // Wooden bowl: lighter rim band, body darkening towards the bottom.
+  // Taro bowl: lighter rim band, body darkening towards the bottom.
   if (v >= 0.5 && dist(u, v, 0.5, 0.5) <= 0.32) return v <= 0.545 ? WOOD_RIM : mix(WOOD_TOP, WOOD_BOTTOM, (v - 0.5) / 0.32);
   if (u >= 0.38 && u <= 0.62 && v >= 0.81 && v <= 0.86) return WOOD_BOTTOM; // foot
   if (nearSteam(u, v)) return STEAM;
