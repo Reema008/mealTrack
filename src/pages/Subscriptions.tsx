@@ -6,9 +6,9 @@ import { useConfirm } from '../components/Confirm';
 import { SubscriptionCard } from '../components/SubscriptionCard';
 import { useToast } from '../components/Toast';
 import { Button, Card, ErrorNote, Spinner } from '../components/ui';
-import { billingPeriodFor, computeBill, shiftPeriod, type BillingPeriod, type BillingSettings } from '../domain/billing';
+import { billingPeriodFor, computeBill, type BillingPeriod, type BillingSettings } from '../domain/billing';
 import { formatShort, isISODate } from '../domain/dates';
-import { formatAmount, paymentFor, type SubscriptionRecord } from '../domain/subscription';
+import { formatAmount, paymentFor, subscriptionMonths, type SubscriptionRecord } from '../domain/subscription';
 import { addSubscription, deleteSubscription, updateBilling, updateSubscription } from '../data/api';
 import { membershipKey, useHousehold } from '../data/household';
 import { useOverrides } from '../data/meals';
@@ -16,9 +16,6 @@ import { subscriptionsKey, useSubscriptions } from '../data/subscriptions';
 
 const inputClass =
   'block min-h-11 w-full rounded-2xl border-0 bg-white px-3 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-emerald-600 disabled:opacity-70 dark:bg-slate-900 dark:text-slate-50 dark:ring-slate-600';
-
-/** Months shown in the history (this one and the ones before it). */
-const HISTORY_MONTHS = 6;
 
 /** Parse a rupee amount typed by the user; '' means "not entered". */
 function parseAmount(text: string): number | null | 'invalid' {
@@ -347,13 +344,8 @@ export function SubscriptionsPage() {
   const [sheet, setSheet] = useState<BillingPeriod | null>(null);
 
   const current = billingPeriodFor(today, billing.billingDay);
-  const months = Array.from({ length: HISTORY_MONTHS }, (_, i) => shiftPeriod(current, -i, billing.billingDay));
-  // Older months that have a payment saved are listed too.
-  for (const r of records) {
-    const p = billingPeriodFor(r.start_date, billing.billingDay);
-    if (!months.some((m) => m.start === p.start)) months.push(p);
-  }
-  months.sort((a, b) => (a.start < b.start ? 1 : -1));
+  // From the first month with a recorded payment (when the subscription started) to now.
+  const months = subscriptionMonths(records, today, billing.billingDay);
   const totalPaid = records.reduce((sum, r) => sum + (r.amount ?? 0), 0);
 
   return (

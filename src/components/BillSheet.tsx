@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { billingPeriodFor, computeBill, CURRY_LABEL, dayRows, shiftPeriod, type BillingPeriod, type BillLine } from '../domain/billing';
 import { formatLong, formatMonth, formatShort } from '../domain/dates';
 import { PERIOD_LABEL } from '../domain/schedule';
-import { formatAmount, paymentFor, type SubscriptionRecord } from '../domain/subscription';
+import { firstSubscriptionStart, formatAmount, paymentFor, type SubscriptionRecord } from '../domain/subscription';
 import { addSubscription, updateSubscription } from '../data/api';
 import { useHousehold } from '../data/household';
 import { useOverrides } from '../data/meals';
@@ -58,6 +58,8 @@ export function BillSheet({ initial, onClose }: { initial: BillingPeriod; onClos
   const next = billingPeriodFor(period.renewsOn, billing.billingDay);
   const finished = period.end < today;
   const nextPayment = paymentFor(subs.data ?? [], next, billing.billingDay);
+  // Don't step back before the subscription started (the first recorded payment).
+  const first = firstSubscriptionStart(subs.data ?? [], billing.billingDay);
   const title = periodTitle(period, billing.billingDay);
   const nextTitle = periodTitle(next, billing.billingDay);
 
@@ -122,7 +124,12 @@ export function BillSheet({ initial, onClose }: { initial: BillingPeriod; onClos
             </Button>
           </div>
           <div className="mt-3 flex items-center justify-between gap-2">
-            <Button variant="ghost" className="min-h-9 px-3 text-xs" onClick={() => setPeriod(shiftPeriod(period, -1, billing.billingDay))}>
+            <Button
+              variant="ghost"
+              className="min-h-9 px-3 text-xs"
+              disabled={first !== null && period.start <= first}
+              onClick={() => setPeriod(shiftPeriod(period, -1, billing.billingDay))}
+            >
               ← Earlier
             </Button>
             <span className="text-sm font-semibold">{title}</span>
