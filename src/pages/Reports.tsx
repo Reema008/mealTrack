@@ -217,7 +217,7 @@ export function ReportsPage() {
         <Spinner label="Calculating" />
       ) : (
         <>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
+          <div className="grid auto-rows-fr grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
             <StatCard label="Delivery success" emoji="✨" tint="sage" value={formatPercent(a.successRate)} hint={`${a.delivered} of ${a.meals} meals so far`} onClick={open('success')} />
             <StatCard label="Delivered" emoji="💜" tint="cream" value={a.delivered} hint={a.deliveredExplicit ? `${a.deliveredExplicit} edited` : 'as scheduled'} onClick={open('delivered')} />
             <StatCard label="Cancelled" emoji="🚫" tint="blush" value={a.notReceived} hint={`${money.missedMeals.filter((l) => l.cancelledBy !== 'you').length} by sender · ${money.missedMeals.filter((l) => l.cancelledBy === 'you').length} by you`} onClick={open('notReceived')} />
@@ -230,7 +230,7 @@ export function ReportsPage() {
 
           <section aria-labelledby="by-category" className="space-y-3">
             <h2 id="by-category" className="text-xl">By category</h2>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
+            <div className="grid auto-rows-fr grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
               <CategoryTile label="Veg" emoji={<VegIcon className="inline h-[1em] w-[1em] align-[-0.1em] text-emerald-600 dark:text-emerald-300" />} tint="sage" stats={s.categories.veg} onClick={open('veg')} />
               <CategoryTile label="Non-Veg" emoji={<NonVegIcon className="inline h-[1em] w-[1em] align-[-0.1em] text-emerald-800 dark:text-emerald-100" />} tint="peach" stats={s.categories.nonveg} onClick={open('nonveg')} />
               <CategoryTile label="Lunch" emoji="☀️" tint="butter" stats={s.categories.lunch} onClick={open('lunch')} />

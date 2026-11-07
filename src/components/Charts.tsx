@@ -43,13 +43,13 @@ export function StatCard({
       <span className="mt-2 block break-words font-display text-3xl tabular-nums text-slate-900 dark:text-slate-50">{value}</span>
       {hint && <span className="mt-1 block text-xs text-slate-600 dark:text-slate-300">{hint}</span>}
       {onClick && (
-        <span className="mt-2 block text-xs font-semibold text-emerald-700 dark:text-emerald-300" aria-hidden>
+        <span className="mt-auto block pt-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300" aria-hidden>
           View details →
         </span>
       )}
     </>
   );
-  const cls = `block w-full min-w-0 rounded-[1.35rem] p-4 text-left ${TINTS[tint]}`;
+  const cls = `flex h-full w-full min-w-0 flex-col rounded-[1.35rem] p-4 text-left ${TINTS[tint]}`;
   return onClick ? (
     <button
       type="button"
@@ -159,7 +159,7 @@ export function CategoryTile({
       type="button"
       onClick={onClick}
       aria-label={`${label}: ${stats.delivered} delivered, ${stats.notReceived} cancelled, ${stats.upcoming} upcoming. View details`}
-      className={`block w-full min-w-0 rounded-[1.35rem] p-4 text-left transition-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${TINTS[tint]}`}
+      className={`flex h-full w-full min-w-0 flex-col rounded-[1.35rem] p-4 text-left transition-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${TINTS[tint]}`}
     >
       <span className="flex flex-wrap items-center justify-between gap-x-2">
         <span className="font-display text-lg">
@@ -177,7 +177,7 @@ export function CategoryTile({
         <strong>{stats.delivered}</strong> delivered · <strong>{stats.notReceived}</strong> cancelled
         {stats.upcoming > 0 && <> · {stats.upcoming} upcoming</>}
       </span>
-      <span className="mt-1 block text-xs font-semibold text-emerald-700 dark:text-emerald-300" aria-hidden>
+      <span className="mt-auto block pt-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300" aria-hidden>
         View details →
       </span>
     </button>

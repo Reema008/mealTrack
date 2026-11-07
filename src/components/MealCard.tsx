@@ -53,7 +53,7 @@ export function MealCard({ meal, pending, onEdit }: { meal: EffectiveMeal; pendi
   const style = PERIOD_STYLE[meal.period];
   return (
     <article
-      className={`rounded-[1.6rem] p-5 ${style.tint} ${
+      className={`flex h-full flex-col rounded-[1.6rem] p-5 ${style.tint} ${
         notReceived ? 'ring-2 ring-rose-400 dark:ring-rose-500' : ''
       }`}
       aria-label={`${PERIOD_LABEL[meal.period]}, ${formatLong(meal.date)}`}
@@ -67,7 +67,7 @@ export function MealCard({ meal, pending, onEdit }: { meal: EffectiveMeal; pendi
         </h3>
         <StatusBadge kind={badgeFor(meal, pending)} />
       </header>
-      <dl>
+      <dl className="mb-3">
         <Row label="Delivery" value={deliveryLabel(meal)} bad={notReceived} />
         {meal.dayType === 'nonveg' && !notReceived && (
           <>
@@ -81,12 +81,13 @@ export function MealCard({ meal, pending, onEdit }: { meal: EffectiveMeal; pendi
         )}
       </dl>
       {meal.timing === 'pending' && (
-        <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
+        <p className="-mt-1 mb-3 text-xs text-slate-600 dark:text-slate-300">
           Assumed delivered from {cutoffLabel(meal.period)} unless someone marks it.
         </p>
       )}
+      {/* Pushed to the bottom so Edit lunch and Edit dinner line up. */}
       <Button
-        className="mt-3 w-full"
+        className="mt-auto w-full"
         onClick={onEdit}
         aria-label={`Edit ${PERIOD_LABEL[meal.period].toLowerCase()} for ${formatLong(meal.date)}`}
       >

@@ -107,18 +107,16 @@ export function CurryMarkIcon({ mark, className = 'h-3 w-3' }: { mark: CurryMark
   );
 }
 
-/** One column per meal, lunch then dinner: its status icon, and its extra curry underneath. */
-function MealIcons({ meals, curries, className }: { meals: MealMark[]; curries: Array<CurryMark | null>; className?: string }) {
-  if (!meals.some(Boolean)) return <span className="h-3" aria-hidden />;
-  const anyCurry = curries.some(Boolean);
+/**
+ * One column per meal, lunch then dinner: its status icon, and its extra curry
+ * underneath. Always the same size (empty slots are kept), so every day card
+ * is the same height whether or not it has curries.
+ */
+function MealIcons({ meals, curries }: { meals: MealMark[]; curries: Array<CurryMark | null> }) {
   return (
-    <span className="flex items-start gap-0.5" aria-hidden>
-      {meals.map((m, i) => (
-        <span key={i} className="flex flex-col items-center gap-px">
-          {m ? <MealIcon mark={m} className={className} /> : <span className="h-3 w-3" />}
-          {anyCurry && (curries[i] ? <CurryMarkIcon mark={curries[i]!} className="h-3 w-3" /> : <span className="h-3 w-3" />)}
-        </span>
-      ))}
+    <span className="grid grid-cols-2 grid-rows-2 gap-x-0.5 gap-y-px" aria-hidden>
+      {[0, 1].map((i) => (meals[i] ? <MealIcon key={`m${i}`} mark={meals[i]!} className="h-3 w-3" /> : <span key={`m${i}`} className="h-3 w-3" />))}
+      {[0, 1].map((i) => (curries[i] ? <CurryMarkIcon key={`c${i}`} mark={curries[i]!} className="h-3 w-3" /> : <span key={`c${i}`} className="h-3 w-3" />))}
     </span>
   );
 }
@@ -173,7 +171,7 @@ export function MonthCalendar({
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-7 gap-1" role="grid" aria-label="Month calendar">
+      <div className="grid auto-rows-fr grid-cols-7 gap-1" role="grid" aria-label="Month calendar">
         {days.map((d) => {
           const inMonth = d >= first && d <= last;
           if (!isEnabled(d)) return <div key={d} role="gridcell" aria-hidden className="min-h-[4.4rem]" />;
@@ -223,7 +221,7 @@ export function WeekStrip({
 }) {
   const { nowMinutes } = useHousehold();
   return (
-    <ol className="grid grid-cols-7 gap-1.5">
+    <ol className="grid auto-rows-fr grid-cols-7 gap-1.5">
       {eachDay(start, addDays(start, 6)).map((d) => {
         if (!isEnabled(d)) return <li key={d} aria-hidden />;
         const s = summarizeDay(d, map, today, nowMinutes);
@@ -235,7 +233,7 @@ export function WeekStrip({
               onClick={() => onSelect(d)}
               aria-label={describeDay(d, s)}
               aria-current={isToday ? 'date' : undefined}
-              className={`taro-inset flex w-full min-w-0 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-xs leading-tight text-slate-700 transition-colors hover:bg-white dark:text-slate-50 dark:hover:bg-white/10 ${
+              className={`taro-inset flex h-full w-full min-w-0 flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-xs leading-tight text-slate-700 transition-colors hover:bg-white dark:text-slate-50 dark:hover:bg-white/10 ${
                 isToday ? 'ring-2 ring-emerald-500 dark:ring-emerald-300' : ''
               }`}
             >

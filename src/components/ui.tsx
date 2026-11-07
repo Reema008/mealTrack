@@ -171,7 +171,7 @@ export function Segmented<T extends string | boolean>({
   return (
     <fieldset>
       <legend className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">{label}</legend>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(5.5rem,1fr))] gap-2" role="radiogroup" aria-label={label}>
+      <div className="grid auto-rows-fr grid-cols-[repeat(auto-fit,minmax(5.5rem,1fr))] gap-2" role="radiogroup" aria-label={label}>
         {options.map((o) => {
           const selected = o.value === value;
           const tone =

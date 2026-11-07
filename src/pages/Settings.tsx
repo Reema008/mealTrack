@@ -35,7 +35,7 @@ function PetSection() {
       />
       <fieldset className="mt-4">
         <legend className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">Choose your pet</legend>
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] gap-2" role="radiogroup" aria-label="Choose your pet">
+        <div className="grid auto-rows-fr grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] gap-2" role="radiogroup" aria-label="Choose your pet">
           {SPECIES.map((p) => {
             const selected = p.id === kind;
             return (

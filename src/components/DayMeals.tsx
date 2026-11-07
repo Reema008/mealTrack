@@ -97,7 +97,7 @@ export function DayMeals({
 
   return (
     <>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid auto-rows-fr gap-3 sm:grid-cols-2">
         {meals.map((m) => (
           <MealCard key={m.period} meal={m} pending={pendingKeys.has(overrideKey(m.date, m.period))} onEdit={() => setEditing(m.period)} />
         ))}

@@ -149,7 +149,7 @@ function BillingSettingsCard() {
           </div>
         </form>
       ) : (
-        <dl className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-2 text-sm">
+        <dl className="grid auto-rows-fr grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-2 text-sm">
           <div className="taro-inset rounded-2xl p-2">
             <dt className="text-xs text-slate-600 dark:text-slate-300">Starts on</dt>
             <dd className="font-semibold">Day {billing.billingDay}</dd>
