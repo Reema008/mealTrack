@@ -42,8 +42,8 @@ export function SubscriptionCard() {
           <p className="text-sm text-slate-600 dark:text-slate-300">
             {due ? (
               <>
-                Pay for <strong className="text-slate-900 dark:text-slate-50">{title}</strong>. {periodTitle(previous, billing.billingDay)}'s missed meals and
-                curries are taken off {formatAmount(billing.monthlyAmount)}.
+                Pay for <strong className="text-slate-900 dark:text-slate-50">{title}</strong>: {formatAmount(billing.monthlyAmount)} minus{' '}
+                {periodTitle(previous, billing.billingDay)}'s cancelled meals, plus its extra curries.
               </>
             ) : (
               <>
@@ -80,8 +80,8 @@ export function SubscriptionCard() {
               {due ? `Amount for ${title}` : 'Next amount so far'}:{' '}
               <strong className="font-display text-lg">{formatAmount(bill.nextAmount)}</strong>
               <span className="block text-xs text-slate-600 dark:text-slate-300">
-                {bill.missedMeals.length} missed meal{bill.missedMeals.length === 1 ? '' : 's'} · {bill.missedCurries.length} missed curr
-                {bill.missedCurries.length === 1 ? 'y' : 'ies'} · − {formatAmount(bill.totalDeductions)}
+                {bill.missedMeals.length} cancelled meal{bill.missedMeals.length === 1 ? '' : 's'} (− {formatAmount(bill.mealDeductions)}) · {bill.addedCurries.length} extra curr
+                {bill.addedCurries.length === 1 ? 'y' : 'ies'} (+ {formatAmount(bill.curryCharges)})
               </span>
             </span>
             <Button className="min-h-10 px-4" onClick={() => setSheet(billed)}>

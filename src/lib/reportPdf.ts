@@ -66,10 +66,14 @@ export async function buildReportPdf(r: ReportInput): Promise<File> {
   if (r.isSubscriptionPeriod) amountRows.push(['Monthly subscription amount', rs(b.base)]);
   amountRows.push(
     [`Cancelled meals (${b.missedMeals.length})`, `- ${rs(b.mealDeductions)}`],
-    [`Missed extra curries (${b.missedCurries.length})`, `- ${rs(b.curryDeductions)}`],
-    ['Total deductions', `- ${rs(b.totalDeductions)}`],
+    [`Chicken curries delivered (${b.curriesAdded.chicken.count} x ${rs(r.settings.chickenCurry)})`, `+ ${rs(b.curriesAdded.chicken.amount)}`],
+    [`Egg curries delivered (${b.curriesAdded.egg.count} x ${rs(r.settings.eggCurry)})`, `+ ${rs(b.curriesAdded.egg.amount)}`],
   );
   if (r.isSubscriptionPeriod) amountRows.push(['Amount for the next subscription', rs(b.nextAmount)]);
+  else {
+    const change = b.curryCharges - b.mealDeductions;
+    amountRows.push(['Change to the subscription amount', `${change >= 0 ? '+' : '-'} ${rs(Math.abs(change))}`]);
+  }
   autoTable(doc, {
     startY: y + 8,
     margin: { left: M, right: M },
@@ -90,7 +94,7 @@ export async function buildReportPdf(r: ReportInput): Promise<File> {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(106, 94, 128);
-  const prices = `Prices: veg meal ${rs(r.settings.vegMeal)}, non-veg meal ${rs(r.settings.nonvegMeal)}, chicken curry ${rs(r.settings.chickenCurry)}, egg curry ${rs(r.settings.eggCurry)}. A cancelled meal deducts its meal price; a missing extra curry on a delivered meal deducts the curry price.`;
+  const prices = `Prices: veg meal ${rs(r.settings.vegMeal)}, non-veg meal ${rs(r.settings.nonvegMeal)}, chicken curry ${rs(r.settings.chickenCurry)}, egg curry ${rs(r.settings.eggCurry)}. A cancelled meal takes its meal price off; each delivered extra curry adds its curry price. A missing extra curry adds nothing.`;
   const lines = doc.splitTextToSize(prices, W - 2 * M);
   doc.text(lines, M, y);
   y += lines.length * 11 + 4;
@@ -99,7 +103,7 @@ export async function buildReportPdf(r: ReportInput): Promise<File> {
     y += 14;
   }
   doc.text(
-    `Delivered: ${b.delivered.veg} veg + ${b.delivered.nonveg} non-veg meals. Extra curries received: ${b.curriesReceived.chicken} chicken, ${b.curriesReceived.egg} egg.`,
+    `Delivered: ${b.delivered.veg} veg + ${b.delivered.nonveg} non-veg meals. Extra curries that did not come: ${b.missingCurries}.`,
     M,
     y,
   );
@@ -109,20 +113,20 @@ export async function buildReportPdf(r: ReportInput): Promise<File> {
   doc.setTextColor(...INK);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
-  doc.text('Cancelled meals and missing curries', M, y);
-  const missed = [...b.missedMeals, ...b.missedCurries].sort((a, c) => (a.date + a.period < c.date + c.period ? -1 : 1));
+  doc.text('Cancelled meals', M, y);
+  const missed = b.missedMeals;
   autoTable(doc, {
     startY: y + 8,
     margin: { left: M, right: M },
-    head: [['Date', 'Meal', 'What', 'Deduction']],
+    head: [['Date', 'Meal', 'What', 'Taken off']],
     body: missed.length
       ? missed.map((l) => [
           day(l.date),
           PERIOD_LABEL[l.period],
-          l.kind === 'meal' ? `${l.dayType === 'veg' ? 'Veg' : 'Non-veg'} meal, cancelled by ${l.cancelledBy === 'you' ? 'you' : 'sender'}` : `${l.curryType === 'egg' ? 'Egg' : 'Chicken'} curry`,
-          rs(l.amount),
+          `${l.dayType === 'veg' ? 'Veg' : 'Non-veg'} meal, cancelled by ${l.cancelledBy === 'you' ? 'you' : 'sender'}`,
+          `- ${rs(l.amount)}`,
         ])
-      : [['-', '-', 'Nothing was cancelled or missing', rs(0)]],
+      : [['-', '-', 'No meals were cancelled', rs(0)]],
     headStyles: { fillColor: [...TARO], textColor: [255, 255, 255] },
     alternateRowStyles: { fillColor: [...TARO_PALE] },
     styles: { fontSize: 10, textColor: [...INK] },
@@ -137,13 +141,13 @@ export async function buildReportPdf(r: ReportInput): Promise<File> {
   autoTable(doc, {
     startY: y + 8,
     margin: { left: M, right: M },
-    head: [['Date', 'Day', 'Lunch', 'Dinner', 'Deduction']],
+    head: [['Date', 'Day', 'Lunch', 'Dinner', 'Amount']],
     body: r.rows.map((row) => [
       day(row.date),
       row.dayType === 'none' ? 'No delivery' : row.dayType === 'veg' ? 'Veg' : 'Non-veg',
       row.dayType === 'none' ? '-' : mealCell(row, 'lunch'),
       row.dayType === 'none' ? '-' : mealCell(row, 'dinner'),
-      row.deduction ? rs(row.deduction) : '-',
+      row.change ? `${row.change > 0 ? '+' : '-'} ${rs(Math.abs(row.change))}` : '-',
     ]),
     headStyles: { fillColor: [...TARO], textColor: [255, 255, 255] },
     alternateRowStyles: { fillColor: [...TARO_PALE] },

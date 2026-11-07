@@ -53,7 +53,7 @@ export const mealPrice = (dayType: ScheduledDayType, s: BillingSettings) => (day
 export const curryPrice = (type: CurryType | null, s: BillingSettings) => (type === 'egg' ? s.eggCurry : s.chickenCurry);
 export const CURRY_LABEL: Record<CurryType, string> = { chicken: 'Chicken curry', egg: 'Egg curry' };
 
-/** One deduction on a bill: a missed meal, or a missed extra curry. */
+/** One line on a bill: a cancelled meal (taken off) or a delivered extra curry (added). */
 export interface BillLine {
   date: ISODate;
   period: MealPeriod;
@@ -69,17 +69,21 @@ export interface BillLine {
 export interface Bill {
   start: ISODate;
   end: ISODate;
-  /** The monthly amount the deductions are taken from. */
+  /** The monthly amount the bill starts from. */
   base: number;
+  /** Cancelled meals: each takes its meal price off. */
   missedMeals: BillLine[];
-  missedCurries: BillLine[];
   mealDeductions: number;
-  curryDeductions: number;
-  totalDeductions: number;
-  /** base − deductions (never below zero). */
+  /** Delivered extra curries: each adds its curry price. */
+  addedCurries: BillLine[];
+  curryCharges: number;
+  /** Delivered extra curries by type: how many, and what they add. */
+  curriesAdded: Record<CurryType, { count: number; amount: number }>;
+  /** Extra curries that did not come (nothing is added for them). */
+  missingCurries: number;
+  /** base − cancelled meals + delivered extra curries (never below zero). */
   nextAmount: number;
   delivered: { veg: number; nonveg: number };
-  curriesReceived: Record<CurryType, number>;
   /** Today's meals still pending and future meals: not counted yet. */
   notYetCounted: number;
 }
@@ -88,9 +92,9 @@ export interface Bill {
 const hasOutcome = (m: EffectiveMeal) => m.timing === 'past' || m.timing === 'today';
 
 /**
- * Deductions for a date range: each missed meal at its meal price (the extra
- * curry is not deducted again), and each missed extra curry on a delivered
- * non-veg meal at the chicken or egg curry price.
+ * The bill for a date range: each cancelled meal takes its meal price off the
+ * monthly amount, and each delivered extra curry adds the chicken or egg
+ * curry price. A missing extra curry adds nothing.
  */
 export function computeBill(
   start: ISODate,
@@ -101,9 +105,10 @@ export function computeBill(
   settings: BillingSettings,
 ): Bill {
   const missedMeals: BillLine[] = [];
-  const missedCurries: BillLine[] = [];
+  const addedCurries: BillLine[] = [];
   const delivered = { veg: 0, nonveg: 0 };
-  const curriesReceived: Record<CurryType, number> = { chicken: 0, egg: 0 };
+  const curriesAdded: Record<CurryType, { count: number; amount: number }> = { chicken: { count: 0, amount: 0 }, egg: { count: 0, amount: 0 } };
+  let missingCurries = 0;
   let notYetCounted = 0;
 
   for (const date of eachDay(start, end)) {
@@ -127,38 +132,42 @@ export function computeBill(
       }
       delivered[m.dayType]++;
       if (m.dayType !== 'nonveg') continue;
+      if (!m.extraCurryReceived) {
+        missingCurries++;
+        continue;
+      }
       const type = m.extraCurryType ?? 'chicken';
-      if (m.extraCurryReceived) curriesReceived[type]++;
-      else
-        missedCurries.push({
-          date,
-          period: m.period,
-          kind: 'curry',
-          dayType: 'nonveg',
-          curryType: type,
-          cancelledBy: null,
-          label: `${PERIOD_LABEL[m.period]}: ${CURRY_LABEL[type].toLowerCase()} missing`,
-          amount: curryPrice(type, settings),
-        });
+      const amount = curryPrice(type, settings);
+      curriesAdded[type].count++;
+      curriesAdded[type].amount += amount;
+      addedCurries.push({
+        date,
+        period: m.period,
+        kind: 'curry',
+        dayType: 'nonveg',
+        curryType: type,
+        cancelledBy: null,
+        label: `${PERIOD_LABEL[m.period]}: ${CURRY_LABEL[type].toLowerCase()}`,
+        amount,
+      });
     }
   }
 
   const sum = (lines: BillLine[]) => lines.reduce((t, l) => t + l.amount, 0);
   const mealDeductions = sum(missedMeals);
-  const curryDeductions = sum(missedCurries);
-  const totalDeductions = mealDeductions + curryDeductions;
+  const curryCharges = sum(addedCurries);
   return {
     start,
     end,
     base: settings.monthlyAmount,
     missedMeals,
-    missedCurries,
     mealDeductions,
-    curryDeductions,
-    totalDeductions,
-    nextAmount: Math.max(0, settings.monthlyAmount - totalDeductions),
+    addedCurries,
+    curryCharges,
+    curriesAdded,
+    missingCurries,
+    nextAmount: Math.max(0, settings.monthlyAmount - mealDeductions + curryCharges),
     delivered,
-    curriesReceived,
     notYetCounted,
   };
 }
@@ -173,7 +182,8 @@ export interface DayRow {
     cancelledBy: CancelledBy | null;
     curry: { type: CurryType; received: boolean } | null;
   }>;
-  deduction: number;
+  /** Delivered extra curries added − cancelled meals taken off, for this day. */
+  change: number;
 }
 
 export function dayRows(start: ISODate, end: ISODate, overrides: OverrideMap, today: ISODate, nowMinutes: number | undefined, settings: BillingSettings): DayRow[] {
@@ -191,7 +201,7 @@ export function dayRows(start: ISODate, end: ISODate, overrides: OverrideMap, to
             ? { type: m.extraCurryType ?? 'chicken', received: m.extraCurryReceived === true }
             : null,
       })),
-      deduction: bill.totalDeductions,
+      change: bill.curryCharges - bill.mealDeductions,
     };
   });
 }

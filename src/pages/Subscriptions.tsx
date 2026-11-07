@@ -101,8 +101,8 @@ function BillingSettingsCard() {
         )}
       </div>
       <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
-        Each subscription starts on day {billing.billingDay} of the month. A missed meal takes its meal price off the next subscription, and a missed extra
-        curry takes the curry price off.{!isAdmin && ' Only an admin can change these.'}
+        Each subscription starts on day {billing.billingDay} of the month. A cancelled meal takes its meal price off the next subscription, and each delivered
+        extra curry adds its curry price.{!isAdmin && ' Only an admin can change these.'}
       </p>
       {editing ? (
         <form className="space-y-3" onSubmit={save}>
@@ -270,8 +270,8 @@ function MonthRow({ period, payment, onDetails }: { period: BillingPeriod; payme
         </div>
       </div>
       <p className="mt-2 text-sm">
-        Missed: {bill.missedMeals.length} meal{bill.missedMeals.length === 1 ? '' : 's'}, {bill.missedCurries.length} curr
-        {bill.missedCurries.length === 1 ? 'y' : 'ies'} · <strong>− {formatAmount(bill.totalDeductions)}</strong>
+        {bill.missedMeals.length} cancelled meal{bill.missedMeals.length === 1 ? '' : 's'} <strong>− {formatAmount(bill.mealDeductions)}</strong> ·{' '}
+        {bill.addedCurries.length} extra curr{bill.addedCurries.length === 1 ? 'y' : 'ies'} <strong>+ {formatAmount(bill.curryCharges)}</strong>
         {current && ' so far'}
       </p>
 
@@ -293,7 +293,7 @@ function MonthRow({ period, payment, onDetails }: { period: BillingPeriod; payme
       ) : (
         <div className="mt-2 flex flex-wrap gap-1">
           <Button variant="ghost" className="min-h-9 px-3 text-xs" onClick={onDetails}>
-            Missed dates & next amount
+            Details & next amount
           </Button>
           <Link
             to={`/reports?period=${period.start}`}
@@ -353,7 +353,7 @@ export function SubscriptionsPage() {
       <div>
         <h1 className="text-3xl">Subscriptions</h1>
         <p className="text-sm text-slate-600 dark:text-slate-300">
-          Each subscription runs for a month from day {billing.billingDay}. Missed meals and missed extra curries are taken off the next one.
+          Each subscription runs for a month from day {billing.billingDay}. The next one is the monthly amount, minus cancelled meals, plus delivered extra curries.
         </p>
       </div>
 

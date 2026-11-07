@@ -137,16 +137,16 @@ export function ReportsPage() {
         <Card>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="text-xl">{mode === 'month' ? 'Amount' : 'Deductions'}</h2>
+              <h2 className="text-xl">{mode === 'month' ? 'Amount' : 'Amount change'}</h2>
               <p className="text-sm text-slate-600 dark:text-slate-300">
                 {money.missedMeals.length} cancelled meal{money.missedMeals.length === 1 ? '' : 's'} (− {formatAmount(money.mealDeductions)}) ·{' '}
-                {money.missedCurries.length} missed curr{money.missedCurries.length === 1 ? 'y' : 'ies'} (− {formatAmount(money.curryDeductions)})
+                {money.addedCurries.length} extra curr{money.addedCurries.length === 1 ? 'y' : 'ies'} (+ {formatAmount(money.curryCharges)})
               </p>
             </div>
             <div className="text-right">
-              <p className="font-display text-2xl leading-none">{mode === 'month' ? formatAmount(money.nextAmount) : `− ${formatAmount(money.totalDeductions)}`}</p>
+              <p className="font-display text-2xl leading-none">{mode === 'month' ? formatAmount(money.nextAmount) : `${money.curryCharges >= money.mealDeductions ? '+' : '−'} ${formatAmount(Math.abs(money.curryCharges - money.mealDeductions))}`}</p>
               <p className="text-xs text-slate-600 dark:text-slate-300">
-                {mode === 'month' ? `${formatAmount(money.base)} − ${formatAmount(money.totalDeductions)}, for next month` : 'taken off the subscription'}
+                {mode === 'month' ? `${formatAmount(money.base)} − ${formatAmount(money.mealDeductions)} + ${formatAmount(money.curryCharges)}, for next month` : 'curries added − cancelled meals'}
               </p>
             </div>
           </div>
@@ -179,7 +179,7 @@ export function ReportsPage() {
             <StatCard label="Scheduled days" emoji="📅" tint="cream" value={s.scheduledDays} hint="Sundays excluded" onClick={open('scheduledDays')} />
             {s.pending > 0 && <StatCard label="Pending today" emoji="💫" tint="butter" value={s.pending} hint="lunch 2 PM · dinner 10 PM" onClick={open('pending')} />}
             <StatCard label="Planned" emoji="🔮" tint="lavender" value={s.planned.meals} hint="future, not counted yet" onClick={open('planned')} />
-            <StatCard label="Extra curries" emoji={<CurryIcon className="h-6 w-6" />} tint="peach" value={a.extraCurryReceived} hint={`${money.curriesReceived.chicken} chicken · ${money.curriesReceived.egg} egg · ${a.extraCurryMissing} missing`} onClick={open('extraCurry')} />
+            <StatCard label="Extra curries" emoji={<CurryIcon className="h-6 w-6" />} tint="peach" value={a.extraCurryReceived} hint={`${money.curriesAdded.chicken.count} chicken · ${money.curriesAdded.egg.count} egg · ${a.extraCurryMissing} missing`} onClick={open('extraCurry')} />
           </div>
 
           <section aria-labelledby="by-category" className="space-y-3">

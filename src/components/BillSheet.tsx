@@ -22,9 +22,11 @@ function Line({ line }: { line: BillLine }) {
     <li className="flex items-center justify-between gap-3 py-1.5 text-sm">
       <span className="min-w-0">
         <span className="font-semibold">{formatShort(line.date)}</span> · {PERIOD_LABEL[line.period]} ·{' '}
-        {line.kind === 'meal' ? `${line.dayType === 'veg' ? 'Veg' : 'Non-veg'} meal cancelled by ${line.cancelledBy === 'you' ? 'you' : 'sender'}` : `${CURRY_LABEL[line.curryType ?? 'chicken']} missing`}
+        {line.kind === 'meal' ? `${line.dayType === 'veg' ? 'Veg' : 'Non-veg'} meal cancelled by ${line.cancelledBy === 'you' ? 'you' : 'sender'}` : CURRY_LABEL[line.curryType ?? 'chicken']}
       </span>
-      <span className="shrink-0 font-semibold tabular-nums">− {formatAmount(line.amount)}</span>
+      <span className="shrink-0 font-semibold tabular-nums">
+        {line.kind === 'meal' ? '−' : '+'} {formatAmount(line.amount)}
+      </span>
     </li>
   );
 }
@@ -158,9 +160,9 @@ export function BillSheet({ initial, onClose }: { initial: BillingPeriod; onClos
                   </div>
                   <div className="flex justify-between gap-3">
                     <dt>
-                      Missed extra curries <span className="text-slate-500 dark:text-slate-300">({bill.missedCurries.length})</span>
+                      Extra curries delivered <span className="text-slate-500 dark:text-slate-300">({bill.addedCurries.length})</span>
                     </dt>
-                    <dd className="font-semibold tabular-nums">− {formatAmount(bill.curryDeductions)}</dd>
+                    <dd className="font-semibold tabular-nums">+ {formatAmount(bill.curryCharges)}</dd>
                   </div>
                   <div className="flex justify-between gap-3 border-t border-slate-900/10 pt-2 dark:border-white/10">
                     <dt className="font-display text-lg">For {nextTitle}</dt>
@@ -190,25 +192,44 @@ export function BillSheet({ initial, onClose }: { initial: BillingPeriod; onClos
                 )}
               </section>
 
-              <section aria-labelledby="missed-curries">
-                <h3 id="missed-curries" className="flex items-center gap-1.5 font-display text-lg">
-                  <CurryIcon className="h-5 w-5" /> Missed extra curries · − {formatAmount(bill.curryDeductions)}
+              <section aria-labelledby="added-curries">
+                <h3 id="added-curries" className="flex items-center gap-1.5 font-display text-lg">
+                  <CurryIcon className="h-5 w-5" /> Extra curries delivered · + {formatAmount(bill.curryCharges)}
                 </h3>
-                {bill.missedCurries.length === 0 ? (
-                  <p className="text-sm text-slate-600 dark:text-slate-300">Every extra curry came. ✿</p>
-                ) : (
-                  <ul className="divide-y divide-slate-900/5 dark:divide-white/10">
-                    {bill.missedCurries.map((l) => (
-                      <Line key={`${l.date}-${l.period}`} line={l} />
-                    ))}
-                  </ul>
+                <ul className="text-sm">
+                  <li className="flex justify-between gap-3 py-1">
+                    <span>
+                      Chicken curry: {bill.curriesAdded.chicken.count} × {formatAmount(billing.chickenCurry)}
+                    </span>
+                    <span className="font-semibold tabular-nums">+ {formatAmount(bill.curriesAdded.chicken.amount)}</span>
+                  </li>
+                  <li className="flex justify-between gap-3 py-1">
+                    <span>
+                      Egg curry: {bill.curriesAdded.egg.count} × {formatAmount(billing.eggCurry)}
+                    </span>
+                    <span className="font-semibold tabular-nums">+ {formatAmount(bill.curriesAdded.egg.amount)}</span>
+                  </li>
+                </ul>
+                {bill.missingCurries > 0 && (
+                  <p className="text-xs text-slate-600 dark:text-slate-300">
+                    {bill.missingCurries} extra curr{bill.missingCurries === 1 ? 'y' : 'ies'} did not come, so nothing is added for {bill.missingCurries === 1 ? 'it' : 'them'}.
+                  </p>
+                )}
+                {bill.addedCurries.length > 0 && (
+                  <details className="mt-1">
+                    <summary className="cursor-pointer text-sm font-semibold text-emerald-700 dark:text-emerald-300">Show the dates</summary>
+                    <ul className="divide-y divide-slate-900/5 dark:divide-white/10">
+                      {bill.addedCurries.map((l) => (
+                        <Line key={`${l.date}-${l.period}`} line={l} />
+                      ))}
+                    </ul>
+                  </details>
                 )}
               </section>
 
               <p className="text-xs text-slate-600 dark:text-slate-300">
                 Prices: veg meal {formatAmount(billing.vegMeal)}, non-veg meal {formatAmount(billing.nonvegMeal)}, chicken curry{' '}
-                {formatAmount(billing.chickenCurry)}, egg curry {formatAmount(billing.eggCurry)}. Received: {bill.delivered.veg + bill.delivered.nonveg} meals,{' '}
-                {bill.curriesReceived.chicken} chicken and {bill.curriesReceived.egg} egg curries.
+                {formatAmount(billing.chickenCurry)}, egg curry {formatAmount(billing.eggCurry)}. Delivered: {bill.delivered.veg + bill.delivered.nonveg} meals.
               </p>
               {nextPayment && (
                 <p className="text-sm font-semibold">
