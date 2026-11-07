@@ -21,8 +21,8 @@ export function toOverrideMap(rows: readonly MealOverride[]): Map<string, MealOv
 /** The standard assumption for a scheduled meal with no saved record. */
 export function defaultValues(dayType: ScheduledDayType): MealValues {
   return dayType === 'veg'
-    ? { deliveryStatus: 'delivered', mainDish: null, extraCurryReceived: null, extraCurryType: null }
-    : { deliveryStatus: 'delivered', mainDish: 'chicken', extraCurryReceived: true, extraCurryType: 'chicken' };
+    ? { deliveryStatus: 'delivered', mainDish: null, extraCurryReceived: null, extraCurryType: null, cancelledBy: null }
+    : { deliveryStatus: 'delivered', mainDish: 'chicken', extraCurryReceived: true, extraCurryType: 'chicken', cancelledBy: null };
 }
 
 /** Minutes after local midnight from which today's meal is assumed delivered. */
@@ -52,14 +52,17 @@ export function isBeforeCutoff(date: ISODate, period: MealPeriod, today: ISODate
  */
 export function normalizeValues(dayType: ScheduledDayType, values: MealValues): MealValues {
   if (dayType === 'veg' || values.deliveryStatus === 'not_received') {
-    return { deliveryStatus: values.deliveryStatus, mainDish: null, extraCurryReceived: null, extraCurryType: null };
+    const cancelledBy = values.deliveryStatus === 'not_received' ? values.cancelledBy ?? 'sender' : null;
+    return { deliveryStatus: values.deliveryStatus, mainDish: null, extraCurryReceived: null, extraCurryType: null, cancelledBy };
   }
   const d = defaultValues('nonveg');
   return {
     deliveryStatus: values.deliveryStatus,
     mainDish: values.mainDish ?? d.mainDish,
     extraCurryReceived: values.extraCurryReceived ?? d.extraCurryReceived,
-    extraCurryType: values.extraCurryType ?? d.extraCurryType,
+    // A missing extra curry has no type to choose; it is counted as chicken.
+    extraCurryType: values.extraCurryReceived === false ? 'chicken' : values.extraCurryType ?? d.extraCurryType,
+    cancelledBy: null,
   };
 }
 
@@ -68,7 +71,8 @@ export function valuesEqual(a: MealValues, b: MealValues): boolean {
     a.deliveryStatus === b.deliveryStatus &&
     a.mainDish === b.mainDish &&
     a.extraCurryReceived === b.extraCurryReceived &&
-    a.extraCurryType === b.extraCurryType
+    a.extraCurryType === b.extraCurryType &&
+    a.cancelledBy === b.cancelledBy
   );
 }
 
@@ -78,13 +82,14 @@ export function isDefault(dayType: ScheduledDayType, values: MealValues): boolea
 }
 
 export function overrideValues(
-  o: Pick<MealOverride, 'delivery_status' | 'main_dish' | 'extra_curry_received' | 'extra_curry_type'>,
+  o: Pick<MealOverride, 'delivery_status' | 'main_dish' | 'extra_curry_received' | 'extra_curry_type' | 'cancelled_by'>,
 ): MealValues {
   return {
     deliveryStatus: o.delivery_status,
     mainDish: o.main_dish,
     extraCurryReceived: o.extra_curry_received,
     extraCurryType: o.extra_curry_type ?? null,
+    cancelledBy: o.cancelled_by ?? null,
   };
 }
 

@@ -55,24 +55,31 @@ describe('next subscription amount', () => {
     expect(bill.mealDeductions).toBe(240);
   });
 
-  it('deducts missed extra curries at ₹30 (egg) and ₹70 (chicken; older records count as chicken)', () => {
+  it('deducts a missing extra curry at the chicken curry price (₹70); there is no curry type to choose', () => {
     expect(bill.missedCurries.map((l) => [l.date, l.period, l.curryType, l.amount])).toEqual([
-      ['2026-10-28', 'lunch', 'egg', 30],
+      ['2026-10-28', 'lunch', 'chicken', 70],
       ['2026-10-28', 'dinner', 'chicken', 70],
     ]);
-    expect(bill.curryDeductions).toBe(100);
+    expect(bill.curryDeductions).toBe(140);
   });
 
-  it('next amount = 6600 − 240 − 100', () => {
-    expect(bill).toMatchObject({ base: 6600, totalDeductions: 340, nextAmount: 6260, notYetCounted: 0 });
+  it('next amount = 6600 − 240 − 140', () => {
+    expect(bill).toMatchObject({ base: 6600, totalDeductions: 380, nextAmount: 6220, notYetCounted: 0 });
     expect(bill.curriesReceived.egg).toBe(1);
   });
 
   it('uses the edited prices and monthly amount', () => {
     const custom = { ...DEFAULT_BILLING, monthlyAmount: 7000, vegMeal: 100, chickenCurry: 80 };
     const b = computeBill('2026-10-01', '2026-10-31', map, '2026-11-07', undefined, custom);
-    expect(b.totalDeductions).toBe(100 + 150 + 30 + 80);
-    expect(b.nextAmount).toBe(7000 - 360);
+    expect(b.totalDeductions).toBe(100 + 150 + 80 + 80);
+    expect(b.nextAmount).toBe(7000 - 410);
+  });
+
+  it('records who cancelled each meal (sender unless marked as you)', () => {
+    const m = toOverrideMap([row({ meal_date: '2026-10-26', meal_period: 'dinner', delivery_status: 'not_received', main_dish: null, extra_curry_received: null, cancelled_by: 'you' })]);
+    const b = computeBill('2026-10-26', '2026-10-26', m, '2026-11-07', undefined, DEFAULT_BILLING);
+    expect(b.missedMeals[0]).toMatchObject({ cancelledBy: 'you', amount: 90 });
+    expect(bill.missedMeals[0].cancelledBy).toBe('sender');
   });
 
   it('pending and future meals are not deducted yet', () => {

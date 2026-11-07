@@ -43,7 +43,7 @@ export function summarizeDay(date: ISODate, map: OverrideMap, today: ISODate, no
 
 const MARK_TEXT: Record<Exclude<MealMark, null>, string> = {
   delivered: 'delivered',
-  missed: 'not delivered',
+  missed: 'cancelled',
   pending: 'pending',
 };
 
@@ -129,7 +129,7 @@ export function CalendarLegend() {
       <li className="flex items-center gap-2"><TypeMark type="veg" className="h-3.5 w-3.5" />Veg day</li>
       <li className="flex items-center gap-2"><TypeMark type="nonveg" className="h-3.5 w-3.5" />Non-veg day</li>
       <li className="flex items-center gap-2"><MealIcon mark="delivered" className="h-3.5 w-3.5" />Delivered</li>
-      <li className="flex items-center gap-2"><MealIcon mark="missed" className="h-3.5 w-3.5" />Not delivered</li>
+      <li className="flex items-center gap-2"><MealIcon mark="missed" className="h-3.5 w-3.5" />Cancelled</li>
       <li className="flex items-center gap-2"><MealIcon mark="pending" className="h-3.5 w-3.5" />Pending</li>
       <li className="flex items-center gap-2"><CurryMarkIcon mark={{ type: 'chicken', received: true }} className="h-4 w-4" />Chicken curry</li>
       <li className="flex items-center gap-2"><CurryMarkIcon mark={{ type: 'egg', received: true }} className="h-4 w-4" />Egg curry</li>

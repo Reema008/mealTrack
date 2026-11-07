@@ -4,8 +4,8 @@ import { NetworkError } from '../../src/lib/errors';
 import type { SaveOutcome, SaveRequest } from '../../src/data/api';
 
 const H = 'household-1';
-const egg = { deliveryStatus: 'delivered', mainDish: 'egg', extraCurryReceived: true, extraCurryType: 'chicken' } as const;
-const missing = { deliveryStatus: 'not_received', mainDish: 'egg', extraCurryReceived: true, extraCurryType: 'chicken' } as const;
+const egg = { deliveryStatus: 'delivered', mainDish: 'egg', extraCurryReceived: true, extraCurryType: 'chicken', cancelledBy: null } as const;
+const missing = { deliveryStatus: 'not_received', mainDish: 'egg', extraCurryReceived: true, extraCurryType: 'chicken', cancelledBy: null } as const;
 
 describe('15. offline outbox', () => {
   it('keeps one entry per meal and the version the first edit was based on', () => {

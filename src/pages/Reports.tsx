@@ -139,7 +139,7 @@ export function ReportsPage() {
             <div className="min-w-0">
               <h2 className="text-xl">{mode === 'month' ? 'Amount' : 'Deductions'}</h2>
               <p className="text-sm text-slate-600 dark:text-slate-300">
-                {money.missedMeals.length} missed meal{money.missedMeals.length === 1 ? '' : 's'} (− {formatAmount(money.mealDeductions)}) ·{' '}
+                {money.missedMeals.length} cancelled meal{money.missedMeals.length === 1 ? '' : 's'} (− {formatAmount(money.mealDeductions)}) ·{' '}
                 {money.missedCurries.length} missed curr{money.missedCurries.length === 1 ? 'y' : 'ies'} (− {formatAmount(money.curryDeductions)})
               </p>
             </div>
@@ -174,7 +174,7 @@ export function ReportsPage() {
           <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
             <StatCard label="Delivery success" emoji="✨" tint="sage" value={formatPercent(a.successRate)} hint={`${a.delivered} of ${a.meals} meals so far`} onClick={open('success')} />
             <StatCard label="Delivered" emoji="💜" tint="cream" value={a.delivered} hint={a.deliveredExplicit ? `${a.deliveredExplicit} edited` : 'as scheduled'} onClick={open('delivered')} />
-            <StatCard label="Not received" emoji="🚫" tint="blush" value={a.notReceived} hint="tap for the dates" onClick={open('notReceived')} />
+            <StatCard label="Cancelled" emoji="🚫" tint="blush" value={a.notReceived} hint={`${money.missedMeals.filter((l) => l.cancelledBy !== 'you').length} by sender · ${money.missedMeals.filter((l) => l.cancelledBy === 'you').length} by you`} onClick={open('notReceived')} />
             <StatCard label="Scheduled meals" emoji="🗓️" tint="lavender" value={s.scheduledTotal} hint={`${s.scheduledLunch} lunch · ${s.scheduledDinner} dinner`} onClick={open('scheduled')} />
             <StatCard label="Scheduled days" emoji="📅" tint="cream" value={s.scheduledDays} hint="Sundays excluded" onClick={open('scheduledDays')} />
             {s.pending > 0 && <StatCard label="Pending today" emoji="💫" tint="butter" value={s.pending} hint="lunch 2 PM · dinner 10 PM" onClick={open('pending')} />}
@@ -198,7 +198,7 @@ export function ReportsPage() {
               parts={[
                 { label: 'Delivered (edited)', value: a.deliveredExplicit, className: 'st-delivered' },
                 { label: 'Delivered (as scheduled)', value: a.deliveredAssumed, className: 'st-delivered-soft' },
-                { label: 'Not received', value: a.notReceived, className: 'st-missed' },
+                { label: 'Cancelled', value: a.notReceived, className: 'st-missed' },
                 { label: 'Pending', value: s.pending, className: 'st-pending' },
                 { label: 'Planned', value: s.planned.meals, className: 'st-planned' },
               ]}
@@ -215,7 +215,7 @@ export function ReportsPage() {
               <li>Extra curries count only non-veg meals that were delivered.</li>
               <li>Today’s meals stay <strong>pending</strong> until 2 PM (lunch) and 10 PM (dinner) unless someone marks them.</li>
               <li>Future meals are <strong>planned</strong>. They are left out of delivered totals and the success rate.</li>
-              <li>Extra curries are counted for each non-veg meal; a meal that was not delivered had no extra curries.</li>
+              <li>Extra curries are counted for each non-veg meal; a cancelled meal had no extra curries.</li>
               <li>Success rate = delivered ÷ meals with an outcome so far (pending and planned meals are left out).</li>
             </ul>
             {s.planned.meals > 0 && (

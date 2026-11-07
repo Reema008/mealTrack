@@ -24,7 +24,7 @@ const INK = [43, 37, 56] as const;
 
 const STATUS: Record<DayRow['meals'][number]['status'], string> = {
   delivered: 'Delivered',
-  not_received: 'NOT DELIVERED',
+  not_received: 'CANCELLED',
   pending: 'Pending',
   planned: 'Planned',
 };
@@ -33,7 +33,8 @@ function mealCell(row: DayRow, period: 'lunch' | 'dinner'): string {
   const m = row.meals.find((x) => x.period === period);
   if (!m) return '-';
   const curry = m.curry ? `\n${m.curry.type === 'egg' ? 'Egg' : 'Chicken'} curry: ${m.curry.received ? 'received' : 'MISSING'}` : '';
-  return STATUS[m.status] + curry;
+  const by = m.status === 'not_received' ? (m.cancelledBy === 'you' ? ' by you' : ' by sender') : '';
+  return STATUS[m.status] + by + curry;
 }
 
 /** Builds the report PDF and returns it as a file (loaded on demand, so the app stays small). */
@@ -64,7 +65,7 @@ export async function buildReportPdf(r: ReportInput): Promise<File> {
   const amountRows: Array<[string, string]> = [];
   if (r.isSubscriptionPeriod) amountRows.push(['Monthly subscription amount', rs(b.base)]);
   amountRows.push(
-    [`Missed meals (${b.missedMeals.length})`, `- ${rs(b.mealDeductions)}`],
+    [`Cancelled meals (${b.missedMeals.length})`, `- ${rs(b.mealDeductions)}`],
     [`Missed extra curries (${b.missedCurries.length})`, `- ${rs(b.curryDeductions)}`],
     ['Total deductions', `- ${rs(b.totalDeductions)}`],
   );
@@ -89,7 +90,7 @@ export async function buildReportPdf(r: ReportInput): Promise<File> {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(106, 94, 128);
-  const prices = `Prices: veg meal ${rs(r.settings.vegMeal)}, non-veg meal ${rs(r.settings.nonvegMeal)}, chicken curry ${rs(r.settings.chickenCurry)}, egg curry ${rs(r.settings.eggCurry)}. A missed meal deducts its meal price; a missed extra curry on a delivered meal deducts the curry price.`;
+  const prices = `Prices: veg meal ${rs(r.settings.vegMeal)}, non-veg meal ${rs(r.settings.nonvegMeal)}, chicken curry ${rs(r.settings.chickenCurry)}, egg curry ${rs(r.settings.eggCurry)}. A cancelled meal deducts its meal price; a missing extra curry on a delivered meal deducts the curry price.`;
   const lines = doc.splitTextToSize(prices, W - 2 * M);
   doc.text(lines, M, y);
   y += lines.length * 11 + 4;
@@ -108,20 +109,20 @@ export async function buildReportPdf(r: ReportInput): Promise<File> {
   doc.setTextColor(...INK);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
-  doc.text('Missed meals and curries', M, y);
+  doc.text('Cancelled meals and missing curries', M, y);
   const missed = [...b.missedMeals, ...b.missedCurries].sort((a, c) => (a.date + a.period < c.date + c.period ? -1 : 1));
   autoTable(doc, {
     startY: y + 8,
     margin: { left: M, right: M },
-    head: [['Date', 'Meal', 'What was missed', 'Deduction']],
+    head: [['Date', 'Meal', 'What', 'Deduction']],
     body: missed.length
       ? missed.map((l) => [
           day(l.date),
           PERIOD_LABEL[l.period],
-          l.kind === 'meal' ? `Whole ${l.dayType === 'veg' ? 'veg' : 'non-veg'} meal` : `${l.curryType === 'egg' ? 'Egg' : 'Chicken'} curry`,
+          l.kind === 'meal' ? `${l.dayType === 'veg' ? 'Veg' : 'Non-veg'} meal, cancelled by ${l.cancelledBy === 'you' ? 'you' : 'sender'}` : `${l.curryType === 'egg' ? 'Egg' : 'Chicken'} curry`,
           rs(l.amount),
         ])
-      : [['-', '-', 'Nothing was missed', rs(0)]],
+      : [['-', '-', 'Nothing was cancelled or missing', rs(0)]],
     headStyles: { fillColor: [...TARO], textColor: [255, 255, 255] },
     alternateRowStyles: { fillColor: [...TARO_PALE] },
     styles: { fontSize: 10, textColor: [...INK] },
@@ -149,7 +150,7 @@ export async function buildReportPdf(r: ReportInput): Promise<File> {
     styles: { fontSize: 9, textColor: [...INK], cellPadding: 4 },
     columnStyles: { 4: { halign: 'right' } },
     didParseCell: (d) => {
-      if (d.section === 'body' && typeof d.cell.raw === 'string' && /NOT DELIVERED|MISSING/.test(d.cell.raw)) d.cell.styles.fontStyle = 'bold';
+      if (d.section === 'body' && typeof d.cell.raw === 'string' && /CANCELLED|MISSING/.test(d.cell.raw)) d.cell.styles.fontStyle = 'bold';
     },
   });
 

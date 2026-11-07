@@ -1,7 +1,7 @@
 import { formatLong } from '../domain/dates';
 import { MEAL_CUTOFF_MINUTES } from '../domain/meals';
 import { PERIOD_LABEL } from '../domain/schedule';
-import type { EffectiveMeal, MealPeriod } from '../domain/types';
+import type { CancelledBy, EffectiveMeal, MealPeriod } from '../domain/types';
 import { Button, StatusBadge, type BadgeKind } from './ui';
 
 /** Tag for a meal: none when it simply follows the schedule. */
@@ -19,13 +19,18 @@ export function cutoffLabel(period: MealPeriod): string {
   return `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`;
 }
 
+/** "Cancelled by sender" (the default) or "Cancelled by you". */
+export function cancelledLabel(by: CancelledBy | null | undefined): string {
+  return by === 'you' ? 'Cancelled by you' : 'Cancelled by sender';
+}
+
 /** Whether to show dish/curry as expected (not yet received). */
 const isUpcoming = (meal: EffectiveMeal) => meal.timing === 'future' || meal.timing === 'pending';
 
 export function deliveryLabel(meal: EffectiveMeal): string {
   if (meal.timing === 'pending') return 'Pending';
-  if (meal.timing === 'future') return meal.deliveryStatus === 'delivered' ? 'Scheduled' : 'Not expected';
-  return meal.deliveryStatus === 'delivered' ? 'Delivered' : 'Not Received';
+  if (meal.deliveryStatus === 'not_received') return cancelledLabel(meal.cancelledBy);
+  return meal.timing === 'future' ? 'Scheduled' : 'Delivered';
 }
 
 const PERIOD_STYLE: Record<MealPeriod, { emoji: string; tint: string }> = {
@@ -69,7 +74,7 @@ export function MealCard({ meal, pending, onEdit }: { meal: EffectiveMeal; pendi
             <Row label="Main dish" value={meal.mainDish === 'egg' ? 'Egg' : 'Chicken'} />
             <Row
               label="Extra curries"
-              value={`${meal.extraCurryType === 'egg' ? 'Egg' : 'Chicken'} · ${meal.extraCurryReceived ? (upcoming ? 'Expected' : 'Received') : upcoming ? 'Not expected' : 'Not received'}`}
+              value={meal.extraCurryReceived ? `${meal.extraCurryType === 'egg' ? 'Egg' : 'Chicken'} · ${upcoming ? 'Expected' : 'Received'}` : upcoming ? 'Not expected' : 'Not received'}
               bad={!meal.extraCurryReceived}
             />
           </>

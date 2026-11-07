@@ -1,7 +1,7 @@
 import { addDays, addMonths, eachDay } from './dates';
 import { mealsForDate } from './meals';
 import { getDayType, PERIOD_LABEL } from './schedule';
-import type { CurryType, EffectiveMeal, ISODate, MealPeriod, OverrideMap, ScheduledDayType } from './types';
+import type { CancelledBy, CurryType, EffectiveMeal, ISODate, MealPeriod, OverrideMap, ScheduledDayType } from './types';
 
 /** Prices and the monthly subscription, as set by an admin (all in rupees). */
 export interface BillingSettings {
@@ -60,6 +60,8 @@ export interface BillLine {
   kind: 'meal' | 'curry';
   dayType: ScheduledDayType;
   curryType: CurryType | null;
+  /** For a cancelled meal: who cancelled it. */
+  cancelledBy: CancelledBy | null;
   label: string;
   amount: number;
 }
@@ -117,7 +119,8 @@ export function computeBill(
           kind: 'meal',
           dayType: m.dayType,
           curryType: null,
-          label: `${PERIOD_LABEL[m.period]} not delivered (${m.dayType === 'veg' ? 'veg' : 'non-veg'})`,
+          cancelledBy: m.cancelledBy ?? 'sender',
+          label: `${PERIOD_LABEL[m.period]} cancelled by ${m.cancelledBy === 'you' ? 'you' : 'sender'} (${m.dayType === 'veg' ? 'veg' : 'non-veg'})`,
           amount: mealPrice(m.dayType, settings),
         });
         continue;
@@ -133,6 +136,7 @@ export function computeBill(
           kind: 'curry',
           dayType: 'nonveg',
           curryType: type,
+          cancelledBy: null,
           label: `${PERIOD_LABEL[m.period]}: ${CURRY_LABEL[type].toLowerCase()} missing`,
           amount: curryPrice(type, settings),
         });
@@ -166,6 +170,7 @@ export interface DayRow {
   meals: Array<{
     period: MealPeriod;
     status: 'delivered' | 'not_received' | 'pending' | 'planned';
+    cancelledBy: CancelledBy | null;
     curry: { type: CurryType; received: boolean } | null;
   }>;
   deduction: number;
@@ -180,6 +185,7 @@ export function dayRows(start: ISODate, end: ISODate, overrides: OverrideMap, to
       meals: mealsForDate(date, overrides, today, nowMinutes).map((m) => ({
         period: m.period,
         status: m.timing === 'pending' ? 'pending' : m.timing === 'future' && m.deliveryStatus === 'delivered' ? 'planned' : m.deliveryStatus,
+        cancelledBy: m.deliveryStatus === 'not_received' ? m.cancelledBy ?? 'sender' : null,
         curry:
           m.dayType === 'nonveg' && m.deliveryStatus === 'delivered'
             ? { type: m.extraCurryType ?? 'chicken', received: m.extraCurryReceived === true }

@@ -21,6 +21,7 @@ export function MealEditSheet({ meal, pending, onClose }: { meal: EffectiveMeal;
     mainDish: meal.mainDish,
     extraCurryReceived: meal.extraCurryReceived,
     extraCurryType: meal.extraCurryType,
+    cancelledBy: meal.cancelledBy,
   }));
   // An unsynced edit has no real server version; the outbox keeps the
   // version its first queued edit was based on.
@@ -104,9 +105,20 @@ export function MealEditSheet({ meal, pending, onClose }: { meal: EffectiveMeal;
             onChange={(v) => setValues({ ...values, deliveryStatus: v })}
             options={[
               { value: 'delivered', label: 'Delivered' },
-              { value: 'not_received', label: 'Not received', tone: 'bad' },
+              { value: 'not_received', label: 'Cancelled', tone: 'bad' },
             ]}
           />
+          {values.deliveryStatus === 'not_received' && (
+            <Segmented
+              label="Cancelled by"
+              value={values.cancelledBy ?? 'sender'}
+              onChange={(v) => setValues({ ...values, cancelledBy: v })}
+              options={[
+                { value: 'sender', label: 'Sender' },
+                { value: 'you', label: 'You' },
+              ]}
+            />
+          )}
           {nonveg && values.deliveryStatus === 'delivered' && (
             <>
               <Segmented
@@ -127,8 +139,9 @@ export function MealEditSheet({ meal, pending, onClose }: { meal: EffectiveMeal;
                   { value: false, label: 'Not received', tone: 'bad' },
                 ]}
               />
+              {values.extraCurryReceived !== false && (
               <Segmented
-                label={values.extraCurryReceived === false ? 'Which extra curry was missing?' : 'Which extra curry came?'}
+                label="Which extra curry came?"
                 value={values.extraCurryType ?? 'chicken'}
                 onChange={(v) => setValues({ ...values, extraCurryType: v })}
                 options={[
@@ -136,6 +149,7 @@ export function MealEditSheet({ meal, pending, onClose }: { meal: EffectiveMeal;
                   { value: 'egg', label: 'Egg curry' },
                 ]}
               />
+              )}
             </>
           )}
 

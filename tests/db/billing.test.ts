@@ -57,6 +57,27 @@ describe('extra curry type', () => {
   });
 });
 
+describe('cancelled by', () => {
+  const cancel = (by: string | null, version: number | null) =>
+    t.as(member, async (tx) => (await tx.query<{ r: { status: string; row: { cancelled_by: string; version: number } } }>(
+      "select public.save_meal_v3('2026-10-31', 'lunch', 'not_received', null, null, null, $1, $2) as r", [by, version])).rows[0].r);
+
+  it('defaults to the sender, can be changed to you, and older app versions keep it', async () => {
+    const first = await cancel(null, null);
+    expect(first.row.cancelled_by).toBe('sender');
+    const mine = await cancel('you', first.row.version);
+    expect(mine.row.cancelled_by).toBe('you');
+    const old = await t.as(member, (tx) => tx.query<{ r: { status: string } }>("select public.save_meal('2026-10-31', 'lunch', 'not_received', null, null, $1) as r", [mine.row.version]));
+    expect(old.rows[0].r.status).toBe('unchanged');
+  });
+
+  it('a delivered meal cannot have a canceller', async () => {
+    await expect(
+      t.db.query("insert into public.meal_overrides (household_id, meal_date, meal_period, delivery_status, cancelled_by) values ($1, '2026-10-26', 'dinner', 'delivered', 'you')", [homeId]),
+    ).rejects.toThrow(/meal_overrides_cancelled_by/);
+  });
+});
+
 describe('prices and start day', () => {
   it('default to ₹6600 a month from the 1st, ₹90 / ₹150 meals, ₹70 / ₹30 curries', async () => {
     const r = await t.as(member, (tx) =>

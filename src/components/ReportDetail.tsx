@@ -8,9 +8,9 @@ import { badgeFor, deliveryLabel } from './MealCard';
 import { Button, DayTypeChip, FilterChips, StatusBadge, NonVegIcon, VegIcon } from './ui';
 
 export const METRIC_INFO: Record<ReportMetric, { title: string; help: string }> = {
-  success: { title: 'Delivery success', help: 'Every meal with an outcome so far: delivered and not delivered.' },
+  success: { title: 'Delivery success', help: 'Every meal with an outcome so far: delivered and cancelled.' },
   delivered: { title: 'Delivered meals', help: 'Meals that arrived, saved by someone or assumed by the schedule.' },
-  notReceived: { title: 'Not received', help: 'Meals that did not arrive. Days with no delivery at all are marked.' },
+  notReceived: { title: 'Cancelled', help: 'Meals that did not come, cancelled by the sender or by you. Days with both meals cancelled are marked.' },
   scheduled: { title: 'Scheduled meals', help: 'Every lunch and dinner Monday–Saturday in this period.' },
   scheduledDays: { title: 'Scheduled days', help: 'Every delivery day in this period (Sundays have no delivery).' },
   pending: { title: 'Pending today', help: 'Today’s meals before their time: lunch counts from 2 PM, dinner from 10 PM.' },
@@ -135,7 +135,7 @@ export function ReportDetailSheet({
                 options={[
                   { value: 'all', label: 'All' },
                   { value: 'delivered', label: 'Delivered' },
-                  { value: 'not_received', label: 'Not delivered' },
+                  { value: 'not_received', label: 'Cancelled' },
                 ]}
               />
             </div>
@@ -161,7 +161,7 @@ export function ReportDetailSheet({
                     <span className="flex flex-wrap items-center gap-1.5">
                       {g.wholeDayMissed && (
                         <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-800 dark:bg-rose-950 dark:text-rose-200">
-                          No delivery all day
+                          Whole day cancelled
                         </span>
                       )}
                       <DayTypeChip type={g.meals[0].dayType} />

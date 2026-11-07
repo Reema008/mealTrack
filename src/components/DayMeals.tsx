@@ -11,7 +11,7 @@ import { useConfirm } from './Confirm';
 import { useToast } from './Toast';
 import { Button } from './ui';
 
-const NOT_DELIVERED: MealValues = { deliveryStatus: 'not_received', mainDish: null, extraCurryReceived: null, extraCurryType: null };
+const NOT_DELIVERED: MealValues = { deliveryStatus: 'not_received', mainDish: null, extraCurryReceived: null, extraCurryType: null, cancelledBy: 'sender' };
 
 /** Lunch and dinner cards for one date, with per-meal editing and a whole-day action. */
 export function DayMeals({
@@ -47,7 +47,6 @@ export function DayMeals({
 
   const editingMeal: EffectiveMeal | undefined = meals.find((m) => m.period === editing);
   const wholeDayMissing = meals.every((m) => m.deliveryStatus === 'not_received');
-  const future = date > today;
 
   /** Apply one status to both meals (not delivered, or back to the standard defaults). */
   async function markWholeDay(toNotDelivered: boolean) {
@@ -56,14 +55,14 @@ export function DayMeals({
         ? {
             emoji: '🚫',
             tone: 'danger',
-            title: future ? 'Skip this whole day?' : 'No delivery this day?',
+            title: 'Cancel this whole day?',
             message: (
               <>
                 Both <strong>lunch</strong> and <strong>dinner</strong> on <strong>{formatShort(date)}</strong> will be marked{' '}
-                {future ? 'as not expected' : 'as not delivered'}. Everyone in the family will see this.
+                as cancelled by the sender. You can change either meal to “cancelled by you” afterwards. Everyone in the family will see this.
               </>
             ),
-            confirmLabel: future ? 'Skip day' : 'Mark not delivered',
+            confirmLabel: 'Cancel day',
           }
         : {
             emoji: '💜',
@@ -108,7 +107,7 @@ export function DayMeals({
         className="mt-3 w-full"
         onClick={() => void markWholeDay(!wholeDayMissing)}
       >
-        {wholeDayMissing ? 'Mark whole day as delivered' : future ? 'No delivery this day (skip both meals)' : 'No delivery this whole day'}
+        {wholeDayMissing ? 'Mark whole day as delivered' : 'Cancel this whole day'}
       </Button>
       {editingMeal && (
         <MealEditSheet

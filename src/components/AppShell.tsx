@@ -52,7 +52,7 @@ function SyncIndicator({ sync }: { sync: SyncState }) {
 }
 
 function describe(v: MealValues, nonveg: boolean) {
-  const parts = [v.deliveryStatus === 'delivered' ? 'Delivered' : 'Not received'];
+  const parts = [v.deliveryStatus === 'delivered' ? 'Delivered' : v.cancelledBy === 'you' ? 'Cancelled by you' : 'Cancelled by sender'];
   if (nonveg && v.deliveryStatus === 'delivered') parts.push(v.mainDish === 'egg' ? 'Egg' : 'Chicken', `${v.extraCurryType === 'egg' ? 'egg' : 'chicken'} curry ${v.extraCurryReceived ? 'received' : 'not received'}`);
   return parts.join(' · ');
 }

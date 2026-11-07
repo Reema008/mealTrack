@@ -22,7 +22,7 @@ function Line({ line }: { line: BillLine }) {
     <li className="flex items-center justify-between gap-3 py-1.5 text-sm">
       <span className="min-w-0">
         <span className="font-semibold">{formatShort(line.date)}</span> · {PERIOD_LABEL[line.period]} ·{' '}
-        {line.kind === 'meal' ? `${line.dayType === 'veg' ? 'Veg' : 'Non-veg'} meal not delivered` : `${CURRY_LABEL[line.curryType ?? 'chicken']} missing`}
+        {line.kind === 'meal' ? `${line.dayType === 'veg' ? 'Veg' : 'Non-veg'} meal cancelled by ${line.cancelledBy === 'you' ? 'you' : 'sender'}` : `${CURRY_LABEL[line.curryType ?? 'chicken']} missing`}
       </span>
       <span className="shrink-0 font-semibold tabular-nums">− {formatAmount(line.amount)}</span>
     </li>
@@ -145,7 +145,7 @@ export function BillSheet({ initial, onClose }: { initial: BillingPeriod; onClos
                   </div>
                   <div className="flex justify-between gap-3">
                     <dt>
-                      Missed meals <span className="text-slate-500 dark:text-slate-300">({bill.missedMeals.length})</span>
+                      Cancelled meals <span className="text-slate-500 dark:text-slate-300">({bill.missedMeals.length})</span>
                     </dt>
                     <dd className="font-semibold tabular-nums">− {formatAmount(bill.mealDeductions)}</dd>
                   </div>
@@ -170,10 +170,10 @@ export function BillSheet({ initial, onClose }: { initial: BillingPeriod; onClos
 
               <section aria-labelledby="missed-meals">
                 <h3 id="missed-meals" className="font-display text-lg">
-                  Missed meals · − {formatAmount(bill.mealDeductions)}
+                  Cancelled meals · − {formatAmount(bill.mealDeductions)}
                 </h3>
                 {bill.missedMeals.length === 0 ? (
-                  <p className="text-sm text-slate-600 dark:text-slate-300">No meals were missed. ✿</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-300">No meals were cancelled. ✿</p>
                 ) : (
                   <ul className="divide-y divide-slate-900/5 dark:divide-white/10">
                     {bill.missedMeals.map((l) => (

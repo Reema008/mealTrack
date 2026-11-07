@@ -94,7 +94,7 @@ export function DailyChart({ daily }: { daily: MealStats['daily'] }) {
   return (
     <figure>
       <figcaption className="mb-2 font-display text-lg">Meals per day</figcaption>
-      <svg viewBox="0 0 100 44" preserveAspectRatio="none" className="h-36 w-full" role="img" aria-label="Meals per scheduled day: delivered, not received, pending and planned">
+      <svg viewBox="0 0 100 44" preserveAspectRatio="none" className="h-36 w-full" role="img" aria-label="Meals per scheduled day: delivered, cancelled, pending and planned">
         <defs>
           <pattern id="st-pending-stripes" width="1.6" height="1.6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <rect width="0.8" height="1.6" style={{ fill: 'var(--st-pending)' }} />
@@ -112,7 +112,7 @@ export function DailyChart({ daily }: { daily: MealStats['daily'] }) {
           };
           return (
             <g key={d.date}>
-              <title>{`${d.date}: ${d.delivered} delivered, ${d.notReceived} not received, ${d.pending} pending, ${d.planned} planned`}</title>
+              <title>{`${d.date}: ${d.delivered} delivered, ${d.notReceived} cancelled, ${d.pending} pending, ${d.planned} planned`}</title>
               {seg(d.delivered, 'stf-delivered', 'd')}
               {seg(d.notReceived, 'stf-missed', 'n')}
               {seg(d.pending, 'stf-pending', 'p')}
@@ -130,7 +130,7 @@ export function DailyChart({ daily }: { daily: MealStats['daily'] }) {
       )}
       <ul className="mt-2 flex flex-wrap gap-x-4 text-xs text-slate-600 dark:text-slate-300">
         <li className="flex items-center gap-1.5"><span className="st-delivered h-3 w-3 rounded" />Delivered</li>
-        <li className="flex items-center gap-1.5"><span className="st-missed h-3 w-3 rounded" />Not received</li>
+        <li className="flex items-center gap-1.5"><span className="st-missed h-3 w-3 rounded" />Cancelled</li>
         <li className="flex items-center gap-1.5"><span className="st-pending h-3 w-3 rounded" />Pending</li>
         <li className="flex items-center gap-1.5"><span className="st-planned h-3 w-3 rounded" />Planned</li>
       </ul>
@@ -158,7 +158,7 @@ export function CategoryTile({
     <button
       type="button"
       onClick={onClick}
-      aria-label={`${label}: ${stats.delivered} delivered, ${stats.notReceived} not received, ${stats.upcoming} upcoming. View details`}
+      aria-label={`${label}: ${stats.delivered} delivered, ${stats.notReceived} cancelled, ${stats.upcoming} upcoming. View details`}
       className={`block w-full min-w-0 rounded-[1.35rem] p-4 text-left transition-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${TINTS[tint]}`}
     >
       <span className="flex flex-wrap items-center justify-between gap-x-2">
@@ -174,7 +174,7 @@ export function CategoryTile({
         {stats.upcoming > 0 && <span className="st-planned rounded-full" style={{ width: `${(stats.upcoming / total) * 100}%` }} />}
       </span>
       <span className="mt-2 block text-xs text-slate-700 dark:text-slate-200">
-        <strong>{stats.delivered}</strong> delivered · <strong>{stats.notReceived}</strong> not received
+        <strong>{stats.delivered}</strong> delivered · <strong>{stats.notReceived}</strong> cancelled
         {stats.upcoming > 0 && <> · {stats.upcoming} upcoming</>}
       </span>
       <span className="mt-1 block text-xs font-semibold text-emerald-700 dark:text-emerald-300" aria-hidden>

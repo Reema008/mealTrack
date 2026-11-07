@@ -84,7 +84,7 @@ export interface SaveRequest {
 }
 
 const OVERRIDE_COLUMNS =
-  'id, household_id, meal_date, meal_period, delivery_status, main_dish, extra_curry_received, extra_curry_type, created_by, updated_by, created_at, updated_at, version';
+  'id, household_id, meal_date, meal_period, delivery_status, main_dish, extra_curry_received, extra_curry_type, cancelled_by, created_by, updated_by, created_at, updated_at, version';
 
 /**
  * This person's access: null (not signed in on this phone yet), pending
@@ -116,13 +116,14 @@ export async function fetchOverrides(householdId: string, start: ISODate, end: I
 }
 
 export async function saveMealOverride(req: SaveRequest): Promise<SaveOutcome> {
-  const { data, error } = await supabase.rpc('save_meal_v2', {
+  const { data, error } = await supabase.rpc('save_meal_v3', {
     p_date: req.date,
     p_period: req.period,
     p_delivery_status: req.values.deliveryStatus,
     p_main_dish: req.values.mainDish,
     p_extra_curry: req.values.extraCurryReceived,
     p_extra_curry_type: req.values.extraCurryType ?? null,
+    p_cancelled_by: req.values.cancelledBy ?? null,
     p_expected_version: req.expectedVersion,
     p_keep: req.keep ?? false,
   });
