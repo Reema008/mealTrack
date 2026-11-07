@@ -114,6 +114,7 @@ export function MochiSvg({
         </>
       )}
       {s.front?.(fill)}
+      {s.hat && !wear.includes('crown') && !wear.includes('party') && s.hat}
       {/* eyes */}
       {face === 'sleeping' ? (
         closed(0.5, 2.4)

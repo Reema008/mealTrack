@@ -37,6 +37,8 @@ export interface Species {
   front?: (fill: string) => ReactNode;
   /** Noses, beaks and whiskers on top of the face. */
   face?: ReactNode;
+  /** A hat the pet always wears, taken off for a crown or party hat. */
+  hat?: ReactNode;
 }
 
 export const SPECIES: Species[] = [
@@ -224,25 +226,41 @@ export const SPECIES: Species[] = [
   },
   {
     id: 'penguin',
-    name: 'Pudding',
+    name: 'Pom',
     kind: 'Penguin',
-    about: 'A round, squishy penguin with a heart-shaped face.',
+    about: 'A cosy penguin in a knitted beanie and scarf, always warm.',
     colors: ['#8670ab', '#594977'],
     body: 'M32 18c12 0 20 10 20 23 0 11-8 18-20 18S12 52 12 41c0-13 8-23 20-23Z',
     feet: '#bba6dc',
-    eyeY: 36,
-    eyeGap: 13,
-    eyeSize: 1.25,
-    cheekY: 42.5,
-    mouthY: 46,
+    eyeY: 36.5,
+    eyeGap: 12,
+    eyeSize: 1.2,
+    cheekY: 43,
+    mouthY: 46.5,
     back: () => (
       <>
         <path d="M13 37c-5 2-6 9-4 12 3 0 5-4 5.5-8.5Z" fill={DEEP} stroke={LINE} strokeWidth="1.2" />
         <path d="M51 37c5 2 6 9 4 12-3 0-5-4-5.5-8.5Z" fill={DEEP} stroke={LINE} strokeWidth="1.2" />
       </>
     ),
-    front: () => <path d="M32 29c-3-6-15-5-15 4 0 9 10 14 15 18 5-4 15-9 15-18 0-9-12-10-15-4Z" fill="#fbf9fc" />,
-    face: <path d="M29.6 40.6h4.8L32 43.4Z" fill="#bba6dc" stroke={DEEP} strokeWidth="1" strokeLinejoin="round" />,
+    front: () => (
+      <>
+        <path d="M32 28c8 0 13 6 13 13 0 9-6 15-13 15s-13-6-13-15c0-7 5-13 13-13Z" fill="#fbf9fc" />
+        {/* scarf */}
+        <path d="M17 49q15 6 30 0l-.5 4q-14.5 5.5-29 0Z" fill={LINE} />
+        <path d="M40 52l2 7 3.5-1.2-1.6-6.4Z" fill={DEEP} />
+      </>
+    ),
+    face: <path d="M29.6 41h4.8L32 43.8Z" fill="#bba6dc" stroke={DEEP} strokeWidth="1" strokeLinejoin="round" />,
+    hat: (
+      <>
+        {/* knitted beanie with a pom-pom */}
+        <path d="M17 27c0-9 6-14 15-14s15 5 15 14Z" fill="#bba6dc" stroke={LINE} strokeWidth="1.4" />
+        <path d="M24 16l1 8M30 14l.4 10M36 14l-.4 10M41 17l-1 7" stroke="#ab94d3" strokeWidth="1" />
+        <rect x="15.5" y="24.5" width="33" height="5" rx="2.5" fill="#dccdef" stroke={LINE} strokeWidth="1.2" />
+        <circle cx="32" cy="11.5" r="3.6" fill="#f6f2fb" stroke={LINE} strokeWidth="1.2" />
+      </>
+    ),
   },
   {
     id: 'axolotl',
