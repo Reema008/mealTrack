@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { MonthCalendar } from '../components/Calendar';
-import { DayMeals } from '../components/DayMeals';
 import { deliveryLabel } from '../components/MealCard';
 import { badgeFor } from '../components/MealCard';
 import { Button, Card, DayTypeChip, ErrorNote, Spinner, StatusBadge } from '../components/ui';
-import { addMonths, eachDay, endOfMonth, formatLong, formatMonth, formatShort, startOfMonth } from '../domain/dates';
+import { addMonths, eachDay, endOfMonth, formatMonth, formatShort, startOfMonth } from '../domain/dates';
 import { mealsForDate, overrideKey } from '../domain/meals';
 import { getDayType, PERIOD_LABEL } from '../domain/schedule';
 import { useHousehold } from '../data/household';
@@ -16,7 +15,7 @@ export function CalendarPage() {
   const [params, setParams] = useSearchParams();
   const monthParam = params.get('month');
   const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? `${monthParam}-01` : startOfMonth(today);
-  const [selected, setSelected] = useState(() => (month === startOfMonth(today) ? today : month));
+  const navigate = useNavigate();
   const [view, setView] = useState<'month' | 'list'>('month');
   const start = startOfMonth(month);
   const end = endOfMonth(month);
@@ -25,7 +24,6 @@ export function CalendarPage() {
   const goMonth = (delta: number) => {
     const next = addMonths(month, delta);
     setParams({ month: next.slice(0, 7) }, { replace: true });
-    setSelected(next.slice(0, 7) === today.slice(0, 7) ? today : next);
   };
 
   return (
@@ -55,20 +53,10 @@ export function CalendarPage() {
       ) : isLoading ? (
         <Spinner />
       ) : view === 'month' ? (
-        <>
-          <Card>
-            <MonthCalendar month={month} selected={selected} today={today} map={map} pendingKeys={pendingKeys} onSelect={setSelected} />
-          </Card>
-          {selected >= start && selected <= end && (
-            <section aria-labelledby="sel-heading" className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 id="sel-heading" className="font-semibold">{formatLong(selected)}</h2>
-                <DayTypeChip type={getDayType(selected)} />
-              </div>
-              <DayMeals date={selected} map={map} pendingKeys={pendingKeys} today={today} />
-            </section>
-          )}
-        </>
+        <Card>
+          {/* Tapping a date opens that day, the same as in the list view. */}
+          <MonthCalendar month={month} selected={today} today={today} map={map} pendingKeys={pendingKeys} onSelect={(d) => navigate(`/day/${d}`)} />
+        </Card>
       ) : (
         <ol className="space-y-2">
           {eachDay(start, end).map((d) => {
