@@ -205,3 +205,21 @@ export function dayRows(start: ISODate, end: ISODate, overrides: OverrideMap, to
     };
   });
 }
+
+/**
+ * What should be paid for a monthly subscription: the previous month's bill
+ * (monthly amount − cancelled meals + delivered extra curries). The first
+ * month of the subscription has nothing before it, so it is the monthly amount.
+ */
+export function calculatedPayment(
+  period: BillingPeriod,
+  firstStart: ISODate | null,
+  overrides: OverrideMap,
+  today: ISODate,
+  nowMinutes: number | undefined,
+  settings: BillingSettings,
+): number {
+  if (firstStart !== null && period.start <= firstStart) return settings.monthlyAmount;
+  const prev = shiftPeriod(period, -1, settings.billingDay);
+  return computeBill(prev.start, prev.end, overrides, today, nowMinutes, settings).nextAmount;
+}

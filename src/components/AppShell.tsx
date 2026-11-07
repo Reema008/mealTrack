@@ -7,6 +7,7 @@ import type { MealValues } from '../domain/types';
 import { saveMealOverride } from '../data/api';
 import { useHouseholdSync, type SyncConflict } from '../data/meals';
 import { useToast } from './Toast';
+import { Pet } from './Pet';
 import { ThemeToggle } from './ThemeToggle';
 import { Button } from './ui';
 
@@ -18,6 +19,8 @@ const NAV = [
   { to: '/', label: 'Home', icon: 'M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10.5Z' },
   { to: '/calendar', label: 'Calendar', icon: 'M7 3v3M17 3v3M3.5 9h17M5 5h14a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 19 21H5a1.5 1.5 0 0 1-1.5-1.5v-13A1.5 1.5 0 0 1 5 5Z' },
   { to: '/reports', label: 'Reports', icon: 'M4 20V10M10 20V4M16 20v-7M22 20H2' },
+  // A wallet with a coin slot: subscriptions, payments and prices.
+  { to: '/subscriptions', label: 'Subscription', icon: 'M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4' },
   {
     to: '/settings',
     label: 'Settings',
@@ -132,15 +135,16 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
         <main className="flex-1 px-4 pb-28 pt-2">{children}</main>
+        <Pet />
         <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-          <ul className="taro-nav mx-auto grid max-w-md grid-cols-4 gap-1 rounded-full p-1.5 shadow-soft backdrop-blur-md">
+          <ul className="taro-nav mx-auto grid max-w-lg grid-cols-5 gap-0.5 rounded-full p-1.5 shadow-soft backdrop-blur-md">
             {NAV.map((n) => (
               <li key={n.to}>
                 <NavLink
                   to={n.to}
                   end={n.to === '/'}
                   className={({ isActive }) =>
-                    `flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-center text-[11px] font-semibold leading-tight transition-colors ${
+                    `flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-full px-0.5 text-center text-[10.5px] font-semibold leading-tight transition-colors ${
                       isActive ? 'taro-tab text-emerald-800 dark:text-white' : 'text-slate-600 dark:text-slate-300'
                     }`
                   }

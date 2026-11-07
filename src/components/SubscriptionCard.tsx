@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { billingPeriodFor, computeBill, shiftPeriod, type BillingPeriod } from '../domain/billing';
+import { billingPeriodFor, calculatedPayment, computeBill, shiftPeriod, type BillingPeriod } from '../domain/billing';
 import { formatShort } from '../domain/dates';
-import { formatAmount, paymentFor, periodProgress } from '../domain/subscription';
+import { firstSubscriptionStart, formatAmount, paymentFor, periodProgress } from '../domain/subscription';
 import { useHousehold } from '../data/household';
 import { useOverrides } from '../data/meals';
 import { useSubscriptions } from '../data/subscriptions';
-import { BillSheet, periodTitle } from './BillSheet';
+import { BillSheet, PaymentDifference, periodTitle } from './BillSheet';
 import { Button, Card } from './ui';
 
 /** Days at the start of a month during which an unpaid subscription shows "Renewal due". */
@@ -71,6 +71,15 @@ export function SubscriptionCard() {
         <div className="taro-grow h-full rounded-full bg-gradient-to-r from-emerald-300 to-emerald-500" style={{ width: `${pct}%` }} />
       </div>
 
+      {paid && !isLoading && (
+        <div className="mt-3">
+          <PaymentDifference
+            calculated={calculatedPayment(current, firstSubscriptionStart(subs.data ?? [], billing.billingDay), map, today, nowMinutes, billing)}
+            paid={paid.amount}
+          />
+        </div>
+      )}
+
       <div className="taro-inset mt-3 rounded-2xl p-3 text-sm">
         {isLoading ? (
           <span className="text-slate-600 dark:text-slate-300">Calculating…</span>
@@ -96,6 +105,7 @@ export function SubscriptionCard() {
           Subscriptions & prices →
         </Link>
       </div>
+
       {sheet && <BillSheet initial={sheet} onClose={() => setSheet(null)} />}
     </Card>
   );

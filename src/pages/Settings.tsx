@@ -2,36 +2,66 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { FamilyAccountsSection, MyAccountSection } from '../components/AccountSettings';
 import { useToast } from '../components/Toast';
-import { Button, Card } from '../components/ui';
-import { Link } from 'react-router-dom';
-import { formatShort, isValidTimeZone } from '../domain/dates';
-import { billingPeriodFor } from '../domain/billing';
-import { formatAmount, paymentFor } from '../domain/subscription';
-import { useSubscriptions } from '../data/subscriptions';
+import { Button, Card, Segmented } from '../components/ui';
+import { MochiSvg } from '../components/pet/art';
+import { SPECIES, speciesFor } from '../components/pet/species';
+import { usePetEnabled, usePetKind } from '../lib/pet';
+import { isValidTimeZone } from '../domain/dates';
 import { fetchReminderPreference, setReminderPreference, updateHousehold } from '../data/api';
 import { membershipKey, useHousehold } from '../data/household';
 import { currentSubscription, enablePushOnThisDevice, pushSupport, sendTestNotification } from '../lib/push';
 
 const TIMEZONES = ['Asia/Kolkata', 'Asia/Dubai', 'Asia/Singapore', 'Europe/London', 'America/New_York', 'America/Los_Angeles', 'Australia/Sydney'];
 
-function SubscriptionSection() {
-  const { today, billing } = useHousehold();
-  const subs = useSubscriptions();
-  const current = billingPeriodFor(today, billing.billingDay);
-  const paid = paymentFor(subs.data ?? [], current, billing.billingDay);
-  const amount = paid ? `${formatAmount(paid.amount)} paid` : `${formatAmount(billing.monthlyAmount)} a month`;
-  const summary = `Current: ${formatShort(current.start)} – ${formatShort(current.end)} · ${amount} · renews ${formatShort(current.renewsOn)}`;
-
+function PetSection() {
+  const [on, setOn] = usePetEnabled();
+  const [kind, setKind] = usePetKind();
+  const pet = speciesFor(kind);
   return (
     <Card>
-      <h2 className="mb-1 text-xl">Subscription</h2>
-      <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">{subs.isLoading ? 'Loading…' : summary}</p>
-      <Link
-        to="/subscriptions"
-        className="btn-taro inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold"
-      >
-        Subscriptions, prices & history →
-      </Link>
+      <h2 className="mb-1 text-xl">Your pet</h2>
+      <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
+        A little friend who wanders around the app and chats with you. Tap to pet · hold to see its mood and this week’s streak · rub in little circles for a
+        belly rub · drag to move · double-tap for yarn chase. When food is delivered every day from Monday to Saturday, it earns a crown. Saved on this phone only.
+      </p>
+      <Segmented<boolean>
+        label={`Show ${pet.name}`}
+        value={on}
+        onChange={setOn}
+        options={[
+          { value: true, label: 'On 💜' },
+          { value: false, label: 'Off' },
+        ]}
+      />
+      <fieldset className="mt-4">
+        <legend className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">Choose your pet</legend>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] gap-2" role="radiogroup" aria-label="Choose your pet">
+          {SPECIES.map((p) => {
+            const selected = p.id === kind;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => setKind(p.id)}
+                className={`taro-inset flex flex-col items-center gap-1 rounded-2xl px-1 pb-2 pt-3 text-center transition-transform active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 ${
+                  selected ? 'ring-2 ring-emerald-500 dark:ring-emerald-300' : ''
+                }`}
+              >
+                <span className={`block h-14 w-14 ${selected ? 'pet-idle' : ''}`}>
+                  <MochiSvg kind={p.id} happy={selected} />
+                </span>
+                <span className="text-xs font-bold leading-tight">{p.name}</span>
+                <span className="text-[10.5px] leading-tight text-slate-500 dark:text-slate-300">{p.kind}</span>
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
+          {pet.name}: {pet.about} Its happiness and outfits carry over when you switch.
+        </p>
+      </fieldset>
     </Card>
   );
 }
@@ -153,7 +183,7 @@ export function SettingsPage() {
       <h1 className="text-3xl">Settings</h1>
       <MyAccountSection />
       {isAdmin && <FamilyAccountsSection />}
-      <SubscriptionSection />
+      <PetSection />
       <TimezoneSection />
       <RemindersSection />
       <p className="pb-2 text-center text-xs text-slate-500 dark:text-slate-400">

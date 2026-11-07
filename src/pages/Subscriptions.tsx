@@ -1,14 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { BillSheet, periodTitle } from '../components/BillSheet';
+import { BillSheet, PaymentDifference, periodTitle } from '../components/BillSheet';
 import { useConfirm } from '../components/Confirm';
 import { SubscriptionCard } from '../components/SubscriptionCard';
 import { useToast } from '../components/Toast';
 import { Button, Card, ErrorNote, Spinner } from '../components/ui';
-import { billingPeriodFor, computeBill, type BillingPeriod, type BillingSettings } from '../domain/billing';
+import { billingPeriodFor, calculatedPayment, computeBill, shiftPeriod, type BillingPeriod, type BillingSettings } from '../domain/billing';
 import { formatShort, isISODate } from '../domain/dates';
-import { formatAmount, paymentFor, subscriptionMonths, type SubscriptionRecord } from '../domain/subscription';
+import { firstSubscriptionStart, formatAmount, paymentFor, subscriptionMonths, type SubscriptionRecord } from '../domain/subscription';
 import { addSubscription, deleteSubscription, updateBilling, updateSubscription } from '../data/api';
 import { membershipKey, useHousehold } from '../data/household';
 import { useOverrides } from '../data/meals';
@@ -243,14 +243,26 @@ function PaymentForm({
   );
 }
 
-function MonthRow({ period, payment, onDetails }: { period: BillingPeriod; payment: SubscriptionRecord | null; onDetails: () => void }) {
+function MonthRow({
+  period,
+  payment,
+  firstStart,
+  onDetails,
+}: {
+  period: BillingPeriod;
+  payment: SubscriptionRecord | null;
+  firstStart: string | null;
+  onDetails: () => void;
+}) {
   const { household, billing, today, nowMinutes } = useHousehold();
   const toast = useToast();
   const confirm = useConfirm();
   const apply = useApplyPayments();
   const [editing, setEditing] = useState(false);
-  const { map } = useOverrides(period.start, period.end);
+  const previous = shiftPeriod(period, -1, billing.billingDay);
+  const { map } = useOverrides(previous.start, period.end);
   const bill = computeBill(period.start, period.end, map, today, nowMinutes, billing);
+  const calculated = calculatedPayment(period, firstStart, map, today, nowMinutes, billing);
   const title = periodTitle(period, billing.billingDay);
   const current = period.start <= today && today <= period.end;
 
@@ -274,6 +286,11 @@ function MonthRow({ period, payment, onDetails }: { period: BillingPeriod; payme
         {bill.addedCurries.length} extra curr{bill.addedCurries.length === 1 ? 'y' : 'ies'} <strong>+ {formatAmount(bill.curryCharges)}</strong>
         {current && ' so far'}
       </p>
+      {payment && (
+        <div className="mt-2">
+          <PaymentDifference calculated={calculated} paid={payment.amount} />
+        </div>
+      )}
 
       {editing ? (
         <div className="mt-3 border-t border-slate-900/10 pt-3 dark:border-white/10">
@@ -389,7 +406,13 @@ export function SubscriptionsPage() {
           </div>
           <ol className="space-y-3">
             {months.map((p) => (
-              <MonthRow key={p.start} period={p} payment={paymentFor(records, p, billing.billingDay)} onDetails={() => setSheet(p)} />
+              <MonthRow
+                key={p.start}
+                period={p}
+                payment={paymentFor(records, p, billing.billingDay)}
+                firstStart={firstSubscriptionStart(records, billing.billingDay)}
+                onDetails={() => setSheet(p)}
+              />
             ))}
           </ol>
         </>

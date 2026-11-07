@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { billingPeriodFor, computeBill, DEFAULT_BILLING, shiftPeriod } from '../../src/domain/billing';
+import { billingPeriodFor, calculatedPayment, computeBill, DEFAULT_BILLING, shiftPeriod } from '../../src/domain/billing';
 import { toOverrideMap } from '../../src/domain/meals';
 import type { MealOverride } from '../../src/domain/types';
 
@@ -89,5 +89,22 @@ describe('next subscription amount', () => {
     const b = computeBill('2026-11-01', '2026-11-30', future, '2026-11-07', 10 * 60, DEFAULT_BILLING);
     expect(b.mealDeductions).toBe(0);
     expect(b.notYetCounted).toBeGreaterThan(0);
+  });
+});
+
+describe('calculated payment for a month', () => {
+  const map = toOverrideMap([
+    row({ meal_date: '2026-10-26', meal_period: 'lunch', delivery_status: 'not_received', main_dish: null, extra_curry_received: null }),
+  ]);
+  const nov = billingPeriodFor('2026-11-07', 1);
+  const oct = billingPeriodFor('2026-10-07', 1);
+  const noCurries = { ...DEFAULT_BILLING, chickenCurry: 0, eggCurry: 0 };
+
+  it('is the previous month’s bill', () => {
+    expect(calculatedPayment(nov, '2026-10-01', map, '2026-11-07', undefined, noCurries)).toBe(6600 - 90);
+  });
+
+  it('is the monthly amount for the first month of the subscription', () => {
+    expect(calculatedPayment(oct, '2026-10-01', map, '2026-11-07', undefined, noCurries)).toBe(6600);
   });
 });

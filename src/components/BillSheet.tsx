@@ -17,6 +17,35 @@ export function periodTitle(p: BillingPeriod, billingDay: number): string {
   return billingDay === 1 ? formatMonth(p.start) : `${formatShort(p.start)} – ${formatShort(p.end)}`;
 }
 
+/** Calculated amount, amount paid, and the difference between them. */
+export function PaymentDifference({ calculated, paid }: { calculated: number; paid: number | null }) {
+  if (paid === null) return null;
+  const diff = Math.round((paid - calculated) * 100) / 100;
+  return (
+    <dl className="taro-inset grid grid-cols-3 gap-2 rounded-2xl p-2.5 text-center text-sm">
+      <div>
+        <dt className="text-xs text-slate-600 dark:text-slate-300">Calculated</dt>
+        <dd className="font-semibold tabular-nums">{formatAmount(calculated)}</dd>
+      </div>
+      <div>
+        <dt className="text-xs text-slate-600 dark:text-slate-300">Paid</dt>
+        <dd className="font-semibold tabular-nums">{formatAmount(paid)}</dd>
+      </div>
+      <div>
+        <dt className="text-xs text-slate-600 dark:text-slate-300">Difference</dt>
+        <dd className={`font-bold tabular-nums ${diff === 0 ? '' : 'text-rose-700 dark:text-rose-300'}`}>
+          {diff === 0 ? 'None ✓' : `${diff > 0 ? '+' : '−'} ${formatAmount(Math.abs(diff))}`}
+        </dd>
+      </div>
+      {diff !== 0 && (
+        <p className="col-span-3 text-xs text-slate-600 dark:text-slate-300">
+          {diff > 0 ? `Paid ${formatAmount(diff)} more than calculated.` : `Paid ${formatAmount(-diff)} less than calculated.`}
+        </p>
+      )}
+    </dl>
+  );
+}
+
 function Line({ line }: { line: BillLine }) {
   return (
     <li className="flex items-center justify-between gap-3 py-1.5 text-sm">
@@ -232,9 +261,10 @@ export function BillSheet({ initial, onClose }: { initial: BillingPeriod; onClos
                 {formatAmount(billing.chickenCurry)}, egg curry {formatAmount(billing.eggCurry)}. Delivered: {bill.delivered.veg + bill.delivered.nonveg} meals.
               </p>
               {nextPayment && (
-                <p className="text-sm font-semibold">
-                  {nextTitle} payment saved: {formatAmount(nextPayment.amount)}
-                </p>
+                <section aria-label={`${nextTitle} payment`} className="space-y-1.5">
+                  <h3 className="font-display text-lg">{nextTitle} payment</h3>
+                  <PaymentDifference calculated={bill.nextAmount} paid={nextPayment.amount} />
+                </section>
               )}
             </>
           )}
