@@ -243,18 +243,10 @@ a:active {
 .pet-ears-down { transform-origin: 32px 26px; transform: rotate(0deg) scaleY(0.82) translateY(4px); }
 .pet-chew { transform-origin: 32px 45.5px; animation: pet-chew 0.28s ease-in-out infinite; }
 .pet-rollover { animation: pet-rollover 1s cubic-bezier(0.34, 1.3, 0.64, 1); transform-origin: 50% 70%; }
-.pet-flame { transform-origin: 8px 56px; animation: pet-flame 0.9s ease-in-out infinite alternate; }
-.pet-glow { animation: pet-glow 1.6s ease-in-out infinite alternate; }
-.pet-sparkle { animation: pet-sparkle 2.2s ease-in-out infinite; }
 .pet-confetti { animation: pet-confetti 2.4s cubic-bezier(0.3, 0.6, 0.6, 1) forwards; }
-.pet-snow { top: -6px; animation: pet-snow 2.8s linear infinite; }
 @keyframes pet-chew { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.35); } }
 @keyframes pet-rollover { 0% { transform: rotate(0); } 60% { transform: rotate(380deg) translateY(-6px); } 100% { transform: rotate(360deg); } }
-@keyframes pet-flame { from { transform: scale(1, 1) rotate(-4deg); } to { transform: scale(0.9, 1.15) rotate(4deg); } }
-@keyframes pet-glow { from { opacity: 0.2; } to { opacity: 0.5; } }
-@keyframes pet-sparkle { 0%, 100% { filter: drop-shadow(0 0 0 #fff0); } 50% { filter: drop-shadow(0 0 3px #ece4f6); } }
 @keyframes pet-confetti { from { transform: translateY(-20px) rotate(0deg); opacity: 1; } to { transform: translateY(100vh) rotate(540deg); opacity: 0.2; } }
-@keyframes pet-snow { from { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } to { transform: translateY(80px); opacity: 0; } }
 @keyframes pet-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.04, 0.96); } }
 @keyframes pet-hop { 0%, 100% { transform: translateY(0) scale(1.03, 0.97); } 50% { transform: translateY(-5px) scale(0.97, 1.03); } }
 @keyframes pet-jump { 0% { transform: translateY(0) scale(1.1, 0.9); } 45% { transform: translateY(-22px) scale(0.92, 1.08); } 80% { transform: translateY(0) scale(1.08, 0.92); } 100% { transform: translateY(0) scale(1, 1); } }

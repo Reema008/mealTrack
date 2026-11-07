@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { mealsForDate, toOverrideMap } from '../../src/domain/meals';
-import { addHappiness, dayOutcome, fullWeek, happinessNow, hasCrown, menuLine, seasonFor, streakFrom, type PetMemory } from '../../src/lib/petLife';
+import { addHappiness, dayOutcome, fullWeek, happinessNow, menuLine, streakFrom, type PetMemory } from '../../src/lib/petLife';
 import { END_OF_DAY_MINUTES } from '../../src/domain/meals';
 import type { MealOverride } from '../../src/domain/types';
 
@@ -34,11 +34,9 @@ describe('Mochi delivery streak: Monday to Saturday', () => {
     expect(streakFrom(outcomes([], '2026-11-09', 10 * 60), '2026-11-09')).toBe(0);
   });
 
-  it('a fully delivered week earns the crown, kept through the next week', () => {
+  it('knows a fully delivered week', () => {
     expect(fullWeek(outcomes([], '2026-11-07'), '2026-11-02')).toBe(true);
-    expect(hasCrown(outcomes([], '2026-11-07'), '2026-11-07')).toBe(true);
-    expect(hasCrown(outcomes([], '2026-11-12', 10 * 60), '2026-11-12')).toBe(true);
-    expect(hasCrown(outcomes([cancel('2026-11-04', 'dinner')], '2026-11-12', 10 * 60), '2026-11-12')).toBe(false);
+    expect(fullWeek(outcomes([cancel('2026-11-04', 'dinner')], '2026-11-07'), '2026-11-02')).toBe(false);
   });
 });
 
@@ -48,17 +46,6 @@ describe('Mochi happiness', () => {
     expect(happinessNow(m, 10 * 3_600_000)).toBe(50);
     expect(happinessNow(m, 100 * 3_600_000)).toBe(0);
     expect(happinessNow(addHappiness(m, 50, 0), 0)).toBe(100);
-  });
-});
-
-describe('seasons', () => {
-  it('Diwali (±2 days), New Year, winter, monsoon', () => {
-    expect(seasonFor('2026-11-08')).toBe('diwali');
-    expect(seasonFor('2026-11-07')).toBe('diwali');
-    expect(seasonFor('2026-11-12')).toBeNull();
-    expect(seasonFor('2027-01-01')).toBe('newyear');
-    expect(seasonFor('2027-01-20')).toBe('winter');
-    expect(seasonFor('2027-07-15')).toBe('monsoon');
   });
 });
 

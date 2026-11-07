@@ -1,4 +1,4 @@
-// Mochi's memory and moods: streaks, happiness, the season, and what to say
+// Mochi's memory and moods: streaks, happiness and what to say
 // about today's meals. Kept on this phone only (localStorage).
 import { addDays, startOfWeek, weekdayOf } from '../domain/dates';
 import { mealsForDate } from '../domain/meals';
@@ -91,35 +91,6 @@ export function streakFrom(outcome: (d: ISODate) => DayOutcome | null, today: IS
 export function fullWeek(outcome: (d: ISODate) => DayOutcome | null, monday: ISODate): boolean {
   return Array.from({ length: STREAK_GOAL }, (_, i) => addDays(monday, i)).every((d) => outcome(d) === 'delivered');
 }
-
-/** Mochi wears the crown for a fully delivered week, and all through the next week. */
-export function hasCrown(outcome: (d: ISODate) => DayOutcome | null, today: ISODate): boolean {
-  const monday = deliveryWeekStart(today);
-  return fullWeek(outcome, monday) || fullWeek(outcome, addDays(monday, -7));
-}
-
-export type Season = 'diwali' | 'newyear' | 'winter' | 'monsoon' | null;
-
-/** Diwali (Lakshmi Puja) dates. */
-const DIWALI: ISODate[] = ['2026-11-08', '2027-10-29', '2028-10-17', '2029-11-05', '2030-10-26'];
-
-/** Seasonal look for a date: Diwali, New Year, winter (Dec–Feb) or monsoon (Jun–Sep). */
-export function seasonFor(date: ISODate): Season {
-  if (DIWALI.some((d) => Math.abs(Date.parse(d) - Date.parse(date)) <= 2 * 86_400_000)) return 'diwali';
-  const md = date.slice(5);
-  if (md >= '12-31' || md <= '01-02') return 'newyear';
-  const month = Number(date.slice(5, 7));
-  if (month === 12 || month <= 2) return 'winter';
-  if (month >= 6 && month <= 9) return 'monsoon';
-  return null;
-}
-
-export const SEASON_LINES: Record<Exclude<Season, null>, string[]> = {
-  diwali: ['Happy Diwali! ✦ Look at my diya!', 'Shubh Deepavali ♡', 'So many lights ✦'],
-  newyear: ['Happy New Year! ✦', 'New year, new meals ♡'],
-  winter: ['Brrr, so cosy in my scarf ♡', 'Snowflakes! ✦'],
-  monsoon: ['Pitter patter… good thing I have my umbrella ☂', 'Rainy day = hot curry day ♡'],
-};
 
 /** "Today: non-veg — chicken with chicken curry" style summary of today's meals. */
 export function menuLine(meals: EffectiveMeal[]): string {

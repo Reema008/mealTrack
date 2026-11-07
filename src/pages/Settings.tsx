@@ -22,7 +22,7 @@ function PetSection() {
       <h2 className="mb-1 text-xl">Your pet</h2>
       <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
         A little friend who wanders around the app and chats with you. Tap to pet · hold to see its mood and this week’s streak · rub in little circles for a
-        belly rub · drag to move · double-tap for yarn chase. When food is delivered every day from Monday to Saturday, it earns a crown. Saved on this phone only.
+        belly rub · drag to move · double-tap for yarn chase. When food is delivered every day from Monday to Saturday, it throws a little party. Saved on this phone only.
       </p>
       <Segmented<boolean>
         label={`Show ${pet.name}`}

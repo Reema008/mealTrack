@@ -14,11 +14,8 @@ import {
   menuLine,
   MISSED_YOU_HOURS,
   saveMemory,
-  SEASON_LINES,
-  seasonFor,
   dayOutcome,
   deliveryWeekStart,
-  hasCrown,
   STREAK_GOAL,
   streakFrom,
   type PetMemory,
@@ -69,9 +66,9 @@ function Meter({ label, value }: { label: string; value: number }) {
 
 /**
  * Mochi, a little pet who wanders around the screen and lives with your meals:
- * delivered meals feed it, cancelled ones make it sad, checking in every
- * delivery day builds a streak (a crown at 6 days), and it dresses up for the
- * season. Tap to pet (and hear today's menu), hold for its moods, rub in
+ * delivered meals feed it, cancelled ones make it sad, and a week of
+ * deliveries (Mon–Sat) gets a little party. Tap to pet (and hear today's
+ * menu), hold for its moods, rub in
  * circles for a belly rub, drag to move, double-tap for yarn chase.
  */
 export function Pet() {
@@ -99,14 +96,11 @@ export function Pet() {
   const lastBill = billTime ? computeBill(previous.start, previous.end, lastMonth.map, today, nowMinutes, billing) : null;
 
   const [memory, setMemory] = useState<PetMemory>(() => loadMemory());
-  // Delivery streak: this week and last week (for the crown).
+  // Delivery streak (Mon–Sat of this week).
   const weekStart = deliveryWeekStart(today);
-  const weeks = useOverrides(addDays(weekStart, -7), addDays(weekStart, 5));
-  const outcome = (d: string) => dayOutcome(d, weeks.map, today, nowMinutes);
-  const streak = weeks.isLoading ? 0 : streakFrom(outcome, today);
-  const crown = !weeks.isLoading && hasCrown(outcome, today);
+  const week = useOverrides(weekStart, addDays(weekStart, 5));
+  const streak = week.isLoading ? 0 : streakFrom((d: string) => dayOutcome(d, week.map, today, nowMinutes), today);
   const happiness = happinessNow(memory);
-  const season = seasonFor(today);
   const sleepyTime = nowMinutes >= 23 * 60 || nowMinutes < 6 * 60;
 
   const [box, setBox] = useState(bounds);
@@ -180,13 +174,13 @@ export function Pet() {
     return () => window.clearTimeout(timer);
   }, [enabled, today, say]);
 
-  // A full week of deliveries (Mon–Sat): confetti and a crown, once per week.
+  // A full week of deliveries (Mon–Sat): confetti, once per week.
   useEffect(() => {
     if (!enabled || streak < STREAK_GOAL || memory.celebrated === weekStart) return;
     const timer = window.setTimeout(() => {
       setConfetti(true);
       window.setTimeout(() => setConfetti(false), 2600);
-      say("Food came every day, Monday to Saturday! ✦ Here's your crown!", 5000);
+      say('Food came every day, Monday to Saturday! ✦ Party time!', 5000);
       setMemory((m) => addHappiness({ ...m, celebrated: weekStart }, 20));
     }, 900);
     return () => window.clearTimeout(timer);
@@ -275,12 +269,9 @@ export function Pet() {
   // Chat every so often, and say something on a new page.
   useEffect(() => {
     if (!enabled || playing) return;
-    const id = window.setInterval(() => {
-      const extra = season && Math.random() < 0.3 ? pick(SEASON_LINES[season]) : null;
-      say(extra ?? idleLine(contextRef.current));
-    }, randomBetween(28_000, 42_000));
+    const id = window.setInterval(() => say(idleLine(contextRef.current)), randomBetween(28_000, 42_000));
     return () => window.clearInterval(id);
-  }, [enabled, playing, season, say]);
+  }, [enabled, playing, say]);
   useEffect(() => {
     if (!enabled) return;
     const id = window.setTimeout(() => Math.random() < 0.6 && say(idleLine(contextRef.current)), 1200);
@@ -411,13 +402,7 @@ export function Pet() {
           : cancelled.length > 0 || happiness < 25
             ? 'sad'
             : 'normal';
-  const wear: Accessory[] = [];
-  if (crown && season !== 'newyear') wear.push('crown');
-  if (season === 'newyear') wear.push('party');
-  if (season === 'winter') wear.push('scarf');
-  if (season === 'monsoon') wear.push('umbrella');
-  if (season === 'diwali') wear.push('diya');
-  if (lastBill) wear.push('bill');
+  const wear: Accessory[] = lastBill ? ['bill'] : [];
 
   const bubbleBelow = pos.y < TOP_GAP + 80;
   const bubbleOnLeft = pos.x > box.maxX / 2;
@@ -483,12 +468,6 @@ export function Pet() {
               ♥
             </span>
           ))}
-          {season === 'winter' &&
-            [0, 1, 2, 3].map((i) => (
-              <span key={i} className="pet-snow absolute text-xs text-emerald-200" style={{ left: `${i * 26}%`, animationDelay: `${i * 0.7}s` }} aria-hidden>
-                ✦
-              </span>
-            ))}
           {mood === 'sleeping' && (
             <span className="pet-zzz absolute -top-3 right-0 text-base font-bold text-emerald-500" aria-hidden>
               z<span className="text-xs">z</span>
@@ -549,12 +528,12 @@ export function Pet() {
             <Meter label="Tummy" value={tummy} />
             <div className="taro-inset rounded-2xl p-2.5 text-sm">
               <p className="font-semibold">
-                Delivery streak: {streak} of {STREAK_GOAL} days this week {crown ? '♛' : ''}
+                Delivery streak: {streak} of {STREAK_GOAL} days this week
               </p>
               <p className="text-xs text-slate-600 dark:text-slate-300">
                 {streak >= STREAK_GOAL
-                  ? 'Food came every day this week! Crown earned ♡ It stays all next week too.'
-                  : `A day counts when both lunch and dinner are delivered (Mon–Sat). A cancelled meal starts it again. ${STREAK_GOAL - streak} more for a crown.${crown ? ' Wearing last week’s crown ♛' : ''}`}
+                  ? 'Food came every day this week! ♡'
+                  : `A day counts when both lunch and dinner are delivered (Mon–Sat). A cancelled meal starts it again. ${STREAK_GOAL - streak} more for a full week.`}
               </p>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-300">{menuLine(meals)}</p>

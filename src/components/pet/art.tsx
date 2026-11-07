@@ -2,53 +2,14 @@
 import { useId } from 'react';
 import { BLOB, INK, LINE, speciesFor, type PetKind } from './species';
 
-/** Things Mochi can wear or hold. */
-export type Accessory = 'crown' | 'party' | 'scarf' | 'umbrella' | 'diya' | 'bill';
+/** Things your pet can hold: last month's bill, in the first days of a month. */
+export type Accessory = 'bill';
 export type Mood = 'normal' | 'happy' | 'sad' | 'sleeping' | 'eating';
 
-
-function Accessories({ wear, layer }: { wear: Accessory[]; layer: 'back' | 'front' }) {
-  const has = (a: Accessory) => wear.includes(a);
-  if (layer === 'back') {
-    return has('umbrella') ? (
-      <g>
-        <path d="M50 46V12" stroke={LINE} strokeWidth="1.6" />
-        <path d="M37 13a13 9 0 0 1 26 0c-2.2-1.4-4.3-1.4-6.5 0-2.2-1.4-4.3-1.4-6.5 0-2.2-1.4-4.3-1.4-6.5 0-2.2-1.4-4.3-1.4-6.5 0Z" fill="#bba6dc" stroke={LINE} strokeWidth="1.4" />
-      </g>
-    ) : null;
-  }
+function Accessories({ wear }: { wear: Accessory[] }) {
   return (
     <g>
-      {has('crown') && (
-        <g className="pet-sparkle">
-          <path d="M24 23l1.5-8 4.5 4.5 2-6.5 2 6.5 4.5-4.5 1.5 8Z" fill="#ece4f6" stroke={LINE} strokeWidth="1.4" strokeLinejoin="round" />
-          <circle cx="32" cy="13" r="1.4" fill="#ab94d3" />
-          <circle cx="25.5" cy="15" r="1.1" fill="#ab94d3" />
-          <circle cx="38.5" cy="15" r="1.1" fill="#ab94d3" />
-        </g>
-      )}
-      {has('party') && (
-        <g>
-          <path d="M32 3 25.5 22h13Z" fill="#dccdef" stroke={LINE} strokeWidth="1.4" strokeLinejoin="round" />
-          <path d="M28.5 13.5h7M27 18h10" stroke="#ab94d3" strokeWidth="1.6" />
-          <circle cx="32" cy="3" r="2" fill="#ab94d3" />
-        </g>
-      )}
-      {has('scarf') && (
-        <g>
-          <path d="M13.5 47q18.5 6 37 0l-.6 4.6q-18 5.8-35.8 0Z" fill="#8670ab" />
-          <path d="M41 51l2.5 8 4-1.5-2-7.5Z" fill="#6e5a92" />
-          <path d="M17 48.6l1 3.6M23 50l.6 3.6M29 50.8v3.6M35 50.8v3.6M41 50l-.6 3.6M47 48.6l-1 3.6" stroke="#ab94d3" strokeWidth="1" />
-        </g>
-      )}
-      {has('diya') && (
-        <g>
-          <path d="M1 57h14a7 4 0 0 1-14 0Z" fill="#8670ab" stroke={INK} strokeWidth="1.2" />
-          <path className="pet-flame" d="M8 56c-2.6-2.6-1.4-5.6 0-8.4 1.4 2.8 2.6 5.8 0 8.4Z" fill="#f6f2fb" stroke="#ab94d3" strokeWidth="1" />
-          <circle className="pet-glow" cx="8" cy="52" r="6" fill="#ece4f6" opacity="0.35" />
-        </g>
-      )}
-      {has('bill') && (
+      {wear.includes('bill') && (
         <g transform="rotate(-12 54 44)">
           <rect x="47" y="36" width="12" height="15" rx="1.5" fill="#fbf9fc" stroke={LINE} strokeWidth="1.3" />
           <path d="M49.5 40h7M49.5 43h7M49.5 46h4.5" stroke="#ab94d3" strokeWidth="1.1" strokeLinecap="round" />
@@ -104,7 +65,6 @@ export function MochiSvg({
           <stop offset="1" stopColor={s.colors[1]} />
         </linearGradient>
       </defs>
-      <Accessories wear={wear} layer="back" />
       {s.back && <g className={face === 'sad' ? 'pet-ears-down' : 'pet-ears'}>{s.back(fill)}</g>}
       <path d={s.body ?? BLOB} fill={fill} stroke={LINE} strokeWidth="1.8" strokeLinejoin="round" />
       {s.feet && (
@@ -114,7 +74,7 @@ export function MochiSvg({
         </>
       )}
       {s.front?.(fill)}
-      {s.hat && !wear.includes('crown') && !wear.includes('party') && s.hat}
+      {s.hat}
       {/* eyes */}
       {face === 'sleeping' ? (
         closed(0.5, 2.4)
@@ -163,7 +123,7 @@ export function MochiSvg({
           fill={face === 'happy' ? '#f3b8cf' : 'none'}
         />
       )}
-      <Accessories wear={wear} layer="front" />
+      <Accessories wear={wear} />
     </svg>
   );
 }

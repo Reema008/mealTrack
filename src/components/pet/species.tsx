@@ -37,7 +37,7 @@ export interface Species {
   front?: (fill: string) => ReactNode;
   /** Noses, beaks and whiskers on top of the face. */
   face?: ReactNode;
-  /** A hat the pet always wears, taken off for a crown or party hat. */
+  /** A hat the pet always wears, drawn over the head. */
   hat?: ReactNode;
 }
 
