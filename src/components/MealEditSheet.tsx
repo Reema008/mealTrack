@@ -20,6 +20,7 @@ export function MealEditSheet({ meal, pending, onClose }: { meal: EffectiveMeal;
     deliveryStatus: meal.deliveryStatus,
     mainDish: meal.mainDish,
     extraCurryReceived: meal.extraCurryReceived,
+    extraCurryType: meal.extraCurryType,
   }));
   // An unsynced edit has no real server version; the outbox keeps the
   // version its first queued edit was based on.
@@ -124,6 +125,15 @@ export function MealEditSheet({ meal, pending, onClose }: { meal: EffectiveMeal;
                 options={[
                   { value: true, label: 'Received' },
                   { value: false, label: 'Not received', tone: 'bad' },
+                ]}
+              />
+              <Segmented
+                label={values.extraCurryReceived === false ? 'Which extra curry was missing?' : 'Which extra curry came?'}
+                value={values.extraCurryType ?? 'chicken'}
+                onChange={(v) => setValues({ ...values, extraCurryType: v })}
+                options={[
+                  { value: 'chicken', label: 'Chicken curry' },
+                  { value: 'egg', label: 'Egg curry' },
                 ]}
               />
             </>

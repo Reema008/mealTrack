@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { toAppError } from '../lib/errors';
+import { DEFAULT_BILLING, type BillingSettings } from '../domain/billing';
 import type { SubscriptionRecord } from '../domain/subscription';
 import type { ISODate, MealOverride, MealPeriod, MealValues } from '../domain/types';
 
@@ -7,8 +8,45 @@ export interface Household {
   id: string;
   name: string;
   timezone: string;
-  /** Subscription renewal date; each period lasts 4 weeks from it. */
-  subscription_start: string | null;
+  /** Day of the month each subscription starts (1–28). */
+  billing_day: number;
+  monthly_amount: number;
+  veg_meal_price: number;
+  nonveg_meal_price: number;
+  chicken_curry_price: number;
+  egg_curry_price: number;
+}
+
+const HOUSEHOLD_COLUMNS =
+  'id, name, timezone, billing_day, monthly_amount, veg_meal_price, nonveg_meal_price, chicken_curry_price, egg_curry_price';
+
+/** Prices and monthly amount set for this MealTrack (numbers, falling back to the defaults). */
+export function billingSettings(h: Household): BillingSettings {
+  const n = (v: unknown, d: number) => (v === null || v === undefined || Number.isNaN(Number(v)) ? d : Number(v));
+  return {
+    billingDay: n(h.billing_day, DEFAULT_BILLING.billingDay),
+    monthlyAmount: n(h.monthly_amount, DEFAULT_BILLING.monthlyAmount),
+    vegMeal: n(h.veg_meal_price, DEFAULT_BILLING.vegMeal),
+    nonvegMeal: n(h.nonveg_meal_price, DEFAULT_BILLING.nonvegMeal),
+    chickenCurry: n(h.chicken_curry_price, DEFAULT_BILLING.chickenCurry),
+    eggCurry: n(h.egg_curry_price, DEFAULT_BILLING.eggCurry),
+  };
+}
+
+/** Admin only: change the monthly amount, prices or start day. */
+export async function updateBilling(id: string, b: BillingSettings): Promise<void> {
+  const { error } = await supabase
+    .from('households')
+    .update({
+      billing_day: b.billingDay,
+      monthly_amount: b.monthlyAmount,
+      veg_meal_price: b.vegMeal,
+      nonveg_meal_price: b.nonvegMeal,
+      chicken_curry_price: b.chickenCurry,
+      egg_curry_price: b.eggCurry,
+    })
+    .eq('id', id);
+  if (error) throw toAppError(error);
 }
 
 export type MemberStatus = 'pending' | 'approved';
@@ -46,7 +84,7 @@ export interface SaveRequest {
 }
 
 const OVERRIDE_COLUMNS =
-  'id, household_id, meal_date, meal_period, delivery_status, main_dish, extra_curry_received, created_by, updated_by, created_at, updated_at, version';
+  'id, household_id, meal_date, meal_period, delivery_status, main_dish, extra_curry_received, extra_curry_type, created_by, updated_by, created_at, updated_at, version';
 
 /**
  * This person's access: null (not signed in on this phone yet), pending
@@ -55,7 +93,7 @@ const OVERRIDE_COLUMNS =
 export async function fetchMembership(userId: string): Promise<Membership | PendingMembership | null> {
   const { data, error } = await supabase
     .from('household_members')
-    .select('role, display_name, username, must_change_password, status, household:households(id, name, timezone, subscription_start)')
+    .select(`role, display_name, username, must_change_password, status, household:households(${HOUSEHOLD_COLUMNS})`)
     .eq('user_id', userId)
     .maybeSingle();
   if (error) throw toAppError(error);
@@ -78,12 +116,13 @@ export async function fetchOverrides(householdId: string, start: ISODate, end: I
 }
 
 export async function saveMealOverride(req: SaveRequest): Promise<SaveOutcome> {
-  const { data, error } = await supabase.rpc('save_meal', {
+  const { data, error } = await supabase.rpc('save_meal_v2', {
     p_date: req.date,
     p_period: req.period,
     p_delivery_status: req.values.deliveryStatus,
     p_main_dish: req.values.mainDish,
     p_extra_curry: req.values.extraCurryReceived,
+    p_extra_curry_type: req.values.extraCurryType ?? null,
     p_expected_version: req.expectedVersion,
     p_keep: req.keep ?? false,
   });
@@ -139,7 +178,7 @@ export async function setAccountRole(userId: string, role: 'admin' | 'member'): 
   if (error) throw toAppError(error);
 }
 
-export async function updateHousehold(id: string, patch: { name?: string; timezone?: string; subscription_start?: string | null }): Promise<void> {
+export async function updateHousehold(id: string, patch: { name?: string; timezone?: string }): Promise<void> {
   const { error } = await supabase.from('households').update(patch).eq('id', id);
   if (error) throw toAppError(error);
 }

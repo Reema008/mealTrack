@@ -93,7 +93,7 @@ export function CalendarPage() {
                             <span className="font-medium">{PERIOD_LABEL[m.period]}:</span>{' '}
                             <span className={m.deliveryStatus === 'not_received' ? 'font-semibold text-rose-700 dark:text-rose-300' : ''}>{deliveryLabel(m)}</span>
                             {m.dayType === 'nonveg' && m.deliveryStatus === 'delivered' && (
-                              <> · {m.mainDish === 'egg' ? 'Egg' : 'Chicken'} · curries {m.extraCurryReceived ? '✓' : '✗'}</>
+                              <> · {m.mainDish === 'egg' ? 'Egg' : 'Chicken'} · {m.extraCurryType === 'egg' ? 'egg' : 'chicken'} curry {m.extraCurryReceived ? '✓' : 'missing'}</>
                             )}
                           </span>
                           <StatusBadge kind={badgeFor(m, pendingKeys.has(overrideKey(m.date, m.period)))} />

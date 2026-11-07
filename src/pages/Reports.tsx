@@ -1,52 +1,48 @@
 import { useState } from 'react';
-import { CategoryTile, DailyChart, SplitBar, StatCard } from '../components/Charts';
-import { Card, CurryIcon, ErrorNote, NonVegIcon, Spinner, TextField, VegIcon } from '../components/ui';
-import { addDays, addMonths, endOfMonth, endOfWeek, formatMonth, formatShort, isISODate, startOfMonth, startOfWeek } from '../domain/dates';
-import { computeStats, formatPercent, listMeals, type ReportMetric } from '../domain/stats';
-import { subscriptionPeriods } from '../domain/subscription';
-import { useSubscriptions } from '../data/subscriptions';
 import { useSearchParams } from 'react-router-dom';
+import { BillSheet, periodTitle } from '../components/BillSheet';
+import { CategoryTile, DailyChart, SplitBar, StatCard } from '../components/Charts';
 import { ReportDetailSheet } from '../components/ReportDetail';
+import { useToast } from '../components/Toast';
+import { Button, Card, CurryIcon, ErrorNote, NonVegIcon, Spinner, TextField, VegIcon } from '../components/ui';
+import { billingPeriodFor, computeBill, dayRows, shiftPeriod, type BillingPeriod } from '../domain/billing';
+import { addDays, endOfWeek, formatLong, formatShort, isISODate, startOfMonth, startOfWeek } from '../domain/dates';
+import { computeStats, formatPercent, listMeals, type ReportMetric } from '../domain/stats';
+import { formatAmount } from '../domain/subscription';
 import { useHousehold } from '../data/household';
 import { useOverrides } from '../data/meals';
+import { buildReportPdf, saveFile } from '../lib/reportPdf';
 
-type Mode = 'subscription' | 'week' | 'month' | 'custom';
+type Mode = 'month' | 'week' | 'custom';
 const MAX_CUSTOM_DAYS = 366;
+const MODE_LABEL: Record<Mode, string> = { month: 'Monthly', week: 'Weekly', custom: 'Custom' };
 
 export function ReportsPage() {
-  const { today, nowMinutes } = useHousehold();
+  const { today, nowMinutes, billing } = useHousehold();
+  const toast = useToast();
   const [params] = useSearchParams();
-  const periods = subscriptionPeriods(useSubscriptions().data ?? []);
-  const hasPeriods = periods.length > 0;
   const requested = params.get('period');
-  const latestStarted = Math.max(0, periods.filter((p) => p.start <= today).length - 1);
-  const currentPeriod = requested && periods.some((p) => p.start === requested) ? periods.findIndex((p) => p.start === requested) : latestStarted;
   const [detail, setDetail] = useState<ReportMetric | null>(null);
-  const [chosenMode, setMode] = useState<Mode | null>(null);
-  const mode: Mode = chosenMode ?? (hasPeriods ? 'subscription' : 'week');
-  const [chosenIndex, setPeriodIndex] = useState<number | null>(null);
-  const periodIndex = Math.min(Math.max(chosenIndex ?? currentPeriod, 0), Math.max(periods.length - 1, 0));
-  const [anchor, setAnchor] = useState(today);
+  const [mode, setMode] = useState<Mode>('month');
+  const [anchor, setAnchor] = useState(requested && isISODate(requested) ? requested : today);
   const [customStart, setCustomStart] = useState(startOfMonth(today));
   const [customEnd, setCustomEnd] = useState(today);
+  const [bill, setBill] = useState<BillingPeriod | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   let start: string;
   let end: string;
   let title: string;
   let rangeError: string | null = null;
-  if (mode === 'subscription' && hasPeriods) {
-    const p = periods[periodIndex];
-    start = p.start;
-    end = p.end;
-    title = `${formatShort(start)} – ${formatShort(end)}`;
+  const month = billingPeriodFor(anchor, billing.billingDay);
+  if (mode === 'month') {
+    start = month.start;
+    end = month.end;
+    title = periodTitle(month, billing.billingDay);
   } else if (mode === 'week') {
     start = startOfWeek(anchor);
     end = endOfWeek(anchor);
     title = `${formatShort(start)} – ${formatShort(end)}`;
-  } else if (mode === 'month') {
-    start = startOfMonth(anchor);
-    end = endOfMonth(anchor);
-    title = formatMonth(anchor);
   } else {
     start = customStart;
     end = customEnd;
@@ -63,16 +59,36 @@ export function ReportsPage() {
   const { map, pendingKeys, isLoading, error, refetch } = useOverrides(start, end);
   const s = computeStats(start, end, map, today, nowMinutes);
   const meals = listMeals(start, end, map, today, nowMinutes);
+  const money = computeBill(start, end, map, today, nowMinutes, billing);
   const rangeLabel = mode === 'custom' ? `${formatShort(start)} – ${formatShort(end)}` : title;
   const open = (m: ReportMetric) => () => setDetail(m);
   const a = s.actual;
 
   const shift = (delta: number) => {
-    if (mode === 'subscription') setPeriodIndex(Math.min(Math.max(periodIndex + delta, 0), periods.length - 1));
-    else setAnchor(mode === 'week' ? addDays(anchor, 7 * delta) : addMonths(anchor, delta));
+    if (mode === 'month') setAnchor(shiftPeriod(month, delta, billing.billingDay).start);
+    else setAnchor(addDays(anchor, 7 * delta));
   };
-  const modes: Mode[] = hasPeriods ? ['subscription', 'week', 'month', 'custom'] : ['week', 'month', 'custom'];
-  const MODE_LABEL: Record<Mode, string> = { subscription: '4 weeks', week: 'Weekly', month: 'Monthly', custom: 'Custom' };
+
+  async function download() {
+    setDownloading(true);
+    try {
+      const file = await buildReportPdf({
+        title: mode === 'custom' ? `${formatShort(start)} – ${formatShort(end)}` : title,
+        start,
+        end,
+        bill: money,
+        rows: dayRows(start, end, map, today, nowMinutes, billing),
+        settings: billing,
+        isSubscriptionPeriod: mode === 'month',
+        generatedOn: formatLong(today),
+      });
+      await saveFile(file);
+    } catch (e) {
+      toast(`Could not create the PDF: ${(e as Error).message}`, 'error');
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -81,7 +97,7 @@ export function ReportsPage() {
         <p className="text-sm text-slate-600 dark:text-slate-300">Tap any box to see the dates behind it.</p>
       </div>
       <div className="taro-card flex flex-wrap gap-1 rounded-3xl p-1" role="tablist" aria-label="Report period">
-        {modes.map((m) => (
+        {(Object.keys(MODE_LABEL) as Mode[]).map((m) => (
           <button
             key={m}
             role="tab"
@@ -89,9 +105,8 @@ export function ReportsPage() {
             onClick={() => {
               setMode(m);
               setAnchor(today);
-              setPeriodIndex(null);
             }}
-            className={`min-h-10 flex-1 whitespace-nowrap rounded-full px-3 text-sm font-semibold capitalize ${mode === m ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300'}`}
+            className={`min-h-10 flex-1 whitespace-nowrap rounded-full px-3 text-sm font-semibold ${mode === m ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300'}`}
           >
             {MODE_LABEL[m]}
           </button>
@@ -105,18 +120,47 @@ export function ReportsPage() {
         </div>
       ) : (
         <div className="flex items-center justify-between gap-2">
-          <button onClick={() => shift(-1)} className="min-h-11 min-w-11 shrink-0 rounded-xl text-lg hover:bg-slate-200 dark:hover:bg-slate-800" aria-label={mode === 'subscription' ? 'Previous period' : `Previous ${mode}`}>←</button>
+          <button onClick={() => shift(-1)} className="min-h-11 min-w-11 shrink-0 rounded-xl text-lg hover:bg-slate-200 dark:hover:bg-white/10" aria-label={`Previous ${mode}`}>←</button>
           <div className="min-w-0 text-center" aria-live="polite">
             <p className="font-display text-lg">{title}</p>
-            {mode === 'subscription' && (
+            {mode === 'month' && billing.billingDay !== 1 && (
               <p className="text-xs text-slate-600 dark:text-slate-300">
-                Subscription {periodIndex + 1} of {periods.length}
-                {periods[periodIndex]?.record.amount != null && ` · ₹${periods[periodIndex].record.amount!.toLocaleString('en-IN')}`}
+                {formatShort(start)} – {formatShort(end)}
               </p>
             )}
           </div>
-          <button onClick={() => shift(1)} className="min-h-11 min-w-11 shrink-0 rounded-xl text-lg hover:bg-slate-200 dark:hover:bg-slate-800" aria-label={mode === 'subscription' ? 'Next period' : `Next ${mode}`}>→</button>
+          <button onClick={() => shift(1)} className="min-h-11 min-w-11 shrink-0 rounded-xl text-lg hover:bg-slate-200 dark:hover:bg-white/10" aria-label={`Next ${mode}`}>→</button>
         </div>
+      )}
+
+      {!rangeError && !error && !isLoading && (
+        <Card>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="text-xl">{mode === 'month' ? 'Amount' : 'Deductions'}</h2>
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                {money.missedMeals.length} missed meal{money.missedMeals.length === 1 ? '' : 's'} (− {formatAmount(money.mealDeductions)}) ·{' '}
+                {money.missedCurries.length} missed curr{money.missedCurries.length === 1 ? 'y' : 'ies'} (− {formatAmount(money.curryDeductions)})
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="font-display text-2xl leading-none">{mode === 'month' ? formatAmount(money.nextAmount) : `− ${formatAmount(money.totalDeductions)}`}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                {mode === 'month' ? `${formatAmount(money.base)} − ${formatAmount(money.totalDeductions)}, for next month` : 'taken off the subscription'}
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap justify-end gap-2">
+            {mode === 'month' && (
+              <Button variant="secondary" onClick={() => setBill(month)}>
+                Missed dates
+              </Button>
+            )}
+            <Button disabled={downloading} onClick={() => void download()}>
+              {downloading ? 'Preparing PDF…' : 'Download report (PDF)'}
+            </Button>
+          </div>
+        </Card>
       )}
 
       {rangeError ? (
@@ -135,7 +179,7 @@ export function ReportsPage() {
             <StatCard label="Scheduled days" emoji="📅" tint="cream" value={s.scheduledDays} hint="Sundays excluded" onClick={open('scheduledDays')} />
             {s.pending > 0 && <StatCard label="Pending today" emoji="💫" tint="butter" value={s.pending} hint="lunch 2 PM · dinner 10 PM" onClick={open('pending')} />}
             <StatCard label="Planned" emoji="🔮" tint="lavender" value={s.planned.meals} hint="future, not counted yet" onClick={open('planned')} />
-            <StatCard label="Extra curries" emoji={<CurryIcon className="h-6 w-6" />} tint="peach" value={a.extraCurryReceived} hint={`of ${a.nonVegMeals} delivered non-veg · ${a.extraCurryMissing} missing`} onClick={open('extraCurry')} />
+            <StatCard label="Extra curries" emoji={<CurryIcon className="h-6 w-6" />} tint="peach" value={a.extraCurryReceived} hint={`${money.curriesReceived.chicken} chicken · ${money.curriesReceived.egg} egg · ${a.extraCurryMissing} missing`} onClick={open('extraCurry')} />
           </div>
 
           <section aria-labelledby="by-category" className="space-y-3">
@@ -183,6 +227,7 @@ export function ReportsPage() {
       {detail && (
         <ReportDetailSheet metric={detail} meals={meals} pendingKeys={pendingKeys} rangeLabel={rangeLabel} onClose={() => setDetail(null)} />
       )}
+      {bill && <BillSheet initial={bill} onClose={() => setBill(null)} />}
     </div>
   );
 }

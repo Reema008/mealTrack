@@ -21,8 +21,8 @@ export function toOverrideMap(rows: readonly MealOverride[]): Map<string, MealOv
 /** The standard assumption for a scheduled meal with no saved record. */
 export function defaultValues(dayType: ScheduledDayType): MealValues {
   return dayType === 'veg'
-    ? { deliveryStatus: 'delivered', mainDish: null, extraCurryReceived: null }
-    : { deliveryStatus: 'delivered', mainDish: 'chicken', extraCurryReceived: true };
+    ? { deliveryStatus: 'delivered', mainDish: null, extraCurryReceived: null, extraCurryType: null }
+    : { deliveryStatus: 'delivered', mainDish: 'chicken', extraCurryReceived: true, extraCurryType: 'chicken' };
 }
 
 /** Minutes after local midnight from which today's meal is assumed delivered. */
@@ -52,13 +52,14 @@ export function isBeforeCutoff(date: ISODate, period: MealPeriod, today: ISODate
  */
 export function normalizeValues(dayType: ScheduledDayType, values: MealValues): MealValues {
   if (dayType === 'veg' || values.deliveryStatus === 'not_received') {
-    return { deliveryStatus: values.deliveryStatus, mainDish: null, extraCurryReceived: null };
+    return { deliveryStatus: values.deliveryStatus, mainDish: null, extraCurryReceived: null, extraCurryType: null };
   }
   const d = defaultValues('nonveg');
   return {
     deliveryStatus: values.deliveryStatus,
     mainDish: values.mainDish ?? d.mainDish,
     extraCurryReceived: values.extraCurryReceived ?? d.extraCurryReceived,
+    extraCurryType: values.extraCurryType ?? d.extraCurryType,
   };
 }
 
@@ -66,7 +67,8 @@ export function valuesEqual(a: MealValues, b: MealValues): boolean {
   return (
     a.deliveryStatus === b.deliveryStatus &&
     a.mainDish === b.mainDish &&
-    a.extraCurryReceived === b.extraCurryReceived
+    a.extraCurryReceived === b.extraCurryReceived &&
+    a.extraCurryType === b.extraCurryType
   );
 }
 
@@ -75,11 +77,14 @@ export function isDefault(dayType: ScheduledDayType, values: MealValues): boolea
   return valuesEqual(normalizeValues(dayType, values), defaultValues(dayType));
 }
 
-export function overrideValues(o: Pick<MealOverride, 'delivery_status' | 'main_dish' | 'extra_curry_received'>): MealValues {
+export function overrideValues(
+  o: Pick<MealOverride, 'delivery_status' | 'main_dish' | 'extra_curry_received' | 'extra_curry_type'>,
+): MealValues {
   return {
     deliveryStatus: o.delivery_status,
     mainDish: o.main_dish,
     extraCurryReceived: o.extra_curry_received,
+    extraCurryType: o.extra_curry_type ?? null,
   };
 }
 

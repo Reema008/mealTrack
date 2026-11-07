@@ -69,7 +69,7 @@ export function MealCard({ meal, pending, onEdit }: { meal: EffectiveMeal; pendi
             <Row label="Main dish" value={meal.mainDish === 'egg' ? 'Egg' : 'Chicken'} />
             <Row
               label="Extra curries"
-              value={meal.extraCurryReceived ? (upcoming ? 'Expected' : 'Received') : upcoming ? 'Not expected' : 'Not Received'}
+              value={`${meal.extraCurryType === 'egg' ? 'Egg' : 'Chicken'} · ${meal.extraCurryReceived ? (upcoming ? 'Expected' : 'Received') : upcoming ? 'Not expected' : 'Not received'}`}
               bad={!meal.extraCurryReceived}
             />
           </>

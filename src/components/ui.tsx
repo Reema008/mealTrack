@@ -64,6 +64,16 @@ export function CurryIcon({ className = 'h-5 w-5' }: { className?: string }) {
   );
 }
 
+/** Extra egg curry: a little egg. */
+export function EggCurryIcon({ className = 'h-5 w-5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <path d="M12 2.8c3.9 0 7 5.6 7 10.4a7 7 0 0 1-14 0C5 8.4 8.1 2.8 12 2.8Z" fill="#f6f2fb" stroke="#8670ab" strokeWidth="1.6" />
+      <circle cx="12" cy="14" r="3.6" fill="#ab94d3" />
+    </svg>
+  );
+}
+
 /** Non-veg mark: a square with a triangle, like the label on Indian food packets. */
 export function NonVegIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
   return (

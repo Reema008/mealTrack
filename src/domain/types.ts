@@ -6,6 +6,8 @@ export type DayType = 'veg' | 'nonveg' | 'none';
 export type ScheduledDayType = Exclude<DayType, 'none'>;
 export type DeliveryStatus = 'delivered' | 'not_received';
 export type MainDish = 'egg' | 'chicken';
+/** Which extra curry came with (or was missing from) a delivered non-veg meal. */
+export type CurryType = 'chicken' | 'egg';
 
 /** Where a meal's state came from. */
 export type MealSource = 'assumed' | 'explicit';
@@ -25,6 +27,8 @@ export interface MealOverride {
   delivery_status: DeliveryStatus;
   main_dish: MainDish | null;
   extra_curry_received: boolean | null;
+  /** Null on older rows: treated as chicken. */
+  extra_curry_type?: CurryType | null;
   created_by: string | null;
   updated_by: string | null;
   created_at: string;
@@ -37,6 +41,8 @@ export interface MealValues {
   deliveryStatus: DeliveryStatus;
   mainDish: MainDish | null;
   extraCurryReceived: boolean | null;
+  /** Chicken or egg; null on veg days and on meals that were not delivered. */
+  extraCurryType: CurryType | null;
 }
 
 export interface EffectiveMeal extends MealValues {

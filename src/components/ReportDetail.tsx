@@ -28,7 +28,7 @@ function mealLine(m: EffectiveMeal, metric: ReportMetric): string {
   const parts = [deliveryLabel(m)];
   if (m.dayType === 'nonveg' && m.deliveryStatus === 'delivered') {
     parts.push(m.mainDish === 'egg' ? 'Egg' : 'Chicken');
-    if (metric === 'extraCurry' || !m.extraCurryReceived) parts.push(m.extraCurryReceived ? 'curries ✓' : 'curries missing');
+    if (metric === 'extraCurry' || !m.extraCurryReceived) parts.push(`${m.extraCurryType === 'egg' ? 'egg' : 'chicken'} curry ${m.extraCurryReceived ? '✓' : 'missing'}`);
   }
   return parts.join(' · ');
 }

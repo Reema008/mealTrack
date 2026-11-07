@@ -5,7 +5,8 @@ import { useToast } from '../components/Toast';
 import { Button, Card } from '../components/ui';
 import { Link } from 'react-router-dom';
 import { formatShort, isValidTimeZone } from '../domain/dates';
-import { formatAmount, subscriptionStatus } from '../domain/subscription';
+import { billingPeriodFor } from '../domain/billing';
+import { formatAmount, paymentFor } from '../domain/subscription';
 import { useSubscriptions } from '../data/subscriptions';
 import { fetchReminderPreference, setReminderPreference, updateHousehold } from '../data/api';
 import { membershipKey, useHousehold } from '../data/household';
@@ -14,17 +15,12 @@ import { currentSubscription, enablePushOnThisDevice, pushSupport, sendTestNotif
 const TIMEZONES = ['Asia/Kolkata', 'Asia/Dubai', 'Asia/Singapore', 'Europe/London', 'America/New_York', 'America/Los_Angeles', 'Australia/Sydney'];
 
 function SubscriptionSection() {
-  const { today } = useHousehold();
+  const { today, billing } = useHousehold();
   const subs = useSubscriptions();
-  const status = subscriptionStatus(subs.data ?? [], today);
-  const summary =
-    status.kind === 'active'
-      ? `Current: ${formatShort(status.period.start)} – ${formatShort(status.period.end)} · ${formatAmount(status.period.record.amount)} · renews ${formatShort(status.period.renewsOn)}`
-      : status.kind === 'ended'
-        ? `Renewal due: the last subscription ended on ${formatShort(status.period.end)}.`
-        : status.kind === 'upcoming'
-          ? `Next subscription starts ${formatShort(status.period.start)}.`
-          : 'No subscriptions recorded yet.';
+  const current = billingPeriodFor(today, billing.billingDay);
+  const paid = paymentFor(subs.data ?? [], current, billing.billingDay);
+  const amount = paid ? `${formatAmount(paid.amount)} paid` : `${formatAmount(billing.monthlyAmount)} a month`;
+  const summary = `Current: ${formatShort(current.start)} – ${formatShort(current.end)} · ${amount} · renews ${formatShort(current.renewsOn)}`;
 
   return (
     <Card>
@@ -34,7 +30,7 @@ function SubscriptionSection() {
         to="/subscriptions"
         className="btn-taro inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold"
       >
-        Renewals & history →
+        Subscriptions, prices & history →
       </Link>
     </Card>
   );

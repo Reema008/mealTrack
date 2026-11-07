@@ -1,9 +1,9 @@
-import { CurryIcon, NonVegIcon, VegIcon } from './ui';
+import { CurryIcon, EggCurryIcon, NonVegIcon, VegIcon } from './ui';
 import { addDays, eachDay, endOfMonth, formatDate, formatLong, startOfMonth, startOfWeek, weekdayShort } from '../domain/dates';
 import { mealsForDate } from '../domain/meals';
 import { getDayType } from '../domain/schedule';
 import { useHousehold } from '../data/household';
-import type { EffectiveMeal, ISODate, OverrideMap } from '../domain/types';
+import type { CurryType, EffectiveMeal, ISODate, OverrideMap } from '../domain/types';
 
 /** What the calendar shows for one meal: only delivered, not delivered or pending. */
 export type MealMark = 'delivered' | 'missed' | 'pending' | null;
@@ -12,8 +12,13 @@ export interface DaySummary {
   dayType: ReturnType<typeof getDayType>;
   /** Lunch then dinner; null = nothing to show yet (a normal future meal). */
   meals: MealMark[];
-  /** A delivered non-veg meal came without the extra curries. */
-  noExtra: boolean;
+  /** Lunch then dinner: the extra curry on a delivered non-veg meal (null when there is none to show). */
+  curries: Array<CurryMark | null>;
+}
+
+export interface CurryMark {
+  type: CurryType;
+  received: boolean;
 }
 
 function markFor(m: EffectiveMeal): MealMark {
@@ -28,8 +33,10 @@ export function summarizeDay(date: ISODate, map: OverrideMap, today: ISODate, no
   return {
     dayType: getDayType(date),
     meals: meals.map(markFor),
-    noExtra: meals.some(
-      (m) => m.dayType === 'nonveg' && m.deliveryStatus === 'delivered' && m.extraCurryReceived === false && (m.timing === 'past' || m.timing === 'today'),
+    curries: meals.map((m) =>
+      m.dayType === 'nonveg' && m.deliveryStatus === 'delivered' && (m.timing === 'past' || m.timing === 'today')
+        ? { type: m.extraCurryType ?? 'chicken', received: m.extraCurryReceived === true }
+        : null,
     ),
   };
 }
@@ -45,8 +52,9 @@ function describeDay(date: ISODate, s: DaySummary): string {
   ['lunch', 'dinner'].forEach((name, i) => {
     const mark = s.meals[i];
     if (mark) parts.push(`${name} ${MARK_TEXT[mark]}`);
+    const curry = s.curries[i];
+    if (curry) parts.push(`${name} ${curry.type} curry ${curry.received ? 'received' : 'missing'}`);
   });
-  if (s.noExtra) parts.push('no extra curry');
   return parts.join(', ');
 }
 
@@ -84,24 +92,33 @@ export function MealIcon({ mark, className = 'h-3 w-3' }: { mark: Exclude<MealMa
   );
 }
 
-/** One icon per meal: lunch first, then dinner. */
-function MealIcons({ meals, className }: { meals: MealMark[]; className?: string }) {
-  if (!meals.some(Boolean)) return <span className="h-3" aria-hidden />;
+/** The extra curry of one meal: chicken bowl or egg, crossed out when it was missing. */
+export function CurryMarkIcon({ mark, className = 'h-3 w-3' }: { mark: CurryMark; className?: string }) {
+  const Icon = mark.type === 'egg' ? EggCurryIcon : CurryIcon;
   return (
-    <span className="flex items-center gap-0.5" aria-hidden>
-      {meals.map((m, i) => (m ? <MealIcon key={i} mark={m} className={className} /> : <span key={i} className="h-3 w-3" />))}
+    <span className={`relative inline-flex ${className}`} aria-hidden>
+      <Icon className={`h-full w-full ${mark.received ? '' : 'opacity-60'}`} />
+      {!mark.received && (
+        <svg viewBox="0 0 12 12" className="absolute inset-0 h-full w-full">
+          <path d="M1.2 10.8 10.8 1.2" strokeWidth="1.8" strokeLinecap="round" style={{ stroke: 'var(--st-missed)' }} />
+        </svg>
+      )}
     </span>
   );
 }
 
-/** The curry bowl with a line through it: a non-veg meal came without the extra curries. */
-export function NoExtraMark({ className }: { className: string }) {
+/** One column per meal, lunch then dinner: its status icon, and its extra curry underneath. */
+function MealIcons({ meals, curries, className }: { meals: MealMark[]; curries: Array<CurryMark | null>; className?: string }) {
+  if (!meals.some(Boolean)) return <span className="h-3" aria-hidden />;
+  const anyCurry = curries.some(Boolean);
   return (
-    <span className={`relative inline-flex ${className}`} aria-hidden>
-      <CurryIcon className="h-full w-full opacity-80" />
-      <svg viewBox="0 0 12 12" className="absolute inset-0 h-full w-full">
-        <path d="M1.5 10.5 10.5 1.5" strokeWidth="1.6" strokeLinecap="round" style={{ stroke: 'var(--st-missed)' }} />
-      </svg>
+    <span className="flex items-start gap-0.5" aria-hidden>
+      {meals.map((m, i) => (
+        <span key={i} className="flex flex-col items-center gap-px">
+          {m ? <MealIcon mark={m} className={className} /> : <span className="h-3 w-3" />}
+          {anyCurry && (curries[i] ? <CurryMarkIcon mark={curries[i]!} className="h-3 w-3" /> : <span className="h-3 w-3" />)}
+        </span>
+      ))}
     </span>
   );
 }
@@ -114,8 +131,10 @@ export function CalendarLegend() {
       <li className="flex items-center gap-2"><MealIcon mark="delivered" className="h-3.5 w-3.5" />Delivered</li>
       <li className="flex items-center gap-2"><MealIcon mark="missed" className="h-3.5 w-3.5" />Not delivered</li>
       <li className="flex items-center gap-2"><MealIcon mark="pending" className="h-3.5 w-3.5" />Pending</li>
-      <li className="flex items-center gap-2"><NoExtraMark className="h-3.5 w-3.5" />No extra curry</li>
-      <li className="col-span-full text-slate-500 dark:text-slate-300">Each day shows two icons: lunch first, then dinner.</li>
+      <li className="flex items-center gap-2"><CurryMarkIcon mark={{ type: 'chicken', received: true }} className="h-4 w-4" />Chicken curry</li>
+      <li className="flex items-center gap-2"><CurryMarkIcon mark={{ type: 'egg', received: true }} className="h-4 w-4" />Egg curry</li>
+      <li className="flex items-center gap-2"><CurryMarkIcon mark={{ type: 'chicken', received: false }} className="h-4 w-4" />Curry missing</li>
+      <li className="col-span-full text-slate-500 dark:text-slate-300">Left column = lunch, right column = dinner. The curry icon sits under its meal.</li>
     </ul>
   );
 }
@@ -165,18 +184,15 @@ export function MonthCalendar({
               aria-selected={isSel}
               aria-label={describeDay(d, s)}
               onClick={() => onSelect(d)}
-              className={`flex min-h-[3.6rem] flex-col items-center justify-center gap-0.5 rounded-xl py-1 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 ${
+              className={`flex min-h-[4.4rem] flex-col items-center justify-start gap-0.5 rounded-xl py-1.5 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 ${
                 inMonth ? 'taro-inset text-slate-900 hover:bg-white dark:text-slate-50 dark:hover:bg-white/10' : 'text-slate-400 opacity-60 dark:text-slate-400'
               } ${isSel ? 'ring-2 ring-emerald-500 dark:ring-emerald-300' : ''}`}
             >
-              <span className="flex h-2.5 items-center gap-0.5" aria-hidden>
-                <TypeMark type={s.dayType} className="h-2.5 w-2.5" />
-                {s.noExtra && <NoExtraMark className="h-2.5 w-2.5" />}
-              </span>
+              <TypeMark type={s.dayType} className="h-2.5 w-2.5" />
               <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[13px] leading-none ${isToday ? 'btn-taro font-bold' : isSel ? 'font-bold' : ''}`}>
                 {Number(formatDate(d, { day: 'numeric' }))}
               </span>
-              <MealIcons meals={s.meals} />
+              <MealIcons meals={s.meals} curries={s.curries} />
             </button>
           );
         })}
@@ -219,11 +235,10 @@ export function WeekStrip({
               <span className={`flex h-7 min-w-7 items-center justify-center rounded-full text-base font-bold ${isToday ? 'btn-taro' : ''}`}>
                 {Number(formatDate(d, { day: 'numeric' }))}
               </span>
-              <span className="flex h-3.5 items-center gap-1">
+              <span className="flex h-3.5 items-center">
                 <TypeMark type={s.dayType} className="h-3 w-3" />
-                {s.noExtra && <NoExtraMark className="h-2.5 w-2.5" />}
               </span>
-              <MealIcons meals={s.meals} />
+              <MealIcons meals={s.meals} curries={s.curries} />
             </button>
           </li>
         );

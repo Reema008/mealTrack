@@ -61,7 +61,7 @@ describe('schedule defaults', () => {
   it('2. Wednesday and Friday use the same non-veg defaults', () => {
     for (const d of [WED, FRI]) {
       for (const m of mealsForDate(d, none, TODAY)) {
-        expect(m).toMatchObject({ dayType: 'nonveg', deliveryStatus: 'delivered', mainDish: 'chicken', extraCurryReceived: true });
+        expect(m).toMatchObject({ dayType: 'nonveg', deliveryStatus: 'delivered', mainDish: 'chicken', extraCurryReceived: true, extraCurryType: 'chicken' });
       }
     }
   });
@@ -107,21 +107,21 @@ describe('overrides', () => {
   it('8. a meal marked not received has no main dish or extra curries; dinner is unaffected', () => {
     const current = effectiveMeal(TUE, 'lunch', undefined, TODAY)!;
     const next = normalizeValues('nonveg', withChange(current, { deliveryStatus: 'not_received' }));
-    expect(next).toEqual({ deliveryStatus: 'not_received', mainDish: null, extraCurryReceived: null });
+    expect(next).toEqual({ deliveryStatus: 'not_received', mainDish: null, extraCurryReceived: null, extraCurryType: null });
     const map = toOverrideMap([override({ meal_date: TUE, meal_period: 'lunch', delivery_status: 'not_received', main_dish: null, extra_curry_received: null })]);
     const [lunch, dinner] = mealsForDate(TUE, map, TODAY);
-    expect(lunch).toMatchObject({ deliveryStatus: 'not_received', mainDish: null, extraCurryReceived: null });
+    expect(lunch).toMatchObject({ deliveryStatus: 'not_received', mainDish: null, extraCurryReceived: null, extraCurryType: null });
     expect(dinner).toMatchObject({ deliveryStatus: 'delivered', mainDish: 'chicken', extraCurryReceived: true, source: 'assumed' });
   });
 
   it('switching a not-received meal back to delivered brings back the defaults', () => {
-    expect(normalizeValues('nonveg', { deliveryStatus: 'delivered', mainDish: null, extraCurryReceived: null })).toEqual(defaultValues('nonveg'));
+    expect(normalizeValues('nonveg', { deliveryStatus: 'delivered', mainDish: null, extraCurryReceived: null, extraCurryType: null })).toEqual(defaultValues('nonveg'));
   });
 
   it('9. extra curries can be missing while the meal stays delivered', () => {
     const map = toOverrideMap([override({ meal_date: FRI, meal_period: 'dinner', extra_curry_received: false })]);
     const dinner = mealsForDate(FRI, map, TODAY)[1];
-    expect(dinner).toMatchObject({ deliveryStatus: 'delivered', mainDish: 'chicken', extraCurryReceived: false });
+    expect(dinner).toMatchObject({ deliveryStatus: 'delivered', mainDish: 'chicken', extraCurryReceived: false, extraCurryType: 'chicken' });
   });
 
   it('10. removing an override restores the standard defaults', () => {
@@ -132,21 +132,34 @@ describe('overrides', () => {
 
   it('detects when values equal the defaults (so the override can be deleted)', () => {
     expect(isDefault('nonveg', defaultValues('nonveg'))).toBe(true);
-    expect(isDefault('nonveg', { deliveryStatus: 'delivered', mainDish: 'egg', extraCurryReceived: true })).toBe(false);
-    expect(isDefault('veg', { deliveryStatus: 'delivered', mainDish: null, extraCurryReceived: null })).toBe(true);
-    expect(isDefault('veg', { deliveryStatus: 'not_received', mainDish: null, extraCurryReceived: null })).toBe(false);
+    expect(isDefault('nonveg', { deliveryStatus: 'delivered', mainDish: 'egg', extraCurryReceived: true, extraCurryType: null })).toBe(false);
+    expect(isDefault('veg', { deliveryStatus: 'delivered', mainDish: null, extraCurryReceived: null, extraCurryType: null })).toBe(true);
+    expect(isDefault('veg', { deliveryStatus: 'not_received', mainDish: null, extraCurryReceived: null, extraCurryType: null })).toBe(false);
+  });
+
+  it('an egg curry is remembered; older records without a curry type count as chicken', () => {
+    const map = toOverrideMap([
+      override({ meal_date: FRI, meal_period: 'lunch', extra_curry_type: 'egg' }),
+      override({ meal_date: FRI, meal_period: 'dinner', extra_curry_received: false }),
+    ]);
+    const [lunch, dinner] = mealsForDate(FRI, map, TODAY);
+    expect(lunch.extraCurryType).toBe('egg');
+    expect(dinner).toMatchObject({ extraCurryReceived: false, extraCurryType: 'chicken' });
+    expect(isDefault('nonveg', { ...defaultValues('nonveg'), extraCurryType: 'egg' })).toBe(false);
   });
 
   it('normalises values to the day type', () => {
-    expect(normalizeValues('veg', { deliveryStatus: 'delivered', mainDish: 'egg', extraCurryReceived: false })).toEqual({
+    expect(normalizeValues('veg', { deliveryStatus: 'delivered', mainDish: 'egg', extraCurryReceived: false, extraCurryType: null })).toEqual({
       deliveryStatus: 'delivered',
       mainDish: null,
       extraCurryReceived: null,
+      extraCurryType: null,
     });
-    expect(normalizeValues('nonveg', { deliveryStatus: 'not_received', mainDish: 'egg', extraCurryReceived: true })).toEqual({
+    expect(normalizeValues('nonveg', { deliveryStatus: 'not_received', mainDish: 'egg', extraCurryReceived: true, extraCurryType: null })).toEqual({
       deliveryStatus: 'not_received',
       mainDish: null,
       extraCurryReceived: null,
+      extraCurryType: null,
     });
   });
 });

@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { nowInTimeZone } from '../domain/dates';
 import type { ISODate } from '../domain/types';
-import { fetchMembership, type Household, type Membership } from './api';
+import type { BillingSettings } from '../domain/billing';
+import { billingSettings, fetchMembership, type Household, type Membership } from './api';
 import { useSession } from './session';
 
 export const membershipKey = (userId: string | undefined) => ['membership', userId] as const;
@@ -26,6 +27,8 @@ interface HouseholdState {
   membership: Membership;
   household: Household;
   isAdmin: boolean;
+  /** Monthly amount, meal and curry prices, and the start day of each subscription. */
+  billing: BillingSettings;
   /** Today's date in the household timezone; updates at local midnight. */
   today: ISODate;
   /** Minutes after local midnight (household timezone); drives the 2 PM / 10 PM cutoffs. */
@@ -48,7 +51,7 @@ export function HouseholdProvider({
   const { date: today, minutes: nowMinutes } = useLocalNow(membership.household.timezone);
   return (
     <HouseholdContext.Provider
-      value={{ userId, email, membership, household: membership.household, isAdmin: membership.role === 'admin', today, nowMinutes }}
+      value={{ userId, email, membership, household: membership.household, isAdmin: membership.role === 'admin', billing: billingSettings(membership.household), today, nowMinutes }}
     >
       {children}
     </HouseholdContext.Provider>

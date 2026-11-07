@@ -53,7 +53,7 @@ function SyncIndicator({ sync }: { sync: SyncState }) {
 
 function describe(v: MealValues, nonveg: boolean) {
   const parts = [v.deliveryStatus === 'delivered' ? 'Delivered' : 'Not received'];
-  if (nonveg && v.deliveryStatus === 'delivered') parts.push(v.mainDish === 'egg' ? 'Egg' : 'Chicken', v.extraCurryReceived ? 'curries received' : 'curries not received');
+  if (nonveg && v.deliveryStatus === 'delivered') parts.push(v.mainDish === 'egg' ? 'Egg' : 'Chicken', `${v.extraCurryType === 'egg' ? 'egg' : 'chicken'} curry ${v.extraCurryReceived ? 'received' : 'not received'}`);
   return parts.join(' · ');
 }
 

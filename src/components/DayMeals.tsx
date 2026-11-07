@@ -11,7 +11,7 @@ import { useConfirm } from './Confirm';
 import { useToast } from './Toast';
 import { Button } from './ui';
 
-const NOT_DELIVERED: MealValues = { deliveryStatus: 'not_received', mainDish: null, extraCurryReceived: null };
+const NOT_DELIVERED: MealValues = { deliveryStatus: 'not_received', mainDish: null, extraCurryReceived: null, extraCurryType: null };
 
 /** Lunch and dinner cards for one date, with per-meal editing and a whole-day action. */
 export function DayMeals({

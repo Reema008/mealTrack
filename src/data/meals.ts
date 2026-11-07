@@ -13,9 +13,11 @@ import { signOut } from './session';
 
 export const overridesKey = (householdId: string) => ['overrides', householdId] as const;
 
+const NO_ITEMS: OutboxItem[] = [];
+
 export function useOutboxItems(householdId: string): OutboxItem[] {
   const subscribe = useCallback((cb: () => void) => outbox.subscribe(cb), []);
-  const all = useSyncExternalStore(subscribe, () => outbox.list());
+  const all = useSyncExternalStore(subscribe, () => outbox.list(), () => NO_ITEMS);
   return useMemo(() => all.filter((i) => i.householdId === householdId), [all, householdId]);
 }
 
@@ -77,6 +79,7 @@ function localOverride(householdId: string, item: OutboxItem, server?: MealOverr
     delivery_status: item.values.deliveryStatus,
     main_dish: item.values.mainDish,
     extra_curry_received: item.values.extraCurryReceived,
+    extra_curry_type: item.values.extraCurryType ?? null,
     created_by: server?.created_by ?? null,
     updated_by: null,
     created_at: server?.created_at ?? item.queuedAt,
@@ -114,6 +117,7 @@ function predictedRow(householdId: string, req: SaveRequest, previous: MealOverr
     delivery_status: values.deliveryStatus,
     main_dish: values.mainDish,
     extra_curry_received: values.extraCurryReceived,
+    extra_curry_type: values.extraCurryType,
     created_by: previous?.created_by ?? null,
     updated_by: null,
     created_at: previous?.created_at ?? now,
