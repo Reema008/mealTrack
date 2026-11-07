@@ -145,6 +145,7 @@ export function MonthCalendar({
   today,
   map,
   onSelect,
+  isEnabled = () => true,
 }: {
   month: ISODate;
   selected: ISODate;
@@ -152,6 +153,8 @@ export function MonthCalendar({
   map: OverrideMap;
   pendingKeys?: ReadonlySet<string>;
   onSelect: (d: ISODate) => void;
+  /** Dates outside the subscription are shown blank and can't be opened. */
+  isEnabled?: (d: ISODate) => boolean;
 }) {
   const { nowMinutes } = useHousehold();
   const first = startOfMonth(month);
@@ -173,6 +176,7 @@ export function MonthCalendar({
       <div className="grid grid-cols-7 gap-1" role="grid" aria-label="Month calendar">
         {days.map((d) => {
           const inMonth = d >= first && d <= last;
+          if (!isEnabled(d)) return <div key={d} role="gridcell" aria-hidden className="min-h-[4.4rem]" />;
           const s = summarizeDay(d, map, today, nowMinutes);
           const isSel = d === selected;
           const isToday = d === today;
@@ -207,17 +211,21 @@ export function WeekStrip({
   today,
   map,
   onSelect,
+  isEnabled = () => true,
 }: {
   start: ISODate;
   today: ISODate;
   map: OverrideMap;
   pendingKeys?: ReadonlySet<string>;
   onSelect: (d: ISODate) => void;
+  /** Dates outside the subscription are left blank. */
+  isEnabled?: (d: ISODate) => boolean;
 }) {
   const { nowMinutes } = useHousehold();
   return (
     <ol className="grid grid-cols-7 gap-1.5">
       {eachDay(start, addDays(start, 6)).map((d) => {
+        if (!isEnabled(d)) return <li key={d} aria-hidden />;
         const s = summarizeDay(d, map, today, nowMinutes);
         const isToday = d === today;
         return (

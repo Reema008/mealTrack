@@ -1,13 +1,13 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { billingPeriodFor, computeBill, CURRY_LABEL, dayRows, shiftPeriod, type BillingPeriod, type BillLine } from '../domain/billing';
-import { formatLong, formatMonth, formatShort } from '../domain/dates';
+import { addDays, formatLong, formatMonth, formatShort } from '../domain/dates';
 import { PERIOD_LABEL } from '../domain/schedule';
 import { firstSubscriptionStart, formatAmount, paymentFor, type SubscriptionRecord } from '../domain/subscription';
 import { addSubscription, updateSubscription } from '../data/api';
 import { useHousehold } from '../data/household';
 import { useOverrides } from '../data/meals';
-import { subscriptionsKey, useSubscriptions } from '../data/subscriptions';
+import { subscriptionsKey, useSubscribedRange, useSubscriptions } from '../data/subscriptions';
 import { buildReportPdf, saveFile } from '../lib/reportPdf';
 import { useToast } from './Toast';
 import { Button, CurryIcon, Spinner } from './ui';
@@ -69,6 +69,7 @@ export function BillSheet({ initial, onClose }: { initial: BillingPeriod; onClos
   const qc = useQueryClient();
   const toast = useToast();
   const subs = useSubscriptions();
+  const range = useSubscribedRange();
   const [period, setPeriod] = useState(initial);
   const [busy, setBusy] = useState<'pdf' | 'pay' | null>(null);
   const { map, isLoading } = useOverrides(period.start, period.end);
@@ -164,7 +165,12 @@ export function BillSheet({ initial, onClose }: { initial: BillingPeriod; onClos
               ← Earlier
             </Button>
             <span className="text-sm font-semibold">{title}</span>
-            <Button variant="ghost" className="min-h-9 px-3 text-xs" onClick={() => setPeriod(shiftPeriod(period, 1, billing.billingDay))}>
+            <Button
+              variant="ghost"
+              className="min-h-9 px-3 text-xs"
+              disabled={!range.inRange(addDays(period.end, 1))}
+              onClick={() => setPeriod(shiftPeriod(period, 1, billing.billingDay))}
+            >
               Later →
             </Button>
           </div>

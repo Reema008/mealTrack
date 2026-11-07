@@ -8,9 +8,10 @@ import { Button, Card, CurryIcon, ErrorNote, NonVegIcon, Spinner, TextField, Veg
 import { billingPeriodFor, computeBill, dayRows, shiftPeriod, type BillingPeriod } from '../domain/billing';
 import { addDays, endOfWeek, formatLong, formatShort, isISODate, startOfMonth, startOfWeek } from '../domain/dates';
 import { computeStats, formatPercent, listMeals, type ReportMetric } from '../domain/stats';
-import { formatAmount } from '../domain/subscription';
+import { formatAmount, subscriptionMonths } from '../domain/subscription';
 import { useHousehold } from '../data/household';
 import { useOverrides } from '../data/meals';
+import { useSubscriptions } from '../data/subscriptions';
 import { buildReportPdf, saveFile } from '../lib/reportPdf';
 
 type Mode = 'month' | 'week' | 'custom';
@@ -30,18 +31,25 @@ export function ReportsPage() {
   const [bill, setBill] = useState<BillingPeriod | null>(null);
   const [downloading, setDownloading] = useState(false);
 
+  // Only the subscribed months: from the first payment (October) to this month, or a later paid month.
+  const subs = useSubscriptions();
+  const months = subscriptionMonths(subs.data ?? [], today, billing.billingDay).reverse(); // oldest first
+  const firstDay = months[0].start;
+  const lastDay = months[months.length - 1].end;
+  const day = subs.isLoading ? anchor : anchor < firstDay ? firstDay : anchor > lastDay ? lastDay : anchor;
+
   let start: string;
   let end: string;
   let title: string;
   let rangeError: string | null = null;
-  const month = billingPeriodFor(anchor, billing.billingDay);
+  const month = billingPeriodFor(day, billing.billingDay);
   if (mode === 'month') {
     start = month.start;
     end = month.end;
     title = periodTitle(month, billing.billingDay);
   } else if (mode === 'week') {
-    start = startOfWeek(anchor);
-    end = endOfWeek(anchor);
+    start = startOfWeek(day);
+    end = endOfWeek(day);
     title = `${formatShort(start)} – ${formatShort(end)}`;
   } else {
     start = customStart;
@@ -50,6 +58,7 @@ export function ReportsPage() {
     if (!isISODate(start) || !isISODate(end)) rangeError = 'Choose a start and end date.';
     else if (end < start) rangeError = 'The end date must be on or after the start date.';
     else if (addDays(start, MAX_CUSTOM_DAYS) < end) rangeError = 'Please choose a range of one year or less.';
+    else if (start < firstDay || end > lastDay) rangeError = `Choose dates within the subscription: ${formatShort(firstDay)} to ${formatShort(lastDay)}.`;
     if (rangeError) {
       start = today;
       end = today;
@@ -66,8 +75,10 @@ export function ReportsPage() {
 
   const shift = (delta: number) => {
     if (mode === 'month') setAnchor(shiftPeriod(month, delta, billing.billingDay).start);
-    else setAnchor(addDays(anchor, 7 * delta));
+    else setAnchor(addDays(start, 7 * delta));
   };
+  const canPrev = start > firstDay;
+  const canNext = end < lastDay;
 
   async function download() {
     setDownloading(true);
@@ -115,12 +126,19 @@ export function ReportsPage() {
 
       {mode === 'custom' ? (
         <div className="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
-          <TextField id="from" label="From" type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
-          <TextField id="to" label="To" type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
+          <TextField id="from" label="From" type="date" min={firstDay} max={lastDay} value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
+          <TextField id="to" label="To" type="date" min={firstDay} max={lastDay} value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
         </div>
       ) : (
         <div className="flex items-center justify-between gap-2">
-          <button onClick={() => shift(-1)} className="min-h-11 min-w-11 shrink-0 rounded-xl text-lg hover:bg-slate-200 dark:hover:bg-white/10" aria-label={`Previous ${mode}`}>←</button>
+          <button
+            onClick={() => shift(-1)}
+            disabled={!canPrev}
+            className="min-h-11 min-w-11 shrink-0 rounded-xl text-lg hover:bg-slate-200 disabled:opacity-30 disabled:hover:bg-transparent dark:hover:bg-white/10"
+            aria-label={`Previous ${mode}`}
+          >
+            ←
+          </button>
           <div className="min-w-0 text-center" aria-live="polite">
             <p className="font-display text-lg">{title}</p>
             {mode === 'month' && billing.billingDay !== 1 && (
@@ -129,7 +147,35 @@ export function ReportsPage() {
               </p>
             )}
           </div>
-          <button onClick={() => shift(1)} className="min-h-11 min-w-11 shrink-0 rounded-xl text-lg hover:bg-slate-200 dark:hover:bg-white/10" aria-label={`Next ${mode}`}>→</button>
+          <button
+            onClick={() => shift(1)}
+            disabled={!canNext}
+            className="min-h-11 min-w-11 shrink-0 rounded-xl text-lg hover:bg-slate-200 disabled:opacity-30 disabled:hover:bg-transparent dark:hover:bg-white/10"
+            aria-label={`Next ${mode}`}
+          >
+            →
+          </button>
+        </div>
+      )}
+
+      {mode === 'month' && months.length > 1 && (
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label="Subscribed months">
+          {months.map((p) => {
+            const on = p.start === month.start;
+            return (
+              <button
+                key={p.start}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setAnchor(p.start)}
+                className={`min-h-9 shrink-0 whitespace-nowrap rounded-full px-3.5 text-sm font-semibold ${
+                  on ? 'bg-emerald-600 text-white shadow-sm' : 'taro-inset text-slate-700 dark:text-slate-200'
+                }`}
+              >
+                {periodTitle(p, billing.billingDay)}
+              </button>
+            );
+          })}
         </div>
       )}
 

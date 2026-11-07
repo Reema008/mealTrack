@@ -4,22 +4,27 @@ import { MonthCalendar } from '../components/Calendar';
 import { deliveryLabel } from '../components/MealCard';
 import { badgeFor } from '../components/MealCard';
 import { Button, Card, DayTypeChip, ErrorNote, Spinner, StatusBadge } from '../components/ui';
-import { addMonths, eachDay, endOfMonth, formatMonth, formatShort, startOfMonth } from '../domain/dates';
+import { addDays, addMonths, eachDay, endOfMonth, formatMonth, formatShort, startOfMonth } from '../domain/dates';
 import { mealsForDate, overrideKey } from '../domain/meals';
 import { getDayType, PERIOD_LABEL } from '../domain/schedule';
 import { useHousehold } from '../data/household';
 import { useOverrides } from '../data/meals';
+import { useSubscribedRange } from '../data/subscriptions';
 
 export function CalendarPage() {
   const { today, nowMinutes } = useHousehold();
   const [params, setParams] = useSearchParams();
   const monthParam = params.get('month');
-  const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? `${monthParam}-01` : startOfMonth(today);
+  const range = useSubscribedRange();
+  // Only the subscribed months.
+  const month = startOfMonth(range.clamp(monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? `${monthParam}-01` : today));
   const navigate = useNavigate();
   const [view, setView] = useState<'month' | 'list'>('month');
   const start = startOfMonth(month);
   const end = endOfMonth(month);
   const { map, pendingKeys, isLoading, error, refetch } = useOverrides(start, end);
+  const canPrev = range.inRange(addDays(start, -1));
+  const canNext = range.inRange(addDays(end, 1));
 
   const goMonth = (delta: number) => {
     const next = addMonths(month, delta);
@@ -29,9 +34,9 @@ export function CalendarPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <Button variant="secondary" onClick={() => goMonth(-1)} aria-label="Previous month">←</Button>
+        <Button variant="secondary" disabled={!canPrev} onClick={() => goMonth(-1)} aria-label="Previous month">←</Button>
         <h1 className="min-w-0 text-center text-lg font-semibold" aria-live="polite">{formatMonth(month)}</h1>
-        <Button variant="secondary" onClick={() => goMonth(1)} aria-label="Next month">→</Button>
+        <Button variant="secondary" disabled={!canNext} onClick={() => goMonth(1)} aria-label="Next month">→</Button>
       </div>
 
       <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-200 p-1 dark:bg-slate-900" role="tablist" aria-label="Calendar view">
@@ -55,11 +60,19 @@ export function CalendarPage() {
       ) : view === 'month' ? (
         <Card>
           {/* Tapping a date opens that day, the same as in the list view. */}
-          <MonthCalendar month={month} selected={today} today={today} map={map} pendingKeys={pendingKeys} onSelect={(d) => navigate(`/day/${d}`)} />
+          <MonthCalendar
+            month={month}
+            selected={today}
+            today={today}
+            map={map}
+            pendingKeys={pendingKeys}
+            isEnabled={range.inRange}
+            onSelect={(d) => navigate(`/day/${d}`)}
+          />
         </Card>
       ) : (
         <ol className="space-y-2">
-          {eachDay(start, end).map((d) => {
+          {eachDay(start, end).filter(range.inRange).map((d) => {
             const meals = mealsForDate(d, map, today, nowMinutes);
             return (
               <li key={d}>

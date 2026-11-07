@@ -8,6 +8,7 @@ import { getDayType } from '../domain/schedule';
 import { computeStats, formatPercent } from '../domain/stats';
 import { useHousehold } from '../data/household';
 import { useOverrides } from '../data/meals';
+import { useSubscribedRange } from '../data/subscriptions';
 
 export function HomePage() {
   const { today, nowMinutes } = useHousehold();
@@ -16,7 +17,9 @@ export function HomePage() {
   const weekStart = startOfWeek(today);
   const weekEnd = endOfWeek(today);
   const { map, pendingKeys, isLoading, error, refetch } = useOverrides(weekStart, weekEnd);
-  const week = computeStats(weekStart, weekEnd, map, today, nowMinutes);
+  // Only days inside the subscription count.
+  const range = useSubscribedRange();
+  const week = computeStats(range.clamp(weekStart), range.clamp(weekEnd), map, today, nowMinutes);
 
   return (
     <div className="space-y-5">
@@ -47,7 +50,7 @@ export function HomePage() {
             Calendar & history →
           </Link>
         </div>
-        <WeekStrip start={weekStart} today={today} map={map} pendingKeys={pendingKeys} onSelect={(d) => navigate(`/day/${d}`)} />
+        <WeekStrip start={weekStart} today={today} map={map} pendingKeys={pendingKeys} isEnabled={range.inRange} onSelect={(d) => navigate(`/day/${d}`)} />
         {!isLoading && !error && (
           <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
             So far: <span className="font-semibold text-slate-900 dark:text-slate-50">{week.actual.delivered}</span> of {week.actual.meals} meals

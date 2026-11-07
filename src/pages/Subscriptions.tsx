@@ -186,6 +186,9 @@ function PaymentForm({
   onCancel?: () => void;
 }) {
   const { billing } = useHousehold();
+  // Not before the subscription started (once a first payment is saved).
+  const subs = useSubscriptions();
+  const firstMonth = firstSubscriptionStart(subs.data ?? [], billing.billingDay);
   const [date, setDate] = useState(initialMonth);
   const [amount, setAmount] = useState(initialAmount === null ? '' : String(initialAmount));
   // Until a date is picked, "Paid on" follows the 1st of the chosen month.
@@ -200,6 +203,7 @@ function PaymentForm({
     e.preventDefault();
     setError(null);
     if (!isISODate(date)) return setError('Choose a date in the month you paid for.');
+    if (firstMonth && date < firstMonth) return setError(`The subscription started on ${formatShort(firstMonth)}; choose that month or later.`);
     const value = parseAmount(amount);
     if (value === 'invalid') return setError('Enter the amount as a number, e.g. 6600.');
     if (paidOn && !isISODate(paidOn)) return setError('Choose the date you paid, or leave it empty.');
@@ -220,7 +224,7 @@ function PaymentForm({
           <label htmlFor={`month-${id}`} className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
             Subscription paid for
           </label>
-          <input id={`month-${id}`} type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} required />
+          <input id={`month-${id}`} type="date" min={firstMonth ?? undefined} value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} required />
           {isISODate(date) && (
             <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{periodTitle(billingPeriodFor(date, billing.billingDay), billing.billingDay)}</p>
           )}

@@ -5,6 +5,7 @@ import { addDays, formatLong, isISODate } from '../domain/dates';
 import { getDayType } from '../domain/schedule';
 import { useHousehold } from '../data/household';
 import { useOverrides } from '../data/meals';
+import { useSubscribedRange } from '../data/subscriptions';
 
 /** Detail view for a single date (also the target of reminder notifications). */
 export function DayPage() {
@@ -13,21 +14,26 @@ export function DayPage() {
   const navigate = useNavigate();
   const valid = isISODate(date);
   const { map, pendingKeys, isLoading, error, refetch } = useOverrides(valid ? date : today, valid ? date : today);
+  const range = useSubscribedRange();
   if (!valid) return <Navigate to="/" replace />;
+  // Only days inside the subscription: go to the nearest one.
+  if (!range.inRange(date)) return <Navigate to={`/day/${range.clamp(date)}`} replace />;
+  const canPrev = range.inRange(addDays(date, -1));
+  const canNext = range.inRange(addDays(date, 1));
 
   const timing = date < today ? 'Past date' : date > today ? 'Future date · planned meals' : 'Today';
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <Button variant="secondary" onClick={() => navigate(`/day/${addDays(date, -1)}`)} aria-label="Previous day">
+        <Button variant="secondary" disabled={!canPrev} onClick={() => navigate(`/day/${addDays(date, -1)}`)} aria-label="Previous day">
           ←
         </Button>
         <div className="min-w-0 text-center">
           <h1 className="text-lg font-semibold">{formatLong(date)}</h1>
           <p className="text-xs text-slate-600 dark:text-slate-300">{timing}</p>
         </div>
-        <Button variant="secondary" onClick={() => navigate(`/day/${addDays(date, 1)}`)} aria-label="Next day">
+        <Button variant="secondary" disabled={!canNext} onClick={() => navigate(`/day/${addDays(date, 1)}`)} aria-label="Next day">
           →
         </Button>
       </div>
