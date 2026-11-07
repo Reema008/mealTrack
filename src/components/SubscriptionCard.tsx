@@ -49,7 +49,7 @@ export function SubscriptionCard() {
               <>
                 {formatShort(current.start)} – {formatShort(current.end)} ·{' '}
                 <strong className="text-slate-900 dark:text-slate-50">{formatAmount(paid?.amount ?? billing.monthlyAmount)}</strong>
-                {paid ? ' paid' : ''}
+                {paid ? (paid.paid_on ? ` paid on ${formatShort(paid.paid_on)}` : ' paid') : ''}
               </>
             )}
           </p>

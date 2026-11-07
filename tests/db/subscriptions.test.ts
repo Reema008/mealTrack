@@ -45,6 +45,21 @@ describe('subscription history (database)', () => {
     expect(n).toBe(2);
   });
 
+  it('records when a payment was made, and it can be changed or cleared', async () => {
+    const paidOn = () =>
+      t.as(phone, async (tx) =>
+        (await tx.query<{ d: string | null }>(`select to_char(paid_on, 'YYYY-MM-DD') as d from public.subscriptions where start_date = '2026-11-02'`)).rows[0].d,
+      );
+    expect(await paidOn()).toBeNull();
+    await t.as(phone, (tx) => tx.query(`update public.subscriptions set paid_on = '2026-11-03' where start_date = '2026-11-02'`));
+    expect(await paidOn()).toBe('2026-11-03');
+    await t.as(phone, (tx) => tx.query(`update public.subscriptions set paid_on = null where start_date = '2026-11-02'`));
+    expect(await paidOn()).toBeNull();
+    await expect(
+      t.as(phone, (tx) => tx.query(`insert into public.subscriptions (household_id, start_date, paid_on) values ($1, '2027-03-01', '1999-01-01')`, [homeId])),
+    ).rejects.toThrow(/subscriptions_paid_on_sane/);
+  });
+
   it('other households and visitors with no session see nothing', async () => {
     await t.as(outsider, async (tx) => expect((await tx.query('select 1 from public.subscriptions')).rows).toHaveLength(0));
     await expect(add(outsider, homeId, '2027-02-01', 1)).rejects.toThrow(/row-level security/);

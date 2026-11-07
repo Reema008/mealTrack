@@ -119,8 +119,8 @@ export function BillSheet({ initial, onClose }: { initial: BillingPeriod; onClos
     setBusy('pay');
     try {
       const saved = nextPayment
-        ? await updateSubscription(nextPayment.id, next.start, bill.nextAmount)
-        : await addSubscription(household.id, next.start, bill.nextAmount);
+        ? await updateSubscription(nextPayment.id, next.start, bill.nextAmount, nextPayment.paid_on ?? next.start)
+        : await addSubscription(household.id, next.start, bill.nextAmount, next.start);
       qc.setQueryData<SubscriptionRecord[]>(subscriptionsKey(household.id), (old) => [...(old ?? []).filter((r) => r.id !== saved.id), saved]);
       void qc.invalidateQueries({ queryKey: subscriptionsKey(household.id) });
       toast(`Saved ${formatAmount(bill.nextAmount)} as the ${nextTitle} payment.`);

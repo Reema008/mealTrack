@@ -172,19 +172,26 @@ function BillingSettingsCard() {
 function PaymentForm({
   initialMonth,
   initialAmount,
+  initialPaidOn,
   submitLabel,
   onSubmit,
   onCancel,
 }: {
   initialMonth: string;
   initialAmount: number | null;
+  /** A date already saved for this payment; otherwise it defaults to the 1st of the month paid for. */
+  initialPaidOn: string | null;
   submitLabel: string;
-  onSubmit: (start: string, amount: number | null) => Promise<void>;
+  onSubmit: (start: string, amount: number | null, paidOn: string | null) => Promise<void>;
   onCancel?: () => void;
 }) {
   const { billing } = useHousehold();
   const [date, setDate] = useState(initialMonth);
   const [amount, setAmount] = useState(initialAmount === null ? '' : String(initialAmount));
+  // Until a date is picked, "Paid on" follows the 1st of the chosen month.
+  const [pickedPaidOn, setPickedPaidOn] = useState<string | null>(initialPaidOn);
+  const monthStart = isISODate(date) ? billingPeriodFor(date, billing.billingDay).start : '';
+  const paidOn = pickedPaidOn ?? monthStart;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const id = submitLabel.replace(/\W/g, '');
@@ -195,9 +202,10 @@ function PaymentForm({
     if (!isISODate(date)) return setError('Choose a date in the month you paid for.');
     const value = parseAmount(amount);
     if (value === 'invalid') return setError('Enter the amount as a number, e.g. 6600.');
+    if (paidOn && !isISODate(paidOn)) return setError('Choose the date you paid, or leave it empty.');
     setBusy(true);
     try {
-      await onSubmit(billingPeriodFor(date, billing.billingDay).start, value);
+      await onSubmit(billingPeriodFor(date, billing.billingDay).start, value, paidOn || null);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -222,6 +230,13 @@ function PaymentForm({
             Amount paid (₹)
           </label>
           <input id={`amount-${id}`} inputMode="decimal" placeholder="e.g. 6600" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputClass} />
+        </div>
+        <div>
+          <label htmlFor={`paid-${id}`} className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
+            Paid on
+          </label>
+          <input id={`paid-${id}`} type="date" value={paidOn} onChange={(e) => setPickedPaidOn(e.target.value)} className={inputClass} />
+          <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{paidOn ? formatShort(paidOn) : 'Not recorded'}</p>
         </div>
       </div>
       {error && (
@@ -278,7 +293,9 @@ function MonthRow({
         </div>
         <div className="text-right">
           <p className="font-display text-xl leading-none">{payment ? formatAmount(payment.amount) : '—'}</p>
-          <p className="text-xs text-slate-600 dark:text-slate-300">{payment ? 'paid' : 'no payment saved'}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-300">
+            {!payment ? 'no payment saved' : payment.paid_on ? `paid on ${formatShort(payment.paid_on)}` : 'paid'}
+          </p>
         </div>
       </div>
       <p className="mt-2 text-sm">
@@ -297,10 +314,13 @@ function MonthRow({
           <PaymentForm
             initialMonth={period.start}
             initialAmount={payment?.amount ?? null}
+            initialPaidOn={payment?.paid_on ?? null}
             submitLabel="Save payment"
             onCancel={() => setEditing(false)}
-            onSubmit={async (start, amount) => {
-              const saved = payment ? await updateSubscription(payment.id, start, amount) : await addSubscription(household.id, start, amount);
+            onSubmit={async (start, amount, paidOn) => {
+              const saved = payment
+                ? await updateSubscription(payment.id, start, amount, paidOn)
+                : await addSubscription(household.id, start, amount, paidOn);
               apply((list) => [...list.filter((r) => r.id !== saved.id), saved]);
               setEditing(false);
               toast('Payment saved.');
@@ -382,12 +402,16 @@ export function SubscriptionsPage() {
         <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">Or use “Calculate” above and save the calculated amount in one tap.</p>
         <PaymentForm
           key={records.length}
-          initialMonth={current.start}
+          // Paid in advance: next month's subscription.
+          initialMonth={shiftPeriod(current, 1, billing.billingDay).start}
           initialAmount={billing.monthlyAmount}
+          initialPaidOn={null}
           submitLabel="Save payment"
-          onSubmit={async (start, amount) => {
+          onSubmit={async (start, amount, paidOn) => {
             const existing = paymentFor(records, billingPeriodFor(start, billing.billingDay), billing.billingDay);
-            const saved = existing ? await updateSubscription(existing.id, start, amount) : await addSubscription(household.id, start, amount);
+            const saved = existing
+              ? await updateSubscription(existing.id, start, amount, paidOn)
+              : await addSubscription(household.id, start, amount, paidOn);
             apply((list) => [...list.filter((r) => r.id !== saved.id), saved]);
             toast(existing ? 'Payment updated.' : 'Payment saved.');
           }}

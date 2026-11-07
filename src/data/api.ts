@@ -219,41 +219,45 @@ export async function fetchRecentNotifications(userId: string) {
 // Subscription renewals (history)
 // ---------------------------------------------------------------------------
 export async function fetchSubscriptions(householdId: string): Promise<SubscriptionRecord[]> {
-  const { data, error } = await supabase
-    .from('subscriptions')
-    .select('id, start_date, amount')
-    .eq('household_id', householdId)
-    .order('start_date');
+  const query = (columns: string) => supabase.from('subscriptions').select(columns).eq('household_id', householdId).order('start_date');
+  let { data, error } = await query(SUBSCRIPTION_COLUMNS);
+  // Database not yet updated with the payment date: still show the payments.
+  if (error && isMissingPaidOn(error)) ({ data, error } = await query('id, start_date, amount'));
   if (error) throw toAppError(error);
-  return (data ?? []).map((r) => ({ id: r.id as string, start_date: r.start_date as string, amount: r.amount === null ? null : Number(r.amount) }));
+  return ((data ?? []) as unknown as Parameters<typeof toRecord>[0][]).map(toRecord);
 }
+
+const isMissingPaidOn = (err: { code?: string; message?: string }) => (err.code === '42703' || err.code === 'PGRST204') && Boolean(err.message?.includes('paid_on'));
 
 function subscriptionError(err: { code?: string; message?: string }): Error {
   if (err.code === '23505') return new Error('There is already a subscription starting on that date.');
+  if (err.message?.includes('subscriptions_paid_on_sane')) return new Error('Choose a real payment date.');
+  if (isMissingPaidOn(err)) return new Error('The database needs the payment-date update before payments can be saved (supabase/migrations/20261108000018_paid_on.sql).');
   return toAppError(err);
 }
 
-const SUBSCRIPTION_COLUMNS = 'id, start_date, amount';
-const toRecord = (r: { id: unknown; start_date: unknown; amount: unknown }): SubscriptionRecord => ({
+const SUBSCRIPTION_COLUMNS = 'id, start_date, amount, paid_on';
+const toRecord = (r: { id: unknown; start_date: unknown; amount: unknown; paid_on?: unknown }): SubscriptionRecord => ({
   id: r.id as string,
   start_date: r.start_date as string,
   amount: r.amount === null || r.amount === undefined ? null : Number(r.amount),
+  paid_on: (r.paid_on as string | null | undefined) ?? null,
 });
 
-export async function addSubscription(householdId: string, startDate: ISODate, amount: number | null): Promise<SubscriptionRecord> {
+export async function addSubscription(householdId: string, startDate: ISODate, amount: number | null, paidOn: ISODate | null): Promise<SubscriptionRecord> {
   const { data, error } = await supabase
     .from('subscriptions')
-    .insert({ household_id: householdId, start_date: startDate, amount })
+    .insert({ household_id: householdId, start_date: startDate, amount, paid_on: paidOn })
     .select(SUBSCRIPTION_COLUMNS)
     .single();
   if (error) throw subscriptionError(error);
   return toRecord(data);
 }
 
-export async function updateSubscription(id: string, startDate: ISODate, amount: number | null): Promise<SubscriptionRecord> {
+export async function updateSubscription(id: string, startDate: ISODate, amount: number | null, paidOn: ISODate | null): Promise<SubscriptionRecord> {
   const { data, error } = await supabase
     .from('subscriptions')
-    .update({ start_date: startDate, amount })
+    .update({ start_date: startDate, amount, paid_on: paidOn })
     .eq('id', id)
     .select(SUBSCRIPTION_COLUMNS)
     .maybeSingle();

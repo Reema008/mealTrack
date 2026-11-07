@@ -8,6 +8,8 @@ export interface SubscriptionRecord {
   start_date: ISODate;
   /** Amount paid, in rupees. */
   amount: number | null;
+  /** The day the payment was made, if recorded. */
+  paid_on?: ISODate | null;
 }
 
 /** Whole days from a to b (b − a), computed in UTC so device time zones never matter. */
